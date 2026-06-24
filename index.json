@@ -2,57 +2,67 @@
   {
     "concept": "Markov Chains",
     "file": "cs/markov_chains.html",
-    "tags": ["probability", "stochastic"],
-    "description": "Interactive state transition diagram with probability sliders"
+    "tags": ["probability", "stochastic-processes", "discrete-math"],
+    "description": "Interactive state transition diagram visualizing a 3-state weather Markov Chain with step-by-step simulations and normalized transition probability sliders."
   },
   {
     "concept": "Claude Shannon",
     "file": "cs/shannon_approximations.html",
-    "tags": ["probability", "stochastic"],
-    "description": "Interactive"
+    "tags": ["stochastic-processes", "probability", "nlp", "markov-chains"],
+    "description": "Stochastic text generator demonstrating Shannon's 0th to 3rd-order character and word-level statistical approximations to the English language."
   },
   {
     "concept": "Claude Shannon",
     "file": "cs/shannon_fano_source_coding.html",
-    "tags": ["probability", "predictive coding"],
-    "description": "Interactive"
+    "tags": ["source-coding", "noiseless-compression", "entropy"],
+    "description": "Noiseless source coding simulator constructing a Shannon-Fano code tree in real time, displaying entropy limits, average code lengths, and compression ratios."
   },
-
   {
     "concept": "Claude Shannon",
     "file": "cs/shannon_continuous_channel.html",
-    "tags": ["probability", "predictive coding"],
-    "description": "Interactive"
+    "tags": ["continuous-channel", "capacity", "analog-signals", "snr"],
+    "description": "Continuous channel simulation graphing the Shannon-Hartley theorem, featuring interactive bandwidth, signal-to-noise ratio sliders, and animated waveforms."
   },
   {
     "concept": "Claude Shannon",
     "file": "cs/shannon_hamming_code.html",
-    "tags": ["probability", "predictive coding"],
-    "description": "Interactive"
+    "tags": ["efficient-coding", "error-correction", "channel-coding"],
+    "description": "Efficient coding playground simulating Richard Hamming's (7,4) block code with live parity calculation, error injection, and automated correction."
   },
   {
     "concept": "Claude Shannon",
     "file": "cs/shannon_sampling_theorem.html",
-    "tags": ["probability", "predictive coding"],
-    "description": "Interactive"
+    "tags": ["sampling", "continuous-signals", "digital-reconstruction"],
+    "description": "Interactive plot of the Nyquist-Shannon Sampling Theorem showing how sinc interpolation filters perfectly reconstruct smooth analog curves from discrete points."
   },
   {
     "concept": "Claude Shannon",
     "file": "cs/shannon_joint_et_conditional_entropy.html",
-    "tags": ["probability", "predictive coding"],
-    "description": "Interactive"
+    "tags": ["entropy-relations", "conditional-probability", "equivocation"],
+    "description": "Interactive binary symmetric channel Information Venn Diagram computing Joint Entropy, Conditional Entropy, Equivocation, and Mutual Information."
   },
   {
     "concept": "Claude Shannon",
     "file": "cs/shannon_variable_symbol_capacity.html",
-    "tags": ["probability", "predictive coding"],
-    "description": "Interactive"
+    "tags": ["discrete-capacity", "noiseless-channel", "difference-equations"],
+    "description": "Interactive solver finding the root of the characteristic equation to calculate channel capacity for systems with variable symbol durations like Morse Code."
   },
   {
     "concept": "Claude Shannon",
     "file": "cs/shannon_continuous_entropy_maximum.html",
-    "tags": ["probability", "predictive coding"],
-    "description": "Interactive"
+    "tags": ["continuous-entropy", "gaussian-distribution", "probability-density"],
+    "description": "Interactive variance slider comparing Uniform and Gaussian distributions, visually proving that Gaussian noise maximizes continuous entropy."
+  },
+  {
+    "concept": "Claude Shannon",
+    "file": "cs/asymptotic_equipartition.html",
+    "tags": ["asymptotic-equipartition", "typical-sequences", "entropy-limit"],
+    "description": "Stochastic distribution chart visualizing the Asymptotic Equipartition Property (AEP), showcasing how sequence probabilities collapse into the Typical Set."
+  },
+  {
+    "concept": "Claude Shannon",
+    "file": "cs/rate_distortion.html",
+    "tags": ["rate-distortion", "fidelity", "lossy-compression"],
+    "description": "Interactive rate-distortion curve mapping Shannon's Theorem 22 limits, visualizing the absolute minimum required transmission rate for allowed distortion."
   }
-  
 ]
