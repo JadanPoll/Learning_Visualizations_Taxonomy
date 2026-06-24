@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shannon's Approximations to English</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-muted: #aaaaaa;
+            --highlight: #4caf50;
+            --border-color: #333;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 350px;
+            background-color: var(--panel-bg);
+            padding: 20px;
+            box-sizing: border-box;
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 40px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .control-group {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .control-group h3 {
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+            color: var(--highlight);
+        }
+
+        .radio-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: flex-start;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .radio-label input {
+            margin-top: 3px;
+            margin-right: 10px;
+            accent-color: var(--highlight);
+        }
+
+        .desc {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .slider-row {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-top: 15px;
+        }
+
+        .slider-row label {
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        input[type=range] {
+            width: 100%;
+            accent-color: var(--highlight);
+        }
+
+        button {
+            padding: 15px;
+            border: none;
+            border-radius: 4px;
+            background-color: var(--highlight);
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: auto;
+        }
+
+        button:hover {
+            background-color: #388e3c;
+        }
+
+        #output-container {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 30px;
+            flex-grow: 1;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        #output-text {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Markov Chain Generator</h2>
+        
+        <div class="control-group">
+            <h3>Approximation Level</h3>
+            <div class="radio-container">
+                <label class="radio-label">
+                    <input type="radio" name="order" value="0" checked>
+                    <div>
+                        0-Order
+                        <span class="desc">Pure random. 26 letters & space are equally likely.</span>
+                    </div>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="order" value="1">
+                    <div>
+                        1st-Order
+                        <span class="desc">Independent letters, but weighted by actual English frequency.</span>
+                    </div>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="order" value="2">
+                    <div>
+                        2nd-Order (Digrams)
+                        <span class="desc">Next letter depends on the 1 preceding letter.</span>
+                    </div>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="order" value="3">
+                    <div>
+                        3rd-Order (Trigrams)
+                        <span class="desc">Next letter depends on the 2 preceding letters.</span>
+                    </div>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="order" value="word">
+                    <div>
+                        1st-Order Word
+                        <span class="desc">Independent whole words, weighted by frequency.</span>
+                    </div>
+                </label>
+            </div>
+
+            <div class="slider-row">
+                <label>
+                    <span>Output Length:</span>
+                    <span id="length-val">300</span>
+                </label>
+                <input type="range" id="length-slider" min="50" max="1000" step="50" value="300">
+            </div>
+        </div>
+
+        <button id="generateBtn">Generate Text</button>
+    </div>
+
+    <div id="main">
+        <div id="output-container">
+            <div id="output-text">Click "Generate Text" to see Shannon's approximations in action...</div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Hidden Corpus Data ---
+        // A snippet from Shannon's paper to use as our statistical training ground.
+        const rawCorpus = `The fundamental problem of communication is that of reproducing at one point either exactly or approximately a message selected at another point Frequently the messages have meaning that is they refer to or are correlated according to some system with certain physical or conceptual entities These semantic aspects of communication are irrelevant to the engineering problem The significant aspect is that the actual message is one selected from a set of possible messages The system must be designed to operate for each possible selection not just the one which will actually be chosen since this is unknown at the time of design If the number of messages in the set is finite then this number or any monotonic function of this number can be regarded as a measure of the information produced when one message is chosen from the set all choices being equally likely As was pointed out by Hartley the most natural choice is the logarithmic function Although this definition must be generalized considerably when we consider the influence of the statistics of the message and when we have a continuous range of messages we will in all cases use an essentially logarithmic measure`;
+        
+        const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ ";
+        
+        // Clean corpus: uppercase, only A-Z and spaces, remove double spaces
+        let corpus = rawCorpus.toUpperCase().replace(/[^A-Z ]/g, '').replace(/\s+/g, ' ');
+        let words = corpus.split(' ');
+
+        // --- 2. Statistical Models ---
+        let charFreq = {};
+        let digramFreq = {};
+        let trigramFreq = {};
+        let wordFreq = {};
+
+        // Build models from corpus
+        function buildModels() {
+            // 1st Order (Chars)
+            for (let i = 0; i < corpus.length; i++) {
+                let c = corpus[i];
+                charFreq[c] = (charFreq[c] || 0) + 1;
+            }
+
+            // 2nd Order (Digrams)
+            for (let i = 0; i < corpus.length - 1; i++) {
+                let c1 = corpus[i];
+                let c2 = corpus[i+1];
+                if (!digramFreq[c1]) digramFreq[c1] = {};
+                digramFreq[c1][c2] = (digramFreq[c1][c2] || 0) + 1;
+            }
+
+            // 3rd Order (Trigrams)
+            for (let i = 0; i < corpus.length - 2; i++) {
+                let pair = corpus.substring(i, i+2);
+                let next = corpus[i+2];
+                if (!trigramFreq[pair]) trigramFreq[pair] = {};
+                trigramFreq[pair][next] = (trigramFreq[pair][next] || 0) + 1;
+            }
+
+            // Word Frequencies
+            for (let w of words) {
+                wordFreq[w] = (wordFreq[w] || 0) + 1;
+            }
+        }
+
+        // --- 3. Generation Logic ---
+        
+        // Helper: pick item from a frequency dictionary based on weights
+        function weightedRandom(freqDict) {
+            let total = 0;
+            for (let key in freqDict) total += freqDict[key];
+            let r = Math.random() * total;
+            let sum = 0;
+            for (let key in freqDict) {
+                sum += freqDict[key];
+                if (r <= sum) return key;
+            }
+            return Object.keys(freqDict)[0]; // Fallback
+        }
+
+        function generate0Order(length) {
+            let res = "";
+            for (let i = 0; i < length; i++) {
+                res += alphabet[Math.floor(Math.random() * alphabet.length)];
+            }
+            return res;
+        }
+
+        function generate1stOrder(length) {
+            let res = "";
+            for (let i = 0; i < length; i++) {
+                res += weightedRandom(charFreq);
+            }
+            return res;
+        }
+
+        function generate2ndOrder(length) {
+            let res = weightedRandom(charFreq); // Start with a 1st order char
+            for (let i = 1; i < length; i++) {
+                let lastChar = res[res.length - 1];
+                let options = digramFreq[lastChar];
+                if (!options) {
+                    res += weightedRandom(charFreq); // Fallback if dead end
+                } else {
+                    res += weightedRandom(options);
+                }
+            }
+            return res;
+        }
+
+        function generate3rdOrder(length) {
+            let res = "TH"; // Seed with common digram to start
+            for (let i = 2; i < length; i++) {
+                let lastPair = res.substring(res.length - 2);
+                let options = trigramFreq[lastPair];
+                if (!options) {
+                    res += weightedRandom(charFreq); // Fallback
+                } else {
+                    res += weightedRandom(options);
+                }
+            }
+            return res;
+        }
+
+        function generateWordOrder(length) {
+            let res = [];
+            // Approximate word count based on character length requested
+            let targetWords = Math.floor(length / 6); 
+            for (let i = 0; i < targetWords; i++) {
+                res.push(weightedRandom(wordFreq));
+            }
+            return res.join(' ');
+        }
+
+        // --- 4. UI Interaction ---
+        buildModels();
+
+        const generateBtn = document.getElementById('generateBtn');
+        const outputText = document.getElementById('output-text');
+        const lengthSlider = document.getElementById('length-slider');
+        const lengthVal = document.getElementById('length-val');
+
+        lengthSlider.addEventListener('input', (e) => {
+            lengthVal.textContent = e.target.value;
+        });
+
+        generateBtn.addEventListener('click', () => {
+            let order = document.querySelector('input[name="order"]:checked').value;
+            let length = parseInt(lengthSlider.value);
+            let result = "";
+
+            if (order === "0") result = generate0Order(length);
+            else if (order === "1") result = generate1stOrder(length);
+            else if (order === "2") result = generate2ndOrder(length);
+            else if (order === "3") result = generate3rdOrder(length);
+            else if (order === "word") result = generateWordOrder(length);
+
+            outputText.textContent = result;
+        });
+    </script>
+</body>
+</html>
