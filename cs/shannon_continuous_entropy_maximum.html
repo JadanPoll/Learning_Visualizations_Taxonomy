@@ -157,8 +157,11 @@
         </div>
 
         <div class="control-group" style="margin-top: auto;">
-            <div class="helper-text">
-                <strong style="color: #fff;">Conclusion:</strong> For any given power &sigma;<sup>2</sup>, the Gaussian distribution always carries exactly <strong style="color: var(--highlight);">0.254 bits</strong> more entropy than a Uniform distribution. It is the absolute maximum entropy shape.
+            <h3 style="margin-bottom: 5px;">Shannon's Theorems 14 & 15</h3>
+            <div class="helper-text" style="color: #ccc;">
+                <p style="margin: 0 0 8px 0;"><strong>Theorem 14:</strong> "If the variance of an ensemble is limited to &sigma;<sup>2</sup>, the entropy is a maximum when the ensemble is normal (Gaussian)."</p>
+                <p style="margin: 0 0 8px 0;">Because of this, Shannon introduces the concept of <strong>Entropy Power</strong> (N<sub>1</sub>). This represents the power of a theoretical Gaussian noise band that would produce the exact same entropy as the given distribution.</p>
+                <p style="margin: 0;"><strong>Visual Proof:</strong> As calculated above, the Gaussian distribution yields exactly <strong style="color: var(--highlight);">log<sub>2</sub>(&radic;(2&pi;e/12)) &approx; 0.2546 bits</strong> more entropy than a Uniform distribution for the exact same variance (power limit). The Gaussian shape uniquely maximizes information uncertainty!</p>
             </div>
         </div>
     </div>
