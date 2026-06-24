@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Efficient Coding: Error Correction</title>
+    <style>
+        :root {
+            --bg-color: #0f111a;
+            --panel-bg: #1a1d2d;
+            --text-main: #e2e2e2;
+            --text-muted: #8b92a5;
+            --highlight: #00d2ff;
+            --data-color: #4caf50;
+            --parity-color: #ff9d00;
+            --error-color: #ff4b4b;
+            --border: #2e3246;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 420px;
+            background-color: var(--panel-bg);
+            padding: 25px;
+            box-sizing: border-box;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #main {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        h2, h3 { margin: 0; color: #fff; }
+        h2 { font-size: 1.3rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 1.1rem; color: var(--highlight); margin-bottom: 10px; }
+
+        .control-group {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .helper-text { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; line-height: 1.4; }
+
+        .bit-toggle-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .bit-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            background: #000;
+            color: #fff;
+            font-size: 1.5rem;
+            font-family: monospace;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: all 0.2s;
+        }
+
+        .bit-btn.data { border-color: var(--data-color); color: var(--data-color); }
+        .bit-btn.data:hover { background: rgba(76, 175, 80, 0.1); }
+        .bit-btn.parity { border-color: var(--parity-color); color: var(--parity-color); }
+        .bit-btn.error { border-color: var(--error-color); background: rgba(255, 75, 75, 0.2); color: var(--error-color); }
+
+        .bit-label {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .math-box {
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 1rem;
+            line-height: 1.8;
+            border-left: 4px solid var(--highlight);
+        }
+
+        .math-symbol { color: #fff; font-weight: bold; }
+        .math-val { color: var(--highlight); }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .step-box {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        /* Channel Section */
+        .channel-bits {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            padding: 20px;
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(0,0,0,0.2),
+                rgba(0,0,0,0.2) 10px,
+                rgba(255, 75, 75, 0.05) 10px,
+                rgba(255, 75, 75, 0.05) 20px
+            );
+            border: 1px dashed var(--error-color);
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .channel-bit {
+            width: 45px;
+            height: 60px;
+            border-radius: 6px;
+            background: #000;
+            border: 2px solid var(--border);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: transform 0.1s;
+        }
+
+        .channel-bit:hover {
+            transform: scale(1.1);
+            border-color: var(--highlight);
+        }
+
+        .channel-bit.flipped {
+            border-color: var(--error-color);
+            color: var(--error-color);
+            background: rgba(255, 75, 75, 0.1);
+            animation: shake 0.3s;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .syndrome-result {
+            font-size: 1.2rem;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .success { color: var(--data-color); }
+        .danger { color: var(--error-color); }
+        .warning { color: var(--parity-color); }
+
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Efficient Coding (Sec. 17)</h2>
+        
+        <div class="control-group">
+            <h3>1. The Source Message</h3>
+            <div class="helper-text">"Of these X<sub>3</sub>, X<sub>5</sub>, X<sub>6</sub>, X<sub>7</sub> are message symbols chosen arbitrarily..." Click to toggle values.</div>
+            
+            <div class="bit-toggle-container">
+                <button class="bit-btn data" onclick="toggleData(3)">
+                    <span id="d3">1</span>
+                    <span class="bit-label">X<sub>3</sub></span>
+                </button>
+                <button class="bit-btn data" onclick="toggleData(5)">
+                    <span id="d5">0</span>
+                    <span class="bit-label">X<sub>5</sub></span>
+                </button>
+                <button class="bit-btn data" onclick="toggleData(6)">
+                    <span id="d6">1</span>
+                    <span class="bit-label">X<sub>6</sub></span>
+                </button>
+                <button class="bit-btn data" onclick="toggleData(7)">
+                    <span id="d7">0</span>
+                    <span class="bit-label">X<sub>7</sub></span>
+                </button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>2. Calculating Redundancy</h3>
+            <div class="helper-text">"The other three are redundant... chosen to make sums EVEN:"</div>
+            <div class="math-box" style="margin-top: 15px; font-size: 0.9rem;">
+                <span style="color: var(--parity-color)">X<sub>1</sub></span> = (X<sub>3</sub> + X<sub>5</sub> + X<sub>7</sub>) mod 2<br>
+                &nbsp;&nbsp;&nbsp;= (<span id="eq-x1-sub">1+0+0</span>) mod 2 = <strong style="color: var(--parity-color)" id="eq-x1-res">1</strong><br><br>
+                
+                <span style="color: var(--parity-color)">X<sub>2</sub></span> = (X<sub>3</sub> + X<sub>6</sub> + X<sub>7</sub>) mod 2<br>
+                &nbsp;&nbsp;&nbsp;= (<span id="eq-x2-sub">1+1+0</span>) mod 2 = <strong style="color: var(--parity-color)" id="eq-x2-res">0</strong><br><br>
+                
+                <span style="color: var(--parity-color)">X<sub>4</sub></span> = (X<sub>5</sub> + X<sub>6</sub> + X<sub>7</sub>) mod 2<br>
+                &nbsp;&nbsp;&nbsp;= (<span id="eq-x4-sub">0+1+0</span>) mod 2 = <strong style="color: var(--parity-color)" id="eq-x4-res">1</strong>
+            </div>
+        </div>
+        
+        <p class="helper-text" style="font-style: italic; margin-top: auto;">
+            "An efficient code, allowing complete correction of errors and transmitting at the rate C... found by a method due to R. Hamming."
+        </p>
+    </div>
+
+    <div id="main">
+        <div class="step-box">
+            <h3>Transmitter Output</h3>
+            <div class="helper-text">The full 7-bit block sent into the channel. Parity bits are placed at powers of 2 (X1, X2, X4).</div>
+            <div class="bit-toggle-container" style="justify-content: flex-start;">
+                <div class="bit-btn parity"><span id="t1">1</span><span class="bit-label">X<sub>1</sub></span></div>
+                <div class="bit-btn parity"><span id="t2">0</span><span class="bit-label">X<sub>2</sub></span></div>
+                <div class="bit-btn data"><span id="t3">1</span><span class="bit-label">X<sub>3</sub></span></div>
+                <div class="bit-btn parity"><span id="t4">1</span><span class="bit-label">X<sub>4</sub></span></div>
+                <div class="bit-btn data"><span id="t5">0</span><span class="bit-label">X<sub>5</sub></span></div>
+                <div class="bit-btn data"><span id="t6">1</span><span class="bit-label">X<sub>6</sub></span></div>
+                <div class="bit-btn data"><span id="t7">0</span><span class="bit-label">X<sub>7</sub></span></div>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <h3 style="color: var(--error-color);">The Noisy Channel</h3>
+            <div class="helper-text">"A block of seven is either transmitted without error, or exactly one symbol... is incorrect." <br><strong>Click exactly ONE bit below to simulate noise flipping a bit during transit.</strong></div>
+            <div class="channel-bits">
+                <button class="channel-bit" onclick="flipBit(1)" id="c1"><span id="r1">1</span><span class="bit-label">R<sub>1</sub></span></button>
+                <button class="channel-bit" onclick="flipBit(2)" id="c2"><span id="r2">0</span><span class="bit-label">R<sub>2</sub></span></button>
+                <button class="channel-bit" onclick="flipBit(3)" id="c3"><span id="r3">1</span><span class="bit-label">R<sub>3</sub></span></button>
+                <button class="channel-bit" onclick="flipBit(4)" id="c4"><span id="r4">1</span><span class="bit-label">R<sub>4</sub></span></button>
+                <button class="channel-bit" onclick="flipBit(5)" id="c5"><span id="r5">0</span><span class="bit-label">R<sub>5</sub></span></button>
+                <button class="channel-bit" onclick="flipBit(6)" id="c6"><span id="r6">1</span><span class="bit-label">R<sub>6</sub></span></button>
+                <button class="channel-bit" onclick="flipBit(7)" id="c7"><span id="r7">0</span><span class="bit-label">R<sub>7</sub></span></button>
+            </div>
+            <div style="text-align: center;">
+                <button onclick="resetChannel()" style="background: transparent; border: 1px solid var(--text-muted); color: var(--text-main); padding: 5px 15px; border-radius: 4px; cursor: pointer;">Reset Noise</button>
+            </div>
+        </div>
+
+        <div class="grid-container">
+            <div class="step-box">
+                <h3>Receiver: Syndrome Calculation</h3>
+                <div class="helper-text">"When a block of seven is received &alpha;, &beta; and &gamma; are calculated..."</div>
+                <div class="math-box" style="margin-top: 15px; font-size: 0.9rem;">
+                    &gamma; = (R<sub>1</sub>+R<sub>3</sub>+R<sub>5</sub>+R<sub>7</sub>) mod 2<br>
+                    &nbsp;&nbsp;= (<span id="eq-g-sub">1+1+0+0</span>) mod 2 = <strong class="math-val" id="eq-g-res">0</strong><br><br>
+                    
+                    &beta; = (R<sub>2</sub>+R<sub>3</sub>+R<sub>6</sub>+R<sub>7</sub>) mod 2<br>
+                    &nbsp;&nbsp;= (<span id="eq-b-sub">0+1+1+0</span>) mod 2 = <strong class="math-val" id="eq-b-res">0</strong><br><br>
+                    
+                    &alpha; = (R<sub>4</sub>+R<sub>5</sub>+R<sub>6</sub>+R<sub>7</sub>) mod 2<br>
+                    &nbsp;&nbsp;= (<span id="eq-a-sub">1+0+1+0</span>) mod 2 = <strong class="math-val" id="eq-a-res">0</strong>
+                </div>
+            </div>
+
+            <div class="step-box">
+                <h3>Locating the Error</h3>
+                <div class="helper-text">"The binary number &alpha;&beta;&gamma; then gives the subscript of the X<sub>i</sub> that is incorrect (if 0 there was no error)."</div>
+                
+                <div class="math-box" style="margin-top: 15px; text-align: center; font-size: 1.5rem;">
+                    &alpha;&beta;&gamma; = <span id="binary-syndrome" style="color: var(--highlight);">000</span><sub>2</sub>
+                    <br>
+                    &darr;<br>
+                    Index = <span id="decimal-syndrome" style="color: var(--highlight);">0</span>
+                </div>
+
+                <div id="correction-status" class="syndrome-result success">
+                    No errors detected in transmission.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let data = { 3: 1, 5: 0, 6: 1, 7: 0 };
+        let tx = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 };
+        let rx = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 };
+        let errors = new Set(); // Keep track of flipped bits
+
+        function toggleData(index) {
+            data[index] = data[index] === 1 ? 0 : 1;
+            updateSystem();
+        }
+
+        function flipBit(index) {
+            if (errors.has(index)) {
+                errors.delete(index);
+                rx[index] = tx[index];
+                document.getElementById('c' + index).classList.remove('flipped');
+            } else {
+                errors.add(index);
+                rx[index] = rx[index] === 1 ? 0 : 1;
+                document.getElementById('c' + index).classList.add('flipped');
+            }
+            updateReceiver();
+        }
+
+        function resetChannel() {
+            errors.clear();
+            for (let i = 1; i <= 7; i++) {
+                rx[i] = tx[i];
+                document.getElementById('c' + i).classList.remove('flipped');
+            }
+            updateReceiver();
+        }
+
+        function updateSystem() {
+            // Update UI for Data inputs
+            document.getElementById('d3').textContent = data[3];
+            document.getElementById('d5').textContent = data[5];
+            document.getElementById('d6').textContent = data[6];
+            document.getElementById('d7').textContent = data[7];
+
+            // Calculate Parity
+            tx[3] = data[3];
+            tx[5] = data[5];
+            tx[6] = data[6];
+            tx[7] = data[7];
+
+            tx[1] = (tx[3] + tx[5] + tx[7]) % 2;
+            tx[2] = (tx[3] + tx[6] + tx[7]) % 2;
+            tx[4] = (tx[5] + tx[6] + tx[7]) % 2;
+
+            // Update Math Equations (Sidebar)
+            document.getElementById('eq-x1-sub').textContent = `${tx[3]}+${tx[5]}+${tx[7]}`;
+            document.getElementById('eq-x1-res').textContent = tx[1];
+            
+            document.getElementById('eq-x2-sub').textContent = `${tx[3]}+${tx[6]}+${tx[7]}`;
+            document.getElementById('eq-x2-res').textContent = tx[2];
+            
+            document.getElementById('eq-x4-sub').textContent = `${tx[5]}+${tx[6]}+${tx[7]}`;
+            document.getElementById('eq-x4-res').textContent = tx[4];
+
+            // Update Transmitter Display
+            for (let i = 1; i <= 7; i++) {
+                document.getElementById('t' + i).textContent = tx[i];
+                // Pass to channel unless there is a persistent error
+                if (!errors.has(i)) {
+                    rx[i] = tx[i];
+                }
+            }
+            
+            updateReceiver();
+        }
+
+        function updateReceiver() {
+            // Update Channel UI
+            for (let i = 1; i <= 7; i++) {
+                document.getElementById('r' + i).textContent = rx[i];
+            }
+
+            // Calculate Syndrome
+            let gamma = (rx[1] + rx[3] + rx[5] + rx[7]) % 2;
+            let beta = (rx[2] + rx[3] + rx[6] + rx[7]) % 2;
+            let alpha = (rx[4] + rx[5] + rx[6] + rx[7]) % 2;
+
+            // Update Receiver Math
+            document.getElementById('eq-g-sub').textContent = `${rx[1]}+${rx[3]}+${rx[5]}+${rx[7]}`;
+            document.getElementById('eq-g-res').textContent = gamma;
+
+            document.getElementById('eq-b-sub').textContent = `${rx[2]}+${rx[3]}+${rx[6]}+${rx[7]}`;
+            document.getElementById('eq-b-res').textContent = beta;
+
+            document.getElementById('eq-a-sub').textContent = `${rx[4]}+${rx[5]}+${rx[6]}+${rx[7]}`;
+            document.getElementById('eq-a-res').textContent = alpha;
+
+            // Evaluate Syndrome
+            let errorIndex = (alpha * 4) + (beta * 2) + gamma;
+            document.getElementById('binary-syndrome').textContent = `${alpha}${beta}${gamma}`;
+            document.getElementById('decimal-syndrome').textContent = errorIndex;
+
+            let statusBox = document.getElementById('correction-status');
+            statusBox.className = 'syndrome-result'; // reset
+
+            if (errors.size === 0) {
+                statusBox.classList.add('success');
+                statusBox.innerHTML = "<strong>Result:</strong> No errors detected in transmission.";
+            } else if (errors.size === 1) {
+                statusBox.classList.add('danger');
+                statusBox.innerHTML = `<strong>Result:</strong> Error detected at R<sub>${errorIndex}</sub>! Math correctly identified the flipped bit.`;
+            } else {
+                statusBox.classList.add('warning');
+                statusBox.innerHTML = `<strong>Warning:</strong> You flipped ${errors.size} bits! The math points to R<sub>${errorIndex}</sub>, which is incorrect. The Hamming (7,4) code can only fix exactly ONE error.`;
+            }
+        }
+
+        // Initialize
+        updateSystem();
+
+    </script>
+</body>
+</html>
