@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEP & Typical Sequences (Theorems 3 & 4)</title>
+    <style>
+        :root {
+            --bg-color: #0f111a;
+            --panel-bg: #1a1d2d;
+            --text-main: #e2e2e2;
+            --text-muted: #8b92a5;
+            --highlight: #00d2ff;
+            --bar-color: #4caf50;
+            --entropy-color: #ff4b4b;
+            --border: #2e3246;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 440px;
+            background-color: var(--panel-bg);
+            padding: 25px;
+            box-sizing: border-box;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #main {
+            flex-grow: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+
+        h2, h3 { margin: 0; color: #fff; }
+        h2 { font-size: 1.3rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 1.1rem; color: var(--highlight); }
+
+        .control-group {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .slider-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        input[type=range] { width: 100%; accent-color: var(--highlight); cursor: pointer; }
+
+        .helper-text { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; line-height: 1.5; }
+
+        .math-box {
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            border-left: 4px solid var(--entropy-color);
+            margin-top: 10px;
+        }
+
+        .math-symbol { color: #fff; font-weight: bold; }
+        .math-val { color: var(--highlight); font-weight: bold;}
+
+        canvas {
+            background-color: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 100%;
+            flex-grow: 1;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            padding: 10px 0;
+            font-size: 0.9rem;
+            justify-content: center;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .color-box { width: 14px; height: 14px; border-radius: 3px; }
+        .color-line { width: 20px; height: 3px; }
+
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Asymptotic Equipartition (Sec. 7)</h2>
+        
+        <div class="control-group">
+            <h3>Binary Source Probability</h3>
+            <div class="helper-text">Probability (p) of generating a '1' instead of a '0'. A biased source (p &ne; 0.5) has a lower Entropy H.</div>
+            <div class="slider-row">
+                <div class="slider-header">
+                    <span>Probability (p)</span>
+                    <span id="val-p" class="math-val">0.80</span>
+                </div>
+                <input type="range" id="slider-p" min="0.05" max="0.95" step="0.01" value="0.80">
+            </div>
+            <div class="math-box" style="border-color: var(--highlight);">
+                <span class="math-symbol">H</span> = -p log<sub>2</sub>p - (1-p) log<sub>2</sub>(1-p)<br>
+                <span class="math-symbol">H</span> = <span id="eq-h" class="math-val">0.7219</span> bits/symbol
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Sequence Length (N)</h3>
+            <div class="helper-text">Number of symbols generated. As N grows, watch the probability mass collapse into the "Typical Set" exactly at the Entropy limit!</div>
+            <div class="slider-row">
+                <div class="slider-header">
+                    <span>Symbols (N)</span>
+                    <span id="val-n" class="math-val">10</span>
+                </div>
+                <input type="range" id="slider-n" min="2" max="150" step="1" value="10">
+            </div>
+        </div>
+
+        <div class="control-group" style="margin-top: auto;">
+            <h3 style="margin-bottom: 5px;">Theorems 3 & 4 (The AEP)</h3>
+            <div class="helper-text" style="color: #ccc;">
+                <p style="margin: 0 0 8px 0;">"Given any &epsilon; &gt; 0 and &delta; &gt; 0, we can find an N<sub>0</sub> such that the sequences of any length N &ge; N<sub>0</sub> fall into two classes... [The main class] all of whose members have probabilities satisfying the inequality: <strong style="color: var(--entropy-color);">| (log p<sup>-1</sup>)/N - H | &lt; &delta;</strong>"</p>
+                <p style="margin: 0;">This means that for large N, <strong>almost all sequences that actually occur</strong> have the exact same probability: <strong style="color: var(--highlight);">2<sup>-NH</sup></strong>. The number of these sequences is exactly <strong style="color: var(--highlight);">2<sup>NH</sup></strong>.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="main">
+        <div class="legend">
+            <div class="legend-item"><div class="color-box" style="background: var(--bar-color);"></div> Probability Mass of Sequence Group</div>
+            <div class="legend-item"><div class="color-line" style="background: var(--entropy-color); border-top: 2px dashed #fff; background: transparent;"></div> Source Entropy (H)</div>
+        </div>
+        
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script>
+        const sliderP = document.getElementById('slider-p');
+        const sliderN = document.getElementById('slider-n');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let p = 0.8;
+        let N = 10;
+        let H = 0;
+        let width, height;
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth - 2;
+            canvas.height = canvas.parentElement.clientHeight - 60;
+            width = canvas.width;
+            height = canvas.height;
+            updateMath();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        // Safe combinations for large N
+        function logChoose(n, k) {
+            if (k === 0 || k === n) return 0;
+            let res = 0;
+            for (let i = 1; i <= k; i++) {
+                res += Math.log(n - i + 1) - Math.log(i);
+            }
+            return res;
+        }
+
+        function updateMath() {
+            p = parseFloat(sliderP.value);
+            N = parseInt(sliderN.value);
+            
+            // 1. Calculate Entropy H
+            H = -p * Math.log2(p) - (1 - p) * Math.log2(1 - p);
+
+            // 2. Update UI
+            document.getElementById('val-p').textContent = p.toFixed(2);
+            document.getElementById('val-n').textContent = N;
+            document.getElementById('eq-h').textContent = H.toFixed(4);
+
+            drawGraph();
+        }
+
+        function drawGraph() {
+            ctx.clearRect(0, 0, width, height);
+
+            let padding = 50;
+            let graphW = width - 2 * padding;
+            let graphH = height - 2 * padding;
+            
+            // X Axis: -1/N log2 P(seq) -> Ranges from 0 to 1 (bits)
+            // Y Axis: Probability Mass -> Ranges from 0 to maxMass
+
+            // Calculate Data Points
+            let data = [];
+            let maxMass = 0;
+
+            for (let k = 0; k <= N; k++) {
+                // Prob of this specific sequence
+                let probSeqLog = k * Math.log(p) + (N - k) * Math.log(1 - p);
+                let xVal = -(probSeqLog / Math.LN2) / N; 
+                
+                // Total probability mass of all sequences with k ones
+                // Mass = Choose(N,k) * p^k * (1-p)^(N-k)
+                let massLog = logChoose(N, k) + probSeqLog;
+                let mass = Math.exp(massLog);
+                
+                if (mass > maxMass) maxMass = mass;
+
+                data.push({ x: xVal, y: mass });
+            }
+
+            // Set dynamic Y scale but min max is 0.1 to avoid jumpiness at start
+            let maxY = Math.max(0.2, maxMass * 1.2);
+
+            const mapX = (x) => padding + x * graphW; // X is from 0 to 1
+            const mapY = (y) => height - padding - (y / maxY) * graphH;
+
+            // --- Draw Grid & Axes ---
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            // X Axis (0 to 1 bits)
+            ctx.beginPath(); ctx.moveTo(padding, height - padding); ctx.lineTo(width - padding, height - padding); ctx.stroke();
+            ctx.fillStyle = '#888'; ctx.font = '12px monospace'; ctx.textAlign = 'center';
+            for (let i = 0; i <= 10; i++) {
+                let x = i / 10;
+                let px = mapX(x);
+                ctx.fillText(x.toFixed(1), px, height - padding + 20);
+                if(i > 0 && i < 10) {
+                    ctx.beginPath(); ctx.moveTo(px, height - padding); ctx.lineTo(px, padding); ctx.stroke();
+                }
+            }
+            ctx.fillText("- (1/N) log₂ P(seq)  [Bits]", width / 2, height - 10);
+
+            // Y Axis
+            ctx.beginPath(); ctx.moveTo(padding, height - padding); ctx.lineTo(padding, padding); ctx.stroke();
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            let ySteps = 5;
+            for (let i = 0; i <= ySteps; i++) {
+                let y = (i / ySteps) * maxY;
+                let py = mapY(y);
+                ctx.fillText((y * 100).toFixed(0) + "%", padding - 10, py);
+            }
+
+            // --- Draw Target Line (Entropy H) ---
+            let hPx = mapX(H);
+            ctx.beginPath();
+            ctx.strokeStyle = 'var(--entropy-color)';
+            ctx.setLineDash([5, 5]);
+            ctx.lineWidth = 2;
+            ctx.moveTo(hPx, height - padding);
+            ctx.lineTo(hPx, padding);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.fillStyle = 'var(--entropy-color)';
+            ctx.textAlign = 'center';
+            ctx.fillText("H = " + H.toFixed(3), hPx, padding - 10);
+
+            // --- Draw Data Bars ---
+            ctx.fillStyle = 'rgba(76, 175, 80, 0.7)'; // bar-color
+            ctx.strokeStyle = '#4caf50';
+            ctx.lineWidth = 2;
+
+            let barWidth = Math.max(2, graphW / (N * 2));
+
+            data.forEach(pt => {
+                if (pt.y > 0.0001) {
+                    let px = mapX(pt.x);
+                    let py = mapY(pt.y);
+                    let h = (height - padding) - py;
+                    
+                    ctx.fillRect(px - barWidth/2, py, barWidth, h);
+                    ctx.strokeRect(px - barWidth/2, py, barWidth, h);
+                }
+            });
+        }
+
+        sliderP.addEventListener('input', updateMath);
+        sliderN.addEventListener('input', updateMath);
+
+        setTimeout(resizeCanvas, 100);
+    </script>
+</body>
+</html>
