@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate-Distortion Theory (Theorem 22)</title>
+    <style>
+        :root {
+            --bg-color: #0f111a;
+            --panel-bg: #1a1d2d;
+            --text-main: #e2e2e2;
+            --text-muted: #8b92a5;
+            --highlight: #00d2ff;
+            --curve-color: #ff9d00;
+            --point-color: #ff4b4b;
+            --border: #2e3246;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 440px;
+            background-color: var(--panel-bg);
+            padding: 25px;
+            box-sizing: border-box;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #main {
+            flex-grow: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+
+        h2, h3 { margin: 0; color: #fff; }
+        h2 { font-size: 1.3rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 1.1rem; color: var(--highlight); }
+
+        .control-group {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .slider-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        input[type=range] { width: 100%; cursor: pointer; }
+        #slider-n { accent-color: var(--point-color); }
+        #slider-q { accent-color: var(--highlight); }
+
+        .helper-text { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; line-height: 1.5; }
+
+        .math-box {
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            border-left: 4px solid var(--curve-color);
+            margin-top: 10px;
+        }
+
+        .math-symbol { color: #fff; font-weight: bold; }
+        .math-val { color: var(--highlight); font-weight: bold;}
+
+        canvas {
+            background-color: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 100%;
+            flex-grow: 1;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            padding: 10px 0;
+            font-size: 0.9rem;
+            justify-content: center;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .color-box { width: 14px; height: 14px; border-radius: 3px; }
+        .color-line { width: 20px; height: 3px; }
+
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Rate-Distortion Theory</h2>
+        
+        <div class="control-group">
+            <h3>Source Parameters</h3>
+            <div class="slider-row">
+                <div class="slider-header">
+                    <span>Source Power (Q)</span>
+                    <span id="val-q" class="math-val">100 W</span>
+                </div>
+                <input type="range" id="slider-q" min="10" max="200" step="10" value="100">
+            </div>
+            <div class="slider-row">
+                <div class="slider-header">
+                    <span>Bandwidth (W<sub>1</sub>)</span>
+                    <span id="val-w" class="math-val">1000 Hz</span>
+                </div>
+                <input type="range" id="slider-w" min="500" max="5000" step="500" value="1000">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Fidelity Criterion (Theorem 22)</h3>
+            <div class="helper-text">Set the accepted "distortion" level (N). As you allow more mean square error, the required transmission rate plummets.</div>
+            <div class="slider-row">
+                <div class="slider-header">
+                    <span style="color: var(--point-color);">Allowed Error (N)</span>
+                    <span id="val-n" class="math-val" style="color: var(--point-color);">10 W</span>
+                </div>
+                <input type="range" id="slider-n" min="1" max="100" step="1" value="10">
+            </div>
+            
+            <div class="math-box">
+                <span class="math-symbol">R</span> = W<sub>1</sub> log<sub>2</sub> (Q / N)<br>
+                <span class="math-symbol">R</span> = <span id="eq-w">1000</span> &middot; log<sub>2</sub> (<span id="eq-q">100</span> / <span id="eq-n" style="color: var(--point-color);">10</span>)<br>
+                <span class="math-symbol">R</span> = <strong id="eq-r" style="font-size: 1.3rem; color: #fff;">3321.9</strong> <span class="math-symbol">bits/sec</span>
+            </div>
+        </div>
+
+        <div class="control-group" style="margin-top: auto;">
+            <div class="helper-text" style="color: #ccc;">
+                <p style="margin: 0 0 8px 0;">"Any evaluation of fidelity must correspond mathematically to an operation applied to P(x,y)... The rate for a white noise source of power Q and band W<sub>1</sub> relative to an R.M.S. measure of fidelity is <strong>R = W<sub>1</sub> log (Q/N)</strong>."</p>
+                <p style="margin: 0;">This established the theoretical foundation for all modern lossy compression algorithms (like JPEG and MP3), proving exactly how much data can be discarded for a given tolerance of distortion.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="main">
+        <div class="legend">
+            <div class="legend-item"><div class="color-line" style="background: var(--curve-color);"></div> R(N) Curve</div>
+            <div class="legend-item"><div class="color-box" style="background: var(--point-color); border-radius: 50%;"></div> Current Operation Point</div>
+        </div>
+        
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script>
+        const sliderQ = document.getElementById('slider-q');
+        const sliderW = document.getElementById('slider-w');
+        const sliderN = document.getElementById('slider-n');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let Q = 100;
+        let W = 1000;
+        let N = 10;
+        let R = 0;
+        let width, height;
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth - 2;
+            canvas.height = canvas.parentElement.clientHeight - 60;
+            width = canvas.width;
+            height = canvas.height;
+            updateMath();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function updateMath() {
+            Q = parseInt(sliderQ.value);
+            W = parseInt(sliderW.value);
+            N = parseInt(sliderN.value);
+            
+            // Constrain N to not exceed Q
+            if (N > Q) {
+                N = Q;
+                sliderN.value = N;
+            }
+
+            // R = W * log2(Q/N)
+            R = W * Math.log2(Q / N);
+            if (R < 0) R = 0;
+
+            // UI
+            document.getElementById('val-q').textContent = Q + " W";
+            document.getElementById('val-w').textContent = W + " Hz";
+            document.getElementById('val-n').textContent = N + " W";
+            
+            document.getElementById('eq-q').textContent = Q;
+            document.getElementById('eq-w').textContent = W;
+            document.getElementById('eq-n').textContent = N;
+            document.getElementById('eq-r').textContent = R.toFixed(1);
+
+            sliderN.max = Q; // Dynamically update max allowed error to source power
+
+            drawGraph();
+        }
+
+        function drawGraph() {
+            ctx.clearRect(0, 0, width, height);
+
+            let padding = 60;
+            let graphW = width - 2 * padding;
+            let graphH = height - 2 * padding;
+            
+            // X Axis: N (Allowed Error) from 0 to max Q (200)
+            // Y Axis: Rate (bits/sec) from 0 to Max Rate (when N=1)
+            let maxN = 200; 
+            let maxRate = 5000 * Math.log2(200 / 1); // absolute max possible on sliders
+
+            const mapX = (x) => padding + (x / maxN) * graphW;
+            const mapY = (y) => height - padding - (y / maxRate) * graphH;
+
+            // --- Draw Grid & Axes ---
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            // X Axis (Error N)
+            ctx.beginPath(); ctx.moveTo(padding, height - padding); ctx.lineTo(width - padding, height - padding); ctx.stroke();
+            ctx.fillStyle = '#888'; ctx.font = '12px monospace'; ctx.textAlign = 'center';
+            for (let i = 0; i <= maxN; i+=20) {
+                let px = mapX(i);
+                ctx.fillText(i, px, height - padding + 20);
+                if(i > 0) {
+                    ctx.beginPath(); ctx.moveTo(px, height - padding); ctx.lineTo(px, padding); ctx.stroke();
+                }
+            }
+            ctx.fillText("Allowed Mean Square Error (N)", width / 2, height - 10);
+
+            // Y Axis (Rate)
+            ctx.beginPath(); ctx.moveTo(padding, height - padding); ctx.lineTo(padding, padding); ctx.stroke();
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            let ySteps = 5;
+            for (let i = 0; i <= ySteps; i++) {
+                let y = (i / ySteps) * maxRate;
+                let py = mapY(y);
+                ctx.fillText(Math.round(y), padding - 10, py);
+            }
+            
+            // Y Axis Label (rotated)
+            ctx.save();
+            ctx.translate(20, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.textAlign = 'center';
+            ctx.fillText("Required Rate R (bits/sec)", 0, 0);
+            ctx.restore();
+
+            // --- Draw Rate-Distortion Curve R(N) ---
+            ctx.beginPath();
+            ctx.strokeStyle = 'var(--curve-color)';
+            ctx.lineWidth = 3;
+            ctx.lineJoin = 'round';
+            
+            let first = true;
+            for (let x = 1; x <= Q; x++) {
+                let y = W * Math.log2(Q / x);
+                let px = mapX(x);
+                let py = mapY(y);
+                
+                if (first) { ctx.moveTo(px, py); first = false; }
+                else { ctx.lineTo(px, py); }
+            }
+            ctx.stroke();
+
+            // Draw line to zero after Q
+            if (Q < maxN) {
+                ctx.beginPath();
+                ctx.strokeStyle = '#555';
+                ctx.setLineDash([5, 5]);
+                ctx.lineWidth = 2;
+                ctx.moveTo(mapX(Q), mapY(0));
+                ctx.lineTo(mapX(maxN), mapY(0));
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // --- Draw Current Point ---
+            let px0 = mapX(N);
+            let py0 = mapY(R);
+            
+            // Drop lines
+            ctx.beginPath();
+            ctx.strokeStyle = 'var(--point-color)';
+            ctx.setLineDash([4, 4]);
+            ctx.moveTo(px0, py0);
+            ctx.lineTo(px0, height - padding);
+            ctx.moveTo(px0, py0);
+            ctx.lineTo(padding, py0);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Dot
+            ctx.beginPath();
+            ctx.fillStyle = 'var(--point-color)';
+            ctx.arc(px0, py0, 7, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        sliderQ.addEventListener('input', updateMath);
+        sliderW.addEventListener('input', updateMath);
+        sliderN.addEventListener('input', updateMath);
+
+        setTimeout(resizeCanvas, 100);
+    </script>
+</body>
+</html>
