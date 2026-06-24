@@ -1,0 +1,8 @@
+[
+  {
+    "concept": "Markov Chains",
+    "file": "cs/markov-chains.html",
+    "tags": ["probability", "stochastic"],
+    "description": "Interactive state transition diagram with probability sliders"
+  }
+]
