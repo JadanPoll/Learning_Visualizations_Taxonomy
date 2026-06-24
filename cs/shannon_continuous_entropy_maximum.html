@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Continuous Entropy & Gaussian Maximum</title>
+    <style>
+        :root {
+            --bg-color: #0f111a;
+            --panel-bg: #1a1d2d;
+            --text-main: #e2e2e2;
+            --text-muted: #8b92a5;
+            --highlight: #00d2ff;
+            --color-gauss: #ff4b4b;
+            --color-unif: #4caf50;
+            --border: #2e3246;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 450px;
+            background-color: var(--panel-bg);
+            padding: 25px;
+            box-sizing: border-box;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #main {
+            flex-grow: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+
+        h2, h3 { margin: 0; color: #fff; }
+        h2 { font-size: 1.3rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 1.1rem; color: var(--highlight); }
+
+        .control-group {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .slider-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        input[type=range] { width: 100%; accent-color: var(--highlight); cursor: pointer; }
+
+        .helper-text { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; line-height: 1.4; }
+
+        .math-box {
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            border-left: 4px solid var(--border);
+            margin-top: 10px;
+        }
+        
+        .math-box.gauss { border-color: var(--color-gauss); }
+        .math-box.unif { border-color: var(--color-unif); }
+
+        .math-symbol { color: #fff; font-weight: bold; }
+        .math-val { font-weight: bold; font-size: 1.1rem; }
+        .gauss-val { color: var(--color-gauss); }
+        .unif-val { color: var(--color-unif); }
+
+        canvas {
+            background-color: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 100%;
+            flex-grow: 1;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            padding: 10px 0;
+            font-size: 0.9rem;
+            justify-content: center;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .color-box { width: 14px; height: 14px; border-radius: 3px; }
+
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Continuous Entropy (Sec. 20)</h2>
+        
+        <div class="control-group">
+            <h3>Average Signal Power</h3>
+            <div class="helper-text">Set the fixed Variance (&sigma;<sup>2</sup>). Both distributions below will be forced to contain this exact amount of power (spread).</div>
+            
+            <div class="slider-row">
+                <div class="slider-header">
+                    <span>Variance (&sigma;<sup>2</sup>)</span>
+                    <span id="val-var" style="font-family: monospace; color: var(--highlight);">4.00</span>
+                </div>
+                <input type="range" id="slider-var" min="1" max="25" step="0.5" value="4">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Gaussian Distribution</h3>
+            <div class="math-box gauss">
+                H = &int; -p(x) log<sub>2</sub> p(x) dx<br>
+                H<sub>G</sub> = log<sub>2</sub>(&radic;<span style="text-decoration: overline;">2&pi;e &middot; &sigma;<sup>2</sup></span>)<br>
+                H<sub>G</sub> = log<sub>2</sub>(&radic;<span style="text-decoration: overline;">17.079 &middot; <span class="var-text">4.00</span></span>)<br>
+                H<sub>G</sub> = <span id="eq-hg" class="math-val gauss-val">3.047</span> <span class="math-symbol">bits</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Uniform Distribution</h3>
+            <div class="math-box unif">
+                H = &int; -p(x) log<sub>2</sub> p(x) dx<br>
+                H<sub>U</sub> = log<sub>2</sub>(&radic;<span style="text-decoration: overline;">12 &middot; &sigma;<sup>2</sup></span>)<br>
+                H<sub>U</sub> = log<sub>2</sub>(&radic;<span style="text-decoration: overline;">12 &middot; <span class="var-text">4.00</span></span>)<br>
+                H<sub>U</sub> = <span id="eq-hu" class="math-val unif-val">2.792</span> <span class="math-symbol">bits</span>
+            </div>
+        </div>
+
+        <div class="control-group" style="margin-top: auto;">
+            <div class="helper-text">
+                <strong style="color: #fff;">Conclusion:</strong> For any given power &sigma;<sup>2</sup>, the Gaussian distribution always carries exactly <strong style="color: var(--highlight);">0.254 bits</strong> more entropy than a Uniform distribution. It is the absolute maximum entropy shape.
+            </div>
+        </div>
+    </div>
+
+    <div id="main">
+        <div class="legend">
+            <div class="legend-item"><div class="color-box" style="background: rgba(255, 75, 75, 0.4); border: 2px solid var(--color-gauss);"></div> Gaussian (Normal)</div>
+            <div class="legend-item"><div class="color-box" style="background: rgba(76, 175, 80, 0.4); border: 2px solid var(--color-unif);"></div> Uniform (Box)</div>
+        </div>
+        
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script>
+        const sliderVar = document.getElementById('slider-var');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let variance = 4;
+        let width, height;
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth - 2;
+            canvas.height = canvas.parentElement.clientHeight - 60;
+            width = canvas.width;
+            height = canvas.height;
+            updateMath();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function updateMath() {
+            variance = parseFloat(sliderVar.value);
+            
+            // 1. Update Labels
+            document.getElementById('val-var').textContent = variance.toFixed(2);
+            document.querySelectorAll('.var-text').forEach(el => el.textContent = variance.toFixed(2));
+
+            // 2. Calculate Entropies
+            // H_G = log2(sqrt(2 * PI * e * var))
+            let hg = Math.log2(Math.sqrt(2 * Math.PI * Math.E * variance));
+            // H_U = log2(sqrt(12 * var))
+            let hu = Math.log2(Math.sqrt(12 * variance));
+
+            document.getElementById('eq-hg').textContent = hg.toFixed(3);
+            document.getElementById('eq-hu').textContent = hu.toFixed(3);
+
+            drawGraph();
+        }
+
+        function drawGraph() {
+            ctx.clearRect(0, 0, width, height);
+
+            let centerX = width / 2;
+            let groundY = height - 40;
+            
+            // Graph bounds for scaling
+            let minX = -10;
+            let maxX = 10;
+            // Max height is when variance is minimum (var = 1).
+            // Max Gaussian PDF is 1/sqrt(2PI*1) ≈ 0.398.
+            let maxY = 0.5;
+
+            const mapX = (x) => centerX + (x / maxX) * (width / 2 - 40);
+            const mapY = (y) => groundY - (y / maxY) * (height - 80);
+
+            // Draw Grid & Axes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            // X Axis
+            ctx.beginPath(); ctx.moveTo(20, groundY); ctx.lineTo(width - 20, groundY); ctx.stroke();
+            ctx.fillStyle = '#888'; ctx.font = '12px monospace'; ctx.textAlign = 'center';
+            for(let x = minX; x <= maxX; x+=2) {
+                let px = mapX(x);
+                ctx.fillText(x, px, groundY + 20);
+                ctx.beginPath(); ctx.moveTo(px, groundY); ctx.lineTo(px, groundY+5); ctx.stroke();
+            }
+
+            // Y Axis (Center)
+            ctx.beginPath(); ctx.moveTo(centerX, groundY); ctx.lineTo(centerX, 20); ctx.stroke();
+
+            // Math Constants
+            let stdDev = Math.sqrt(variance);
+
+            // --- 1. Draw Uniform Distribution ---
+            // Width is sqrt(12 * variance) = 2 * a -> a = sqrt(3 * variance)
+            let a = Math.sqrt(3 * variance);
+            let unifHeight = 1 / (2 * a);
+            
+            let uPx1 = mapX(-a);
+            let uPx2 = mapX(a);
+            let uPy = mapY(unifHeight);
+
+            // Fill Uniform
+            ctx.fillStyle = 'rgba(76, 175, 80, 0.2)'; // unif color low opacity
+            ctx.fillRect(uPx1, uPy, uPx2 - uPx1, groundY - uPy);
+            
+            // Stroke Uniform
+            ctx.strokeStyle = '#4caf50';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(uPx1, groundY);
+            ctx.lineTo(uPx1, uPy);
+            ctx.lineTo(uPx2, uPy);
+            ctx.lineTo(uPx2, groundY);
+            ctx.stroke();
+
+            // --- 2. Draw Gaussian Distribution ---
+            ctx.fillStyle = 'rgba(255, 75, 75, 0.3)'; // gauss color low opacity
+            ctx.strokeStyle = '#ff4b4b';
+            ctx.lineWidth = 3;
+            
+            ctx.beginPath();
+            ctx.moveTo(mapX(minX), groundY);
+            
+            let path = new Path2D();
+            path.moveTo(mapX(minX), groundY);
+            
+            for (let px = 20; px <= width - 20; px++) {
+                let x = ((px - centerX) / (width / 2 - 40)) * maxX;
+                // PDF: p(x) = (1 / (sigma * sqrt(2PI))) * exp(-0.5 * (x/sigma)^2)
+                let p_x = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow(x / stdDev, 2));
+                let py = mapY(p_x);
+                path.lineTo(px, py);
+            }
+            path.lineTo(mapX(maxX), groundY);
+            path.closePath();
+
+            ctx.fill(path);
+            ctx.stroke(path);
+        }
+
+        sliderVar.addEventListener('input', updateMath);
+
+        setTimeout(resizeCanvas, 100);
+    </script>
+</body>
+</html>
