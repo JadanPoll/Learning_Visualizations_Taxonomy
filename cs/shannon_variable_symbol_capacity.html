@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Variable Symbol Capacity (Characteristic Equation)</title>
+    <style>
+        :root {
+            --bg-color: #0f111a;
+            --panel-bg: #1a1d2d;
+            --text-main: #e2e2e2;
+            --text-muted: #8b92a5;
+            --highlight: #00d2ff;
+            --color-a: #ff9d00;
+            --color-b: #4caf50;
+            --color-root: #ff4b4b;
+            --border: #2e3246;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 420px;
+            background-color: var(--panel-bg);
+            padding: 25px;
+            box-sizing: border-box;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #main {
+            flex-grow: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+
+        h2, h3 { margin: 0; color: #fff; }
+        h2 { font-size: 1.3rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 1.1rem; color: var(--highlight); }
+
+        .control-group {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .slider-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        input[type=range] { width: 100%; cursor: pointer; }
+        input[type=range].slider-a { accent-color: var(--color-a); }
+        input[type=range].slider-b { accent-color: var(--color-b); }
+
+        .helper-text { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; line-height: 1.4; }
+
+        .math-box {
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 1rem;
+            line-height: 1.8;
+            border-left: 4px solid var(--highlight);
+            margin-top: 10px;
+        }
+
+        .math-symbol { color: #fff; font-weight: bold; }
+        .math-val { color: var(--highlight); }
+
+        canvas {
+            background-color: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 100%;
+            flex-grow: 1;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            padding: 10px 0;
+            font-size: 0.9rem;
+            justify-content: center;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .color-line { width: 20px; height: 3px; border-radius: 2px; }
+        .dot-box { width: 12px; height: 12px; border-radius: 50%; }
+
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Symbol Capacity (Sec. 1)</h2>
+        
+        <div class="control-group">
+            <h3>Symbol Durations</h3>
+            <div class="helper-text">Set the time (in arbitrary units) it takes to transmit each symbol. Example: Telegraphy (Dot = 1, Dash = 3).</div>
+            
+            <div class="slider-row">
+                <div class="slider-header">
+                    <span>Symbol A (<span style="color: var(--color-a);">t<sub>1</sub></span>)</span>
+                    <span id="val-t1" style="color: var(--color-a); font-family: monospace;">1 unit</span>
+                </div>
+                <input type="range" id="slider-t1" class="slider-a" min="1" max="10" step="1" value="1">
+            </div>
+
+            <div class="slider-row">
+                <div class="slider-header">
+                    <span>Symbol B (<span style="color: var(--color-b);">t<sub>2</sub></span>)</span>
+                    <span id="val-t2" style="color: var(--color-b); font-family: monospace;">3 units</span>
+                </div>
+                <input type="range" id="slider-t2" class="slider-b" min="1" max="10" step="1" value="3">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Characteristic Equation</h3>
+            <div class="helper-text">Find the real root X<sub>0</sub> where the sum of X<sup>-t</sup> equals 1.</div>
+            <div class="math-box">
+                <span class="math-symbol">f(X)</span> = X<sup>-t<sub>1</sub></sup> + X<sup>-t<sub>2</sub></sup><br>
+                <span class="math-symbol">1</span> = X<sup>-<span id="eq-t1" style="color: var(--color-a);">1</span></sup> + X<sup>-<span id="eq-t2" style="color: var(--color-b);">3</span></sup><br>
+                <span class="math-symbol">&rarr; X<sub>0</sub></span> = <span id="eq-x0" class="math-val" style="color: var(--color-root);">1.4656</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Maximum Channel Capacity (C)</h3>
+            <div class="helper-text">The absolute limit of bits per unit time this system can transmit.</div>
+            <div class="math-box">
+                <span class="math-symbol">C</span> = log<sub>2</sub>(X<sub>0</sub>)<br>
+                <span class="math-symbol">C</span> = log<sub>2</sub>(<span id="eq-x0-2" class="math-val" style="color: var(--color-root);">1.4656</span>)<br>
+                <span class="math-symbol">C</span> = <strong id="eq-c" style="font-size: 1.3rem; color: #fff;">0.551</strong> <span class="math-symbol">bits/unit</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="main">
+        <div class="legend">
+            <div class="legend-item"><div class="color-line" style="background: var(--highlight);"></div> Curve: f(X) = X<sup>-t1</sup> + X<sup>-t2</sup></div>
+            <div class="legend-item"><div class="color-line" style="background: #fff; border-top: 1px dashed #fff; background: transparent;"></div> Target: y = 1</div>
+            <div class="legend-item"><div class="dot-box" style="background: var(--color-root);"></div> Root (X<sub>0</sub>)</div>
+        </div>
+        
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script>
+        const sliderT1 = document.getElementById('slider-t1');
+        const sliderT2 = document.getElementById('slider-t2');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let t1 = 1, t2 = 3;
+        let width, height;
+        let x0 = 1;
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth - 2;
+            canvas.height = canvas.parentElement.clientHeight - 60;
+            width = canvas.width;
+            height = canvas.height;
+            updateMath();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        // Bisection method to find the root where X^-t1 + X^-t2 = 1
+        function findRoot(t1, t2) {
+            let low = 1.0001; 
+            let high = 10.0;
+            for(let i=0; i<50; i++) {
+                let mid = (low + high) / 2;
+                let val = Math.pow(mid, -t1) + Math.pow(mid, -t2);
+                if (val > 1) low = mid; // Curve is decreasing, so if val > 1, root is to the right
+                else high = mid;
+            }
+            return (low + high) / 2;
+        }
+
+        function updateMath() {
+            t1 = parseInt(sliderT1.value);
+            t2 = parseInt(sliderT2.value);
+
+            // Update UI Labels
+            document.getElementById('val-t1').textContent = `${t1} unit${t1>1?'s':''}`;
+            document.getElementById('val-t2').textContent = `${t2} unit${t2>1?'s':''}`;
+            document.getElementById('eq-t1').textContent = t1;
+            document.getElementById('eq-t2').textContent = t2;
+
+            // Solve and calculate C
+            x0 = findRoot(t1, t2);
+            let C = Math.log2(x0);
+
+            // Update Equations
+            let x0Str = x0.toFixed(4);
+            document.getElementById('eq-x0').textContent = x0Str;
+            document.getElementById('eq-x0-2').textContent = x0Str;
+            document.getElementById('eq-c').textContent = C.toFixed(3);
+
+            drawGraph();
+        }
+
+        function drawGraph() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Graph bounds
+            let minX = 0.5;
+            let maxX = Math.max(4.0, x0 + 1.0); // Dynamic X axis scaling
+            let minY = 0;
+            let maxY = 3.0; // Dynamic Y axis
+
+            // Mapping functions
+            const mapX = (x) => ((x - minX) / (maxX - minX)) * (width - 40) + 20;
+            const mapY = (y) => height - 20 - ((y - minY) / (maxY - minY)) * (height - 40);
+
+            // 1. Draw Grid & Axes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            // X Axis marks
+            ctx.fillStyle = '#888';
+            ctx.font = '12px monospace';
+            ctx.textAlign = 'center';
+            for (let x = Math.ceil(minX); x <= maxX; x++) {
+                let px = mapX(x);
+                ctx.beginPath(); ctx.moveTo(px, mapY(0)); ctx.lineTo(px, mapY(maxY)); ctx.stroke();
+                ctx.fillText(x, px, mapY(0) + 15);
+            }
+            
+            // Y Axis marks
+            ctx.textAlign = 'right';
+            for (let y = 0; y <= maxY; y++) {
+                let py = mapY(y);
+                ctx.beginPath(); ctx.moveTo(mapX(minX), py); ctx.lineTo(mapX(maxX), py); ctx.stroke();
+                ctx.fillText(y, mapX(minX) - 5, py + 4);
+            }
+
+            // 2. Draw Target Line y = 1
+            ctx.beginPath();
+            ctx.strokeStyle = '#fff';
+            ctx.setLineDash([5, 5]);
+            ctx.lineWidth = 2;
+            ctx.moveTo(mapX(minX), mapY(1));
+            ctx.lineTo(mapX(maxX), mapY(1));
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 3. Draw the Function f(X) = X^-t1 + X^-t2
+            ctx.beginPath();
+            ctx.strokeStyle = '#00d2ff'; // highlight
+            ctx.lineWidth = 3;
+            ctx.lineJoin = 'round';
+            
+            let first = true;
+            for (let px = 20; px <= width - 20; px++) {
+                let x = minX + ((px - 20) / (width - 40)) * (maxX - minX);
+                if (x <= 1.01 && t1 > 0 && t2 > 0) continue; // Prevent infinity asymptote explosion visually
+
+                let y = Math.pow(x, -t1) + Math.pow(x, -t2);
+                let py = mapY(y);
+                
+                // Keep within visual bounds to prevent crazy drawing
+                if (y > maxY + 1) continue; 
+
+                if (first) { ctx.moveTo(px, py); first = false; }
+                else { ctx.lineTo(px, py); }
+            }
+            ctx.stroke();
+
+            // 4. Draw Intersection Root Point (X0)
+            let px0 = mapX(x0);
+            let py0 = mapY(1);
+            
+            // Drop line
+            ctx.beginPath();
+            ctx.strokeStyle = '#ff4b4b'; // root color
+            ctx.setLineDash([3, 3]);
+            ctx.moveTo(px0, py0);
+            ctx.lineTo(px0, mapY(0));
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Dot
+            ctx.beginPath();
+            ctx.fillStyle = '#ff4b4b';
+            ctx.arc(px0, py0, 6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        sliderT1.addEventListener('input', updateMath);
+        sliderT2.addEventListener('input', updateMath);
+
+        setTimeout(resizeCanvas, 100);
+    </script>
+</body>
+</html>
