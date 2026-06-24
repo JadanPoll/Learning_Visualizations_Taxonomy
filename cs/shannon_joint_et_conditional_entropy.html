@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joint & Conditional Entropy (Information Diagram)</title>
+    <style>
+        :root {
+            --bg-color: #0f111a;
+            --panel-bg: #1a1d2d;
+            --text-main: #e2e2e2;
+            --text-muted: #8b92a5;
+            --highlight: #00d2ff;
+            --color-x: #4caf50;
+            --color-y: #ff9d00;
+            --color-xy: #9c27b0;
+            --color-mutual: #00d2ff;
+            --border: #2e3246;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 420px;
+            background-color: var(--panel-bg);
+            padding: 25px;
+            box-sizing: border-box;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #main {
+            flex-grow: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        h2, h3 { margin: 0; color: #fff; }
+        h2 { font-size: 1.3rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 1.1rem; color: var(--highlight); margin-bottom: 10px; }
+
+        .control-group {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .slider-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        input[type=range] { width: 100%; accent-color: var(--highlight); cursor: pointer; }
+
+        .helper-text { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; line-height: 1.4; }
+
+        /* Information Diagram Styles */
+        .diagram-container {
+            width: 100%;
+            height: 200px;
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            position: relative;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .info-bar-wrapper {
+            width: 90%;
+            height: 100px;
+            display: flex;
+            position: relative;
+        }
+
+        .bar-segment {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: monospace;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #fff;
+            transition: width 0.3s ease;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .bar-x-given-y { background-color: var(--color-x); opacity: 0.8; border-radius: 8px 0 0 8px; }
+        .bar-mutual { background-color: var(--color-mutual); opacity: 0.9; }
+        .bar-y-given-x { background-color: var(--color-y); opacity: 0.8; border-radius: 0 8px 8px 0; }
+
+        .math-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .math-card {
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--highlight);
+            font-family: "Courier New", Courier, monospace;
+        }
+
+        .math-card.x { border-color: var(--color-x); }
+        .math-card.y { border-color: var(--color-y); }
+        .math-card.xy { border-color: var(--color-xy); }
+        .math-card.mutual { border-color: var(--color-mutual); }
+
+        .math-title { font-weight: bold; font-family: sans-serif; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;}
+        .math-eq { font-size: 1.1rem; color: #fff; }
+        .math-val { color: var(--highlight); margin-top: 5px; display: block;}
+
+        .bracket-top, .bracket-bottom {
+            position: absolute;
+            border: 2px solid #fff;
+            height: 15px;
+            transition: width 0.3s ease, left 0.3s ease;
+        }
+        .bracket-top { border-bottom: none; top: -20px; }
+        .bracket-bottom { border-top: none; bottom: -20px; }
+        .bracket-label {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        .bracket-top .bracket-label { top: -25px; }
+        .bracket-bottom .bracket-label { bottom: -25px; }
+
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Joint Entropy (Sec. 6)</h2>
+        
+        <div class="control-group">
+            <h3>Binary Symmetric Channel</h3>
+            <div class="helper-text">Configure a theoretical noisy channel to generate overlapping variables X (Input) and Y (Output).</div>
+            
+            <div class="slider-row">
+                <div class="slider-header">
+                    <span>P(x=1)</span>
+                    <span id="val-px">0.50</span>
+                </div>
+                <input type="range" id="slider-px" min="1" max="99" value="50">
+                <div class="helper-text">Probability of sending a '1' instead of a '0'. Changes the source entropy H(x).</div>
+            </div>
+
+            <div class="slider-row">
+                <div class="slider-header">
+                    <span>Noise / Error Prob (q)</span>
+                    <span id="val-q">0.10</span>
+                </div>
+                <input type="range" id="slider-q" min="1" max="50" value="10">
+                <div class="helper-text">Probability the channel flips a bit. Controls how "entangled" X and Y are.</div>
+            </div>
+        </div>
+        
+        <div class="control-group" style="margin-top: auto;">
+            <div class="helper-text" style="font-style: italic;">
+                "The uncertainty of a joint event is less than or equal to the sum of the individual uncertainties."<br><br>
+                H(x,y) &le; H(x) + H(y)
+            </div>
+        </div>
+    </div>
+
+    <div id="main">
+        <h3>The Information Diagram</h3>
+        <p class="helper-text" style="margin-top: 0;">This bar chart maps exactly to Shannon's equations. The total width is the Joint Entropy H(x,y). The inner segments show the Equivocation H<sub>y</sub>(x), Mutual Information R, and Noise Entropy H<sub>x</sub>(y).</p>
+        
+        <div class="diagram-container">
+            <div class="info-bar-wrapper" id="info-wrapper">
+                
+                <!-- Bracket for H(x) -->
+                <div class="bracket-top" id="bracket-x" style="border-color: var(--color-x);">
+                    <div class="bracket-label" style="color: var(--color-x);">H(x)</div>
+                </div>
+                
+                <!-- Bracket for H(y) -->
+                <div class="bracket-bottom" id="bracket-y" style="border-color: var(--color-y);">
+                    <div class="bracket-label" style="color: var(--color-y);">H(y)</div>
+                </div>
+
+                <div class="bar-segment bar-x-given-y" id="bar-equivocation">
+                    H<sub>y</sub>(x)
+                </div>
+                <div class="bar-segment bar-mutual" id="bar-mutual">
+                    R
+                </div>
+                <div class="bar-segment bar-y-given-x" id="bar-noise">
+                    H<sub>x</sub>(y)
+                </div>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 10px;">Calculated Entropies</h3>
+        <div class="math-grid">
+            <div class="math-card x">
+                <div class="math-title">Source Entropy</div>
+                <div class="math-eq">H(x)</div>
+                <div class="math-val" id="math-hx">0.00 bits</div>
+            </div>
+            <div class="math-card y">
+                <div class="math-title">Received Entropy</div>
+                <div class="math-eq">H(y)</div>
+                <div class="math-val" id="math-hy">0.00 bits</div>
+            </div>
+            <div class="math-card xy">
+                <div class="math-title">Joint Entropy</div>
+                <div class="math-eq">H(x,y)</div>
+                <div class="math-val" id="math-hxy">0.00 bits</div>
+            </div>
+            <div class="math-card mutual">
+                <div class="math-title">Rate / Mutual Info</div>
+                <div class="math-eq">R = H(x) - H<sub>y</sub>(x)</div>
+                <div class="math-val" id="math-r">0.00 bits</div>
+            </div>
+            <div class="math-card x">
+                <div class="math-title">Equivocation</div>
+                <div class="math-eq">H<sub>y</sub>(x)</div>
+                <div class="math-val" id="math-hyx">0.00 bits</div>
+            </div>
+            <div class="math-card y">
+                <div class="math-title">Noise Entropy</div>
+                <div class="math-eq">H<sub>x</sub>(y)</div>
+                <div class="math-val" id="math-hxy-cond">0.00 bits</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const sliderPx = document.getElementById('slider-px');
+        const sliderQ = document.getElementById('slider-q');
+        
+        function calcEntropy(p) {
+            if (p <= 0 || p >= 1) return 0;
+            return -p * Math.log2(p) - (1 - p) * Math.log2(1 - p);
+        }
+
+        function updateMath() {
+            let px1 = parseInt(sliderPx.value) / 100;
+            let px0 = 1 - px1;
+            let q = parseInt(sliderQ.value) / 100; // error prob
+            let p_correct = 1 - q;
+
+            // Update Labels
+            document.getElementById('val-px').textContent = px1.toFixed(2);
+            document.getElementById('val-q').textContent = q.toFixed(2);
+
+            // 1. Source Entropy H(x)
+            let Hx = calcEntropy(px1);
+
+            // 2. Output Probabilities
+            let py0 = px0 * p_correct + px1 * q;
+            let py1 = px0 * q + px1 * p_correct;
+
+            // 3. Received Entropy H(y)
+            let Hy = calcEntropy(py1);
+
+            // 4. Conditional Entropy H_x(y) -> This is just the entropy of the noise q!
+            let Hxy_cond = calcEntropy(q);
+
+            // 5. Joint Entropy H(x,y) = H(x) + H_x(y)
+            let Hxy = Hx + Hxy_cond;
+
+            // 6. Equivocation H_y(x) = H(x,y) - H(y)
+            let Hyx = Hxy - Hy;
+            if(Hyx < 0) Hyx = 0; // Float prevention
+
+            // 7. Mutual Information (Rate) R = H(x) - H_y(x)
+            let R = Hx - Hyx;
+            if(R < 0) R = 0;
+
+            // Update Text Values
+            document.getElementById('math-hx').textContent = Hx.toFixed(3) + ' bits';
+            document.getElementById('math-hy').textContent = Hy.toFixed(3) + ' bits';
+            document.getElementById('math-hxy').textContent = Hxy.toFixed(3) + ' bits';
+            document.getElementById('math-hyx').textContent = Hyx.toFixed(3) + ' bits';
+            document.getElementById('math-hxy-cond').textContent = Hxy_cond.toFixed(3) + ' bits';
+            document.getElementById('math-r').textContent = R.toFixed(3) + ' bits';
+
+            // Update Visual Bar Widths as percentages of H(x,y)
+            let total = Hxy;
+            let pEquiv = (Hyx / total) * 100;
+            let pMutual = (R / total) * 100;
+            let pNoise = (Hxy_cond / total) * 100;
+
+            // Handle edge case of 0 total entropy
+            if (total === 0) {
+                pEquiv = 0; pMutual = 0; pNoise = 0;
+            }
+
+            document.getElementById('bar-equivocation').style.width = pEquiv + '%';
+            document.getElementById('bar-mutual').style.width = pMutual + '%';
+            document.getElementById('bar-noise').style.width = pNoise + '%';
+
+            // Adjust brackets
+            let bracketX = document.getElementById('bracket-x');
+            bracketX.style.width = (pEquiv + pMutual) + '%';
+            bracketX.style.left = '0';
+
+            let bracketY = document.getElementById('bracket-y');
+            bracketY.style.width = (pMutual + pNoise) + '%';
+            bracketY.style.left = pEquiv + '%';
+        }
+
+        sliderPx.addEventListener('input', updateMath);
+        sliderQ.addEventListener('input', updateMath);
+        
+        // Initial Calculation
+        updateMath();
+    </script>
+</body>
+</html>
