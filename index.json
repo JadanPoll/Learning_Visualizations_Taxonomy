@@ -10,5 +10,49 @@
     "file": "cs/shannon_approximations.html",
     "tags": ["probability", "stochastic"],
     "description": "Interactive"
-  }
+  },
+  {
+    "concept": "Claude Shannon",
+    "file": "cs/shannon_fano_source_coding.html",
+    "tags": ["probability", "predictive coding"],
+    "description", "Interactive"
+  },
+
+  {
+    "concept": "Claude Shannon",
+    "file": "cs/shannon_continuous_channel.html",
+    "tags": ["probability", "predictive coding"],
+    "description", "Interactive"
+  },
+  {
+    "concept": "Claude Shannon",
+    "file": "cs/shannon_hamming_code.html",
+    "tags": ["probability", "predictive coding"],
+    "description", "Interactive"
+  },
+  {
+    "concept": "Claude Shannon",
+    "file": "cs/shannon_sampling_theorem.html",
+    "tags": ["probability", "predictive coding"],
+    "description", "Interactive"
+  },
+  {
+    "concept": "Claude Shannon",
+    "file": "cs/shannon_joint_et_conditional_entropy.html",
+    "tags": ["probability", "predictive coding"],
+    "description", "Interactive"
+  },
+  {
+    "concept": "Claude Shannon",
+    "file": "cs/shannon_variable_symbol_capacity.html",
+    "tags": ["probability", "predictive coding"],
+    "description", "Interactive"
+  },
+  {
+    "concept": "Claude Shannon",
+    "file": "cs/shannon_continuous_entropy_maximum.html",
+    "tags": ["probability", "predictive coding"],
+    "description", "Interactive"
+  },
+  
 ]
