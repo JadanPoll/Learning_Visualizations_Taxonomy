@@ -1,1 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markov Chain Visualization</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-muted: #aaaaaa;
+            --sunny: #ffd700;
+            --cloudy: #87ceeb;
+            --rainy: #4682b4;
+            --highlight: #ff5722;
+        }
 
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 350px;
+            background-color: var(--panel-bg);
+            padding: 20px;
+            box-sizing: border-box;
+            border-right: 1px solid #333;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        canvas {
+            background-color: var(--bg-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            color: var(--text-main);
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .control-group {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .control-group h3 {
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+        }
+
+        .slider-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .slider-row label {
+            width: 60px;
+        }
+
+        input[type=range] {
+            flex-grow: 1;
+            margin: 0 10px;
+            accent-color: var(--highlight);
+        }
+
+        .val-display {
+            width: 40px;
+            text-align: right;
+            font-family: monospace;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            background-color: #333;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #444;
+        }
+
+        button.primary {
+            background-color: var(--highlight);
+            color: #fff;
+        }
+
+        button.primary:hover {
+            background-color: #e64a19;
+        }
+
+        .helper-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: -5px;
+            margin-bottom: 15px;
+        }
+
+        #stats {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: var(--panel-bg);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Transition Matrix</h2>
+        <p class="helper-text">Adjust probabilities. Rows auto-normalize to equal 100%.</p>
+
+        <div id="controls-container"></div>
+
+        <div class="btn-group">
+            <button id="stepBtn">Step Forward</button>
+            <button id="runBtn" class="primary">Auto Run</button>
+        </div>
+    </div>
+
+    <div id="main">
+        <canvas id="canvas" width="800" height="600"></canvas>
+        <div id="stats">
+            <strong>Current State: </strong><span id="currentStateLabel">-</span><br>
+            <strong>Steps Taken: </strong><span id="stepsLabel">0</span>
+        </div>
+    </div>
+
+    <script>
+        // 1. Core Data and Configuration
+        const states = [
+            { id: 0, name: 'Sunny', color: '#ffd700', x: 400, y: 150 },
+            { id: 1, name: 'Cloudy', color: '#87ceeb', x: 250, y: 400 },
+            { id: 2, name: 'Rainy', color: '#4682b4', x: 550, y: 400 }
+        ];
+
+        // Initial transition matrix (probabilities sum to 1 per row)
+        let matrix = [
+            [0.6, 0.3, 0.1], // From Sunny
+            [0.4, 0.4, 0.2], // From Cloudy
+            [0.2, 0.5, 0.3]  // From Rainy
+        ];
+
+        let currentState = 0;
+        let steps = 0;
+        let isRunning = false;
+        let animationId;
+
+        // 2. DOM Elements
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const controlsContainer = document.getElementById('controls-container');
+        const stepBtn = document.getElementById('stepBtn');
+        const runBtn = document.getElementById('runBtn');
+        const currentStateLabel = document.getElementById('currentStateLabel');
+        const stepsLabel = document.getElementById('stepsLabel');
+
+        // 3. Setup UI Controls
+        function buildControls() {
+            controlsContainer.innerHTML = '';
+            states.forEach((state, i) => {
+                const group = document.createElement('div');
+                group.className = 'control-group';
+                group.innerHTML = `<h3 style="color: ${state.color}">From ${state.name}</h3>`;
+                
+                states.forEach((target, j) => {
+                    const row = document.createElement('div');
+                    row.className = 'slider-row';
+                    row.innerHTML = `
+                        <label>To ${target.name}</label>
+                        <input type="range" min="0" max="100" value="${Math.round(matrix[i][j] * 100)}" data-row="${i}" data-col="${j}">
+                        <span class="val-display">${Math.round(matrix[i][j] * 100)}%</span>
+                    `;
+                    
+                    const slider = row.querySelector('input');
+                    slider.addEventListener('input', (e) => handleSliderChange(i, j, parseInt(e.target.value)));
+                    group.appendChild(row);
+                });
+                controlsContainer.appendChild(group);
+            });
+        }
+
+        function handleSliderChange(row, col, newValue) {
+            let newProb = newValue / 100;
+            let oldProb = matrix[row][col];
+            let diff = newProb - oldProb;
+            
+            matrix[row][col] = newProb;
+            
+            // Normalize the other two values so the row sum is 1
+            let others = [0, 1, 2].filter(x => x !== col);
+            let sumOthers = matrix[row][others[0]] + matrix[row][others[1]];
+            
+            if (sumOthers === 0) {
+                matrix[row][others[0]] = (1 - newProb) / 2;
+                matrix[row][others[1]] = (1 - newProb) / 2;
+            } else {
+                matrix[row][others[0]] -= diff * (matrix[row][others[0]] / sumOthers);
+                matrix[row][others[1]] -= diff * (matrix[row][others[1]] / sumOthers);
+            }
+
+            // Fix floating point errors
+            matrix[row][others[0]] = Math.max(0, matrix[row][others[0]]);
+            matrix[row][others[1]] = Math.max(0, matrix[row][others[1]]);
+
+            updateSliderUI();
+            draw();
+        }
+
+        function updateSliderUI() {
+            const sliders = document.querySelectorAll('input[type=range]');
+            sliders.forEach(slider => {
+                const r = slider.getAttribute('data-row');
+                const c = slider.getAttribute('data-col');
+                const val = Math.round(matrix[r][c] * 100);
+                slider.value = val;
+                slider.nextElementSibling.textContent = `${val}%`;
+            });
+        }
+
+        // 4. Drawing Logic
+        function drawArrow(fromX, fromY, toX, toY, color, width, isSelfLoop, nodeRadius) {
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            
+            if (width < 0.5) return; // Don't draw if probability is very close to 0
+
+            if (isSelfLoop) {
+                ctx.arc(fromX - nodeRadius, fromY - nodeRadius, nodeRadius * 0.8, 0, Math.PI * 1.5);
+                ctx.stroke();
+                // Draw arrowhead
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(fromX, fromY - nodeRadius * 1.8);
+                ctx.lineTo(fromX + 10, fromY - nodeRadius * 1.8 - 10);
+                ctx.lineTo(fromX - 10, fromY - nodeRadius * 1.8 - 10);
+                ctx.fill();
+            } else {
+                // Curved lines for bi-directional arrows
+                const dx = toX - fromX;
+                const dy = toY - fromY;
+                const angle = Math.atan2(dy, dx);
+                const distance = Math.sqrt(dx*dx + dy*dy);
+                
+                // Control point for curve
+                const cx = fromX + dx/2 - dy * 0.2;
+                const cy = fromY + dy/2 + dx * 0.2;
+
+                // Adjust start and end to boundaries of the node
+                const startX = fromX + Math.cos(Math.atan2(cy - fromY, cx - fromX)) * nodeRadius;
+                const startY = fromY + Math.sin(Math.atan2(cy - fromY, cx - fromX)) * nodeRadius;
+                const endX = toX - Math.cos(Math.atan2(cy - toY, cx - toX)) * nodeRadius;
+                const endY = toY - Math.sin(Math.atan2(cy - toY, cx - toX)) * nodeRadius;
+
+                ctx.moveTo(startX, startY);
+                ctx.quadraticCurveTo(cx, cy, endX, endY);
+                ctx.stroke();
+
+                // Draw arrowhead
+                const arrowAngle = Math.atan2(endY - cy, endX - cx);
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(endX - 15 * Math.cos(arrowAngle - Math.PI/6), endY - 15 * Math.sin(arrowAngle - Math.PI/6));
+                ctx.lineTo(endX - 15 * Math.cos(arrowAngle + Math.PI/6), endY - 15 * Math.sin(arrowAngle + Math.PI/6));
+                ctx.fill();
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const nodeRadius = 40;
+
+            // Draw Edges First
+            for (let i = 0; i < states.length; i++) {
+                for (let j = 0; j < states.length; j++) {
+                    const prob = matrix[i][j];
+                    if (prob > 0.01) {
+                        const isSelf = i === j;
+                        const width = prob * 10; // Line thickness based on probability
+                        const opacity = Math.max(0.2, prob).toFixed(2);
+                        drawArrow(
+                            states[i].x, states[i].y, 
+                            states[j].x, states[j].y, 
+                            `rgba(255, 255, 255, ${opacity})`, 
+                            width, 
+                            isSelf, 
+                            nodeRadius
+                        );
+                    }
+                }
+            }
+
+            // Draw Nodes
+            states.forEach(state => {
+                ctx.beginPath();
+                ctx.arc(state.x, state.y, nodeRadius, 0, Math.PI * 2);
+                ctx.fillStyle = '#222';
+                ctx.fill();
+
+                // Highlight border if active
+                ctx.lineWidth = currentState === state.id ? 6 : 2;
+                ctx.strokeStyle = currentState === state.id ? varHighlight() : state.color;
+                ctx.stroke();
+
+                // Inner color fill based on state
+                ctx.beginPath();
+                ctx.arc(state.x, state.y, nodeRadius - (currentState === state.id ? 8 : 4), 0, Math.PI * 2);
+                ctx.fillStyle = state.color;
+                ctx.fill();
+
+                // Text label
+                ctx.fillStyle = currentState === state.id ? '#121212' : '#fff';
+                ctx.font = "bold 14px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(state.name, state.x, state.y);
+            });
+
+            updateStatsPanel();
+        }
+
+        function varHighlight() {
+            return getComputedStyle(document.documentElement).getPropertyValue('--highlight').trim();
+        }
+
+        // 5. Simulation Logic
+        function stepSimulation() {
+            const row = matrix[currentState];
+            const rand = Math.random();
+            let sum = 0;
+            
+            for (let i = 0; i < row.length; i++) {
+                sum += row[i];
+                if (rand <= sum) {
+                    currentState = i;
+                    break;
+                }
+            }
+            
+            steps++;
+            draw();
+        }
+
+        function updateStatsPanel() {
+            currentStateLabel.textContent = states[currentState].name;
+            currentStateLabel.style.color = states[currentState].color;
+            stepsLabel.textContent = steps;
+        }
+
+        // 6. Event Listeners
+        stepBtn.addEventListener('click', () => {
+            stepSimulation();
+        });
+
+        runBtn.addEventListener('click', () => {
+            if (isRunning) {
+                clearInterval(animationId);
+                runBtn.textContent = 'Auto Run';
+                runBtn.classList.add('primary');
+                runBtn.style.backgroundColor = '';
+                isRunning = false;
+            } else {
+                animationId = setInterval(stepSimulation, 800);
+                runBtn.textContent = 'Stop';
+                runBtn.classList.remove('primary');
+                runBtn.style.backgroundColor = '#d32f2f';
+                isRunning = true;
+            }
+        });
+
+        // Initialize
+        buildControls();
+        draw();
+    </script>
+</body>
+</html>
