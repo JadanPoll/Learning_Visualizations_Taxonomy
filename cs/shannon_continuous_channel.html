@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Continuous Channel & Shannon-Hartley Theorem</title>
+    <style>
+        :root {
+            --bg-color: #0f111a;
+            --panel-bg: #1a1d2d;
+            --text-main: #e2e2e2;
+            --text-muted: #8b92a5;
+            --highlight: #00d2ff;
+            --signal-color: #4caf50;
+            --noise-color: #ff4b4b;
+            --received-color: #ffeb3b;
+            --border: #2e3246;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 420px;
+            background-color: var(--panel-bg);
+            padding: 25px;
+            box-sizing: border-box;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #main {
+            flex-grow: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+
+        h2, h3 { margin: 0; color: #fff; }
+        h2 { font-size: 1.3rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 1.1rem; color: var(--highlight); }
+
+        .control-group {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .slider-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .slider-header span:last-child {
+            font-family: monospace;
+            color: var(--highlight);
+        }
+
+        input[type=range] {
+            width: 100%;
+            accent-color: var(--highlight);
+            cursor: pointer;
+        }
+        
+        input[type=range].signal-slider { accent-color: var(--signal-color); }
+        input[type=range].noise-slider { accent-color: var(--noise-color); }
+
+        .math-box {
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 1rem;
+            line-height: 1.8;
+            border-left: 4px solid var(--highlight);
+            margin-top: 10px;
+        }
+
+        .math-symbol { color: #fff; font-weight: bold; }
+        .math-val { color: var(--highlight); }
+
+        .helper-text { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; line-height: 1.4; }
+
+        canvas {
+            background-color: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 100%;
+            flex-grow: 1;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            padding: 10px 0;
+            font-size: 0.9rem;
+            justify-content: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .color-box {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Continuous Channel (Sec. 24-25)</h2>
+        
+        <div class="control-group">
+            <h3>Channel Parameters</h3>
+            <div class="helper-text">Adjust the physical constraints of the communication medium.</div>
+            
+            <div class="slider-row">
+                <div class="slider-header">
+                    <span>Bandwidth (W)</span>
+                    <span id="val-W">3000 Hz</span>
+                </div>
+                <input type="range" id="slider-W" min="100" max="10000" step="100" value="3000">
+                <div class="helper-text">Frequency range of the channel. Increases the number of independent samples per second (2W).</div>
+            </div>
+
+            <div class="slider-row">
+                <div class="slider-header">
+                    <span>Signal Power (P)</span>
+                    <span id="val-P" style="color: var(--signal-color);">1000 W</span>
+                </div>
+                <input type="range" class="signal-slider" id="slider-P" min="0" max="5000" step="50" value="1000">
+                <div class="helper-text">Average power of the transmitted signal.</div>
+            </div>
+
+            <div class="slider-row">
+                <div class="slider-header">
+                    <span>Noise Power (N)</span>
+                    <span id="val-N" style="color: var(--noise-color);">100 W</span>
+                </div>
+                <input type="range" class="noise-slider" id="slider-N" min="10" max="2000" step="10" value="100">
+                <div class="helper-text">Average power of the white thermal noise.</div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Theorem 17 (Shannon-Hartley)</h3>
+            <div class="helper-text">The maximum rate C at which information can be reliably transmitted.</div>
+            <div class="math-box">
+                <span class="math-symbol">C</span> = W &middot; log<sub>2</sub>(1 + P/N)<br>
+                <span class="math-symbol">C</span> = <span id="eq-W" class="math-val">3000</span> &middot; log<sub>2</sub>(1 + <span id="eq-P" style="color: var(--signal-color);">1000</span>/<span id="eq-N" style="color: var(--noise-color);">100</span>)<br>
+                <span class="math-symbol">C</span> = <span id="eq-W2" class="math-val">3000</span> &middot; log<sub>2</sub>(<span id="eq-ratio" class="math-val">11.00</span>)<br>
+                <span class="math-symbol">C</span> = <strong id="eq-C" style="font-size: 1.2rem; color: #fff;">10378.2</strong> <span class="math-symbol">bits/sec</span>
+            </div>
+            
+            <div class="slider-row" style="margin-top: 20px;">
+                <div class="slider-header">
+                    <span>Signal-to-Noise Ratio (SNR)</span>
+                    <span id="val-SNR">10.00 dB</span>
+                </div>
+                <div class="helper-text">Often expressed in decibels: 10 &middot; log<sub>10</sub>(P/N)</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="main">
+        <div class="legend">
+            <div class="legend-item"><div class="color-box" style="background: var(--signal-color);"></div> Original Signal (P)</div>
+            <div class="legend-item"><div class="color-box" style="background: var(--received-color);"></div> Received Signal (P + N)</div>
+            <div class="legend-item"><div class="color-box" style="background: var(--noise-color);"></div> Thermal Noise (N)</div>
+        </div>
+        
+        <canvas id="waveformCanvas"></canvas>
+    </div>
+
+    <script>
+        // DOM Elements
+        const sliderW = document.getElementById('slider-W');
+        const sliderP = document.getElementById('slider-P');
+        const sliderN = document.getElementById('slider-N');
+        
+        const valW = document.getElementById('val-W');
+        const valP = document.getElementById('val-P');
+        const valN = document.getElementById('val-N');
+        const valSNR = document.getElementById('val-SNR');
+        
+        const eqW = document.getElementById('eq-W');
+        const eqP = document.getElementById('eq-P');
+        const eqN = document.getElementById('eq-N');
+        const eqW2 = document.getElementById('eq-W2');
+        const eqRatio = document.getElementById('eq-ratio');
+        const eqC = document.getElementById('eq-C');
+
+        const canvas = document.getElementById('waveformCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // State Variables
+        let W = 3000;
+        let P = 1000;
+        let N = 100;
+        let time = 0;
+
+        // Resize Canvas properly
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth - 2; // -2 for border
+            canvas.height = canvas.parentElement.clientHeight - 60; // offset for legend
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        // Update Math & UI
+        function updateMath() {
+            W = parseInt(sliderW.value);
+            P = parseInt(sliderP.value);
+            N = parseInt(sliderN.value);
+
+            // Calculations
+            let ratio = 1 + (P / N);
+            let C = W * Math.log2(ratio);
+            let snr_db = 10 * Math.log10(P / N);
+
+            // Update Labels
+            valW.textContent = `${W} Hz`;
+            valP.textContent = `${P} W`;
+            valN.textContent = `${N} W`;
+            valSNR.textContent = `${snr_db.toFixed(2)} dB`;
+
+            // Update Equations
+            eqW.textContent = W;
+            eqW2.textContent = W;
+            eqP.textContent = P;
+            eqN.textContent = N;
+            eqRatio.textContent = ratio.toFixed(2);
+            eqC.textContent = C.toFixed(1);
+        }
+
+        // Gaussian Noise Generator (Box-Muller transform)
+        function gaussianRandom() {
+            let u = 0, v = 0;
+            while(u === 0) u = Math.random();
+            while(v === 0) v = Math.random();
+            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+
+        // Draw the waveforms
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            let centerY = canvas.height / 2;
+            let points = canvas.width;
+            
+            // Visual scaling factors based on Power = Amplitude^2
+            // We scale the amplitude by the square root of the power
+            let maxExpectedPower = 5000 + 2000; // Max P + Max N
+            let scaleFactor = (canvas.height / 3) / Math.sqrt(maxExpectedPower);
+            
+            let ampP = Math.sqrt(P) * scaleFactor;
+            let ampN = Math.sqrt(N) * scaleFactor;
+            
+            // Frequency mapping for visualization (higher W = faster wave visually)
+            let freqVis = (W / 10000) * 0.05 + 0.01; 
+
+            // Draw grid lines
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(canvas.width, centerY);
+            ctx.stroke();
+
+            // Arrays to store path points
+            let pathSignal = new Path2D();
+            let pathReceived = new Path2D();
+            
+            // Generate waveform
+            for (let x = 0; x < points; x++) {
+                // Compose a pseudo-random looking band-limited signal out of a few sine waves
+                // The signal shifts with 'time'
+                let t = (x * freqVis) + time;
+                
+                let sigNorm = Math.sin(t) * 0.5 
+                            + Math.sin(t * 2.3 + 1) * 0.3 
+                            + Math.sin(t * 4.1 + 2) * 0.2;
+                            
+                let signalVal = sigNorm * ampP;
+                
+                // Add Gaussian noise
+                let noiseVal = gaussianRandom() * ampN;
+                let receivedVal = signalVal + noiseVal;
+
+                if (x === 0) {
+                    pathSignal.moveTo(x, centerY - signalVal);
+                    pathReceived.moveTo(x, centerY - receivedVal);
+                } else {
+                    pathSignal.lineTo(x, centerY - signalVal);
+                    pathReceived.lineTo(x, centerY - receivedVal);
+                }
+            }
+
+            // Draw Received Signal (Back layer, slightly thicker)
+            ctx.strokeStyle = '#ffeb3b'; // var(--received-color)
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = 0.8;
+            ctx.stroke(pathReceived);
+
+            // Draw Original Signal (Front layer)
+            ctx.strokeStyle = '#4caf50'; // var(--signal-color)
+            ctx.lineWidth = 3;
+            ctx.globalAlpha = 1.0;
+            ctx.stroke(pathSignal);
+
+            // Increment time for animation
+            time += (W / 10000) * 0.1 + 0.02;
+            
+            requestAnimationFrame(draw);
+        }
+
+        // Event Listeners
+        sliderW.addEventListener('input', updateMath);
+        sliderP.addEventListener('input', updateMath);
+        sliderN.addEventListener('input', updateMath);
+
+        // Initialize
+        setTimeout(() => {
+            resizeCanvas();
+            updateMath();
+            draw();
+        }, 100);
+
+    </script>
+</body>
+</html>
