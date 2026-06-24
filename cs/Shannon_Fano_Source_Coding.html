@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shannon-Fano Encoding & Entropy Limit</title>
+    <style>
+        :root {
+            --bg-color: #0f111a;
+            --panel-bg: #1a1d2d;
+            --text-main: #e2e2e2;
+            --text-muted: #8b92a5;
+            --highlight: #00d2ff;
+            --accent: #ff4b4b;
+            --border: #2e3246;
+            --bar-ascii: #4a5568;
+            --bar-compressed: #00d2ff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 400px;
+            background-color: var(--panel-bg);
+            padding: 25px;
+            box-sizing: border-box;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #main {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        h2, h3 { margin: 0; color: #fff; }
+        h2 { font-size: 1.3rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 1.1rem; color: var(--highlight); }
+
+        .control-group {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        textarea {
+            width: 100%;
+            height: 80px;
+            background: #000;
+            color: var(--highlight);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 1rem;
+            resize: none;
+            box-sizing: border-box;
+            margin-top: 10px;
+        }
+
+        .math-box {
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            border-left: 4px solid var(--highlight);
+        }
+
+        .math-symbol { color: var(--highlight); font-weight: bold; }
+        .math-sum { color: var(--accent); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--panel-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th { background: rgba(0,0,0,0.4); font-weight: 600; color: var(--text-muted); }
+        td { font-family: monospace; font-size: 1.1rem; }
+        
+        .code-0 { color: #00d2ff; font-weight: bold;}
+        .code-1 { color: #ff9d00; font-weight: bold;}
+
+        .compression-viz {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .bar-container {
+            width: 100%;
+            background: #000;
+            border-radius: 20px;
+            height: 30px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid var(--border);
+        }
+
+        .bar {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            padding-left: 15px;
+            font-weight: bold;
+            font-family: monospace;
+            color: #fff;
+            transition: width 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .helper-text { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; }
+
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Fundamental Theorem (Sec. 9)</h2>
+        
+        <div class="control-group">
+            <h3>Input Source Message</h3>
+            <div class="helper-text">Type to see probabilities and encoding change in real-time. Notice how repetitive text compresses better!</div>
+            <textarea id="inputText">MISSISSIPPI RIVER</textarea>
+        </div>
+
+        <div class="control-group">
+            <h3>1. Source Entropy (H)</h3>
+            <div class="helper-text">The absolute theoretical minimum bits needed per symbol.</div>
+            <div class="math-box" id="math-entropy">
+                H = -&Sigma; p<sub>i</sub> log<sub>2</sub>(p<sub>i</sub>)<br>
+                H = ...
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>2. Average Code Length (L)</h3>
+            <div class="helper-text">The actual average bits per symbol using Shannon-Fano coding. The theorem proves H &le; L < H+1.</div>
+            <div class="math-box" id="math-length">
+                L = &Sigma; p<sub>i</sub> l<sub>i</sub><br>
+                L = ...
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Efficiency</h3>
+            <div class="math-box" id="math-efficiency">
+                &eta; = H / L = 0%
+            </div>
+        </div>
+    </div>
+
+    <div id="main">
+        <div>
+            <h3>Shannon-Fano Coding Table</h3>
+            <p class="helper-text">Symbols are sorted by frequency. The list is recursively divided into two halves of roughly equal probability. The first half gets a '0', the second gets a '1'.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Count</th>
+                        <th>Prob (p<sub>i</sub>)</th>
+                        <th>Code</th>
+                        <th>Length (l<sub>i</sub>)</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Populated by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <div>
+            <h3>Data Compression Visualization</h3>
+            <p class="helper-text">Standard ASCII uses exactly 8 bits per character. Shannon-Fano uses variable bits based on probability.</p>
+            <div class="compression-viz">
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                    <span>Standard ASCII (8-bit)</span>
+                    <span id="ascii-bits-text">0 bits</span>
+                </div>
+                <div class="bar-container">
+                    <div id="ascii-bar" class="bar" style="background: var(--bar-ascii); width: 100%;"></div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-top: 10px;">
+                    <span>Shannon-Fano Encoded</span>
+                    <span id="sf-bits-text">0 bits</span>
+                </div>
+                <div class="bar-container">
+                    <div id="sf-bar" class="bar" style="background: var(--bar-compressed); width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const inputEl = document.getElementById('inputText');
+        const tableBody = document.getElementById('tableBody');
+        const mathEntropy = document.getElementById('math-entropy');
+        const mathLength = document.getElementById('math-length');
+        const mathEfficiency = document.getElementById('math-efficiency');
+        const asciiBar = document.getElementById('ascii-bar');
+        const sfBar = document.getElementById('sf-bar');
+        const asciiText = document.getElementById('ascii-bits-text');
+        const sfText = document.getElementById('sf-bits-text');
+
+        // Recursive Shannon-Fano Algorithm
+        function shannonFano(nodes, prefix = "") {
+            if (nodes.length === 0) return;
+            if (nodes.length === 1) {
+                nodes[0].code = prefix || "0"; // Handle single char edge case
+                return;
+            }
+
+            let totalProb = nodes.reduce((sum, n) => sum + n.prob, 0);
+            let runningSum = 0;
+            let minDiff = Infinity;
+            let splitIndex = 0;
+
+            // Find the index that splits the probabilities as evenly as possible
+            for (let i = 0; i < nodes.length - 1; i++) {
+                runningSum += nodes[i].prob;
+                let diff = Math.abs(totalProb - 2 * runningSum);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    splitIndex = i;
+                }
+            }
+
+            let left = nodes.slice(0, splitIndex + 1);
+            let right = nodes.slice(splitIndex + 1);
+
+            shannonFano(left, prefix + "0");
+            shannonFano(right, prefix + "1");
+        }
+
+        function updateVisualization() {
+            let text = inputEl.value;
+            if (!text) text = " "; // Prevent empty errors
+
+            let N = text.length;
+            let counts = {};
+            for (let char of text) {
+                counts[char] = (counts[char] || 0) + 1;
+            }
+
+            // Create array of objects and sort by probability (descending)
+            let symbols = Object.keys(counts).map(char => {
+                return {
+                    char: char,
+                    count: counts[char],
+                    prob: counts[char] / N,
+                    code: ""
+                };
+            }).sort((a, b) => b.prob - a.prob);
+
+            // Apply encoding
+            shannonFano(symbols);
+
+            // Calculate H and L, and build math strings
+            let H = 0;
+            let L = 0;
+            let hEq = `H = -[`;
+            let lEq = `L = `;
+
+            let tableHTML = "";
+            let totalBitsSF = 0;
+
+            symbols.forEach((sym, index) => {
+                // Math
+                let p = sym.prob;
+                let len = sym.code.length;
+                
+                let termH = p * Math.log2(p);
+                H -= termH;
+                L += p * len;
+                totalBitsSF += sym.count * len;
+
+                // Format numbers for display
+                let pStr = p.toFixed(3);
+                hEq += `<span class="math-sum">${pStr}</span> &middot; log<sub>2</sub>(<span class="math-sum">${pStr}</span>)`;
+                if (index < symbols.length - 1) hEq += ` + `;
+                
+                lEq += `(<span class="math-sum">${pStr}</span> &middot; ${len})`;
+                if (index < symbols.length - 1) lEq += ` + `;
+
+                // Table
+                let displayChar = sym.char === " " ? "SPACE" : sym.char;
+                let styledCode = sym.code.split('').map(b => `<span class="code-${b}">${b}</span>`).join('');
+
+                tableHTML += `
+                    <tr>
+                        <td>'${displayChar}'</td>
+                        <td>${sym.count}</td>
+                        <td>${pStr}</td>
+                        <td>${styledCode}</td>
+                        <td>${len}</td>
+                    </tr>
+                `;
+            });
+
+            hEq += `]<br><span class="math-symbol">H = ${H.toFixed(4)} bits/symbol</span>`;
+            lEq += `<br><span class="math-symbol">L = ${L.toFixed(4)} bits/symbol</span>`;
+
+            let efficiency = (H / L) * 100;
+            if (isNaN(efficiency)) efficiency = 100;
+
+            // Update DOM
+            tableBody.innerHTML = tableHTML;
+            mathEntropy.innerHTML = `H = -&Sigma; p<sub>i</sub> log<sub>2</sub>(p<sub>i</sub>)<br>` + hEq;
+            mathLength.innerHTML = `L = &Sigma; p<sub>i</sub> l<sub>i</sub><br>` + lEq;
+            
+            let color = efficiency > 95 ? '#4caf50' : (efficiency > 85 ? '#ff9d00' : '#ff4b4b');
+            mathEfficiency.innerHTML = `&eta; = H / L<br><span style="color:${color}; font-size:1.2rem; font-weight:bold;">${efficiency.toFixed(1)}%</span>`;
+
+            // Update Compression Bars
+            let asciiBits = N * 8;
+            asciiText.textContent = `${asciiBits} bits`;
+            sfText.textContent = `${totalBitsSF} bits`;
+
+            asciiBar.style.width = '100%';
+            let compressionRatio = (totalBitsSF / asciiBits) * 100;
+            sfBar.style.width = `${Math.min(compressionRatio, 100)}%`;
+        }
+
+        inputEl.addEventListener('input', updateVisualization);
+        
+        // Initial render
+        updateVisualization();
+
+    </script>
+</body>
+</html>
