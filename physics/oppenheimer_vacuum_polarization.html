@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vacuum Polarization & Modified Coulomb Law</title>
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --panel-bg: #1f2833;
+            --text-main: #c5c6c7;
+            --text-muted: #8b92a5;
+            --highlight: #66fcf1;
+            --proton: #ff4b4b;
+            --electron: #66fcf1;
+            --positron: #ff9d00;
+            --border: #45a29e;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 440px;
+            background-color: var(--panel-bg);
+            padding: 25px;
+            box-sizing: border-box;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #main {
+            flex-grow: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-color);
+            position: relative;
+        }
+
+        h2, h3 { margin: 0; color: #fff; }
+        h2 { font-size: 1.3rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 1.1rem; color: var(--highlight); }
+
+        .control-group {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(69, 162, 158, 0.3);
+        }
+
+        .slider-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        input[type=range] { width: 100%; accent-color: var(--highlight); cursor: pointer; }
+
+        .helper-text { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; line-height: 1.5; }
+
+        .math-box {
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            border-left: 4px solid var(--highlight);
+            margin-top: 10px;
+        }
+
+        .math-val { color: var(--highlight); font-weight: bold;}
+
+        canvas {
+            background-color: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 100%;
+            height: 50%;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            margin-bottom: 20px;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            padding: 10px 0;
+            font-size: 0.9rem;
+            justify-content: center;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .color-line { width: 20px; height: 3px; }
+
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Vacuum Polarization (Eq. 4.6 - 4.9)</h2>
+        
+        <div class="control-group">
+            <h3>Probe Distance (R)</h3>
+            <div class="helper-text">Move the probe closer to the central proton. Observe how penetrating the virtual pair cloud changes the effective interaction energy.</div>
+            <div class="slider-row">
+                <div class="slider-header">
+                    <span>Distance R (Units of &lambda;<sub>0</sub>)</span>
+                    <span id="val-r" class="math-val">5.00 &lambda;<sub>0</sub></span>
+                </div>
+                <input type="range" id="slider-r" min="0.05" max="5.0" step="0.05" value="5.0">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Interaction Energy vs. Distance</h3>
+            <div class="math-box">
+                <span style="color: #888">Classical (R &gg; &lambda;<sub>0</sub>):</span><br>
+                E<sub>int</sub> = - e&sup2; / R<br><br>
+                <span style="color: var(--highlight)">Furry-Oppenheimer (R &lt;&lt; &lambda;<sub>0</sub>):</span><br>
+                E<sub>int</sub> &approx; -(e&sup2;/R) [1 + (2&alpha;/3&pi;) ln(&lambda;<sub>0</sub>/R)]<br><br>
+                <span style="color: var(--proton)">Effective Charge Multiplier:</span><br>
+                Q<sub>eff</sub> / e = <span id="val-qeff" class="math-val">1.000</span>
+            </div>
+            <div class="helper-text" style="margin-top: 10px;">
+                "For protons... deviations from the Coulomb law should in principle be detectable... This corresponds to an increase of effective charge of the proton of &delta;e &approx; (2&alpha;/3&pi;) ln(&lambda;<sub>0</sub>/R)."
+            </div>
+        </div>
+    </div>
+
+    <div id="main">
+        <h3 style="margin-bottom: 10px;">Spatial View: Dielectric Virtual Pairs</h3>
+        <canvas id="canvas-space"></canvas>
+        
+        <h3 style="margin-bottom: 10px;">Effective Coulomb Potential R &middot; V(R)</h3>
+        <div class="legend">
+            <div class="legend-item"><div class="color-line" style="background: #888;"></div> Classical (Flat e&sup2;)</div>
+            <div class="legend-item"><div class="color-line" style="background: var(--highlight);"></div> QED Corrected (Penetrating Shield)</div>
+        </div>
+        <canvas id="canvas-graph"></canvas>
+    </div>
+
+    <script>
+        const sliderR = document.getElementById('slider-r');
+        const valR = document.getElementById('val-r');
+        const valQeff = document.getElementById('val-qeff');
+        
+        const cSpace = document.getElementById('canvas-space');
+        const ctxSpace = cSpace.getContext('2d');
+        
+        const cGraph = document.getElementById('canvas-graph');
+        const ctxGraph = cGraph.getContext('2d');
+
+        let R = 5.0; // units of lambda_0
+        const alpha = 1 / 137.036; // Fine structure constant (exaggerated slightly for viz below)
+        const alphaViz = 0.05; // Exaggerated for visual distinction in the graph
+
+        function resize() {
+            cSpace.width = cSpace.parentElement.clientWidth - 40;
+            cSpace.height = (cSpace.parentElement.clientHeight / 2) - 50;
+            cGraph.width = cGraph.parentElement.clientWidth - 40;
+            cGraph.height = (cGraph.parentElement.clientHeight / 2) - 60;
+            updateSystem();
+        }
+        window.addEventListener('resize', resize);
+
+        function calcQeff(r) {
+            // Simplified implementation of Eq 4.8 / 4.9 (Uehling potential concept)
+            if (r >= 1.0) return 1.0;
+            // delta e ~ (2 alpha / 3 pi) * ln(lambda_0 / R)
+            // Using alphaViz so the curve is visibly distinct
+            let delta = (2 * alphaViz / (3 * Math.PI)) * Math.log(1.0 / r);
+            return 1.0 + delta;
+        }
+
+        function updateSystem() {
+            R = parseFloat(sliderR.value);
+            valR.textContent = R.toFixed(2) + " λ₀";
+            
+            let qEff = calcQeff(R);
+            valQeff.textContent = qEff.toFixed(3);
+
+            drawGraph();
+        }
+
+        function drawSpace() {
+            ctxSpace.clearRect(0, 0, cSpace.width, cSpace.height);
+            
+            let cx = cSpace.width / 2;
+            let cy = cSpace.height / 2;
+            
+            // Draw Central Proton
+            ctxSpace.fillStyle = '#ff4b4b';
+            ctxSpace.shadowBlur = 15;
+            ctxSpace.shadowColor = '#ff4b4b';
+            ctxSpace.beginPath(); ctxSpace.arc(cx, cy, 8, 0, Math.PI*2); ctxSpace.fill();
+            ctxSpace.shadowBlur = 0;
+            
+            // Draw virtual pairs (Vacuum Polarization)
+            // Electrons orient inward (attracted), Positrons outward (repelled)
+            const numPairs = 12;
+            const time = Date.now() * 0.001;
+
+            for (let i = 0; i < numPairs; i++) {
+                let angle = (i / numPairs) * Math.PI * 2 + time * 0.2;
+                
+                // Pulsate radius around lambda_0 (approx 60px)
+                let baseRadius = 60 + Math.sin(time * 3 + i) * 10;
+                
+                // e-
+                let ex = cx + Math.cos(angle) * (baseRadius - 10);
+                let ey = cy + Math.sin(angle) * (baseRadius - 10);
+                ctxSpace.fillStyle = '#66fcf1';
+                ctxSpace.beginPath(); ctxSpace.arc(ex, ey, 3, 0, Math.PI*2); ctxSpace.fill();
+                
+                // e+
+                let px = cx + Math.cos(angle) * (baseRadius + 10);
+                let py = cy + Math.sin(angle) * (baseRadius + 10);
+                ctxSpace.strokeStyle = '#ff9d00';
+                ctxSpace.lineWidth = 1.5;
+                ctxSpace.beginPath(); ctxSpace.arc(px, py, 3, 0, Math.PI*2); ctxSpace.stroke();
+            }
+
+            // Draw Probe
+            let probeX = cx + R * 60; // 60px = 1 lambda_0
+            ctxSpace.strokeStyle = '#fff';
+            ctxSpace.lineWidth = 2;
+            ctxSpace.setLineDash([5,5]);
+            ctxSpace.beginPath(); ctxSpace.moveTo(cx, cy); ctxSpace.lineTo(probeX, cy); ctxSpace.stroke();
+            ctxSpace.setLineDash([]);
+            
+            ctxSpace.fillStyle = '#fff';
+            ctxSpace.beginPath(); ctxSpace.arc(probeX, cy, 5, 0, Math.PI*2); ctxSpace.fill();
+            ctxSpace.fillText('Probe', probeX + 10, cy + 5);
+        }
+
+        function drawGraph() {
+            ctxGraph.clearRect(0, 0, cGraph.width, cGraph.height);
+            
+            let pad = 40;
+            let gw = cGraph.width - 2*pad;
+            let gh = cGraph.height - 2*pad;
+
+            // Axes
+            ctxGraph.strokeStyle = '#555';
+            ctxGraph.lineWidth = 1;
+            ctxGraph.beginPath();
+            ctxGraph.moveTo(pad, pad); ctxGraph.lineTo(pad, cGraph.height - pad);
+            ctxGraph.lineTo(cGraph.width - pad, cGraph.height - pad);
+            ctxGraph.stroke();
+
+            // Labels
+            ctxGraph.fillStyle = '#888';
+            ctxGraph.font = '12px sans-serif';
+            ctxGraph.textAlign = 'center';
+            ctxGraph.fillText('Distance R (λ₀)', cGraph.width/2, cGraph.height - 10);
+            
+            ctxGraph.save();
+            ctxGraph.translate(15, cGraph.height/2);
+            ctxGraph.rotate(-Math.PI/2);
+            ctxGraph.fillText('Effective Charge R·V(R)', 0, 0);
+            ctxGraph.restore();
+
+            const mapX = (r) => pad + (r / 5.0) * gw;
+            const mapY = (q) => cGraph.height - pad - ((q - 0.95) / 0.15) * gh; // zoomed Y axis
+
+            // Mark Lambda_0
+            let xL0 = mapX(1.0);
+            ctxGraph.strokeStyle = '#45a29e';
+            ctxGraph.setLineDash([3, 3]);
+            ctxGraph.beginPath(); ctxGraph.moveTo(xL0, pad); ctxGraph.lineTo(xL0, cGraph.height - pad); ctxGraph.stroke();
+            ctxGraph.setLineDash([]);
+            ctxGraph.fillText('1.0 λ₀', xL0, cGraph.height - pad + 15);
+
+            // Classical Line (Constant Q=1)
+            let yClass = mapY(1.0);
+            ctxGraph.strokeStyle = '#888';
+            ctxGraph.lineWidth = 2;
+            ctxGraph.beginPath();
+            ctxGraph.moveTo(mapX(0.05), yClass);
+            ctxGraph.lineTo(mapX(5.0), yClass);
+            ctxGraph.stroke();
+
+            // QED Corrected Curve
+            ctxGraph.strokeStyle = '#66fcf1';
+            ctxGraph.lineWidth = 3;
+            ctxGraph.beginPath();
+            for(let r = 0.05; r <= 5.0; r+=0.05) {
+                let q = calcQeff(r);
+                let px = mapX(r);
+                let py = mapY(q);
+                if (r === 0.05) ctxGraph.moveTo(px, py);
+                else ctxGraph.lineTo(px, py);
+            }
+            ctxGraph.stroke();
+
+            // Current point
+            let curX = mapX(R);
+            let curY = mapY(calcQeff(R));
+            ctxGraph.fillStyle = '#fff';
+            ctxGraph.beginPath();
+            ctxGraph.arc(curX, curY, 6, 0, Math.PI*2);
+            ctxGraph.fill();
+        }
+
+        sliderR.addEventListener('input', updateSystem);
+
+        function animate() {
+            drawSpace();
+            requestAnimationFrame(animate);
+        }
+
+        setTimeout(() => { resize(); animate(); }, 100);
+    </script>
+</body>
+</html>
