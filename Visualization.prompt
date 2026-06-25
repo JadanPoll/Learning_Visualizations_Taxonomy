@@ -1,0 +1,130 @@
+Role: You are an expert physicist, mathematician, and educational UI/UX developer.
+
+Task: Create a self-contained interactive JSXGraph visualization for the following concept:
+
+
+$$INSERT CONCEPT / PAPER / EQUATIONS HERE$$
+
+Core Directives (Maximize Token Efficiency & Consistency):
+
+Use the Preloaded Shell: DO NOT write HTML/CSS/Layout from scratch. Use the exact boilerplate provided below. It contains the dark mode styling, JSXGraph imports, MathJax for LaTeX formatting, and an adjustable sidebar.
+
+Fill the 3 Zones: Only insert content into the designated zones:
+
+<!-- ZONE 1: SIDEBAR CONTENT -->: Pedagogical text, definitions, and mathematical equations. Wrap variable numbers in <span id="..."> tags so they can be updated. Use $$...$$ for block math and $...$ for inline math.
+
+// ZONE 2: SLIDERS & UI: Define JSXGraph sliders (board.create('slider', ...)). DO NOT build HTML <input> sliders.
+
+// ZONE 3: MATHEMATICS & PLOTTING: Define the mathematical curves, points, AND the board.on('update', ...) event listener to update the HTML math equations in real-time.
+
+Pedagogical Richness & Dynamic Math:
+
+Deep Theory: Provide a rigorous explanation of the physical/mathematical significance using direct context from the theory. Quote the source material if applicable.
+
+Live Equations: Inside <div class="math-box">, show the core equations. As the user drags the sliders in the graph, the numeric values inside the math-box MUST update in real-time to reflect the current state. Use document.getElementById('...').innerHTML = ... inside the JSXGraph update loop.
+
+Interaction Guide: Tell the user exactly what to drag and what physical/mathematical relationship they should be observing.
+
+The Boilerplate (Copy this and fill in the Zones):
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Physics Visualization</title>
+    
+    <!-- JSXGraph -->
+    <script type="text/javascript" charset="UTF-8" src="[https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js](https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js)"></script>
+    <link rel="stylesheet" type="text/css" href="[https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css](https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css)" />
+    
+    <!-- MathJax Configuration & Rendering -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script src="[https://polyfill.io/v3/polyfill.min.js?features=es6](https://polyfill.io/v3/polyfill.min.js?features=es6)"></script>
+    <script id="MathJax-script" async src="[https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js](https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js)"></script>
+
+    <style>
+        :root {
+            --bg-color: #0b0c10; --panel-bg: #1f2833; 
+            --text-main: #c5c6c7; --text-muted: #8b92a5; 
+            --highlight: #66fcf1; --border: #45a29e;
+            --accent-1: #ff4b4b; --accent-2: #ff9d00; --accent-3: #4caf50;
+        }
+        body { margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; background-color: var(--bg-color); color: var(--text-main); font-family: -apple-system, sans-serif; }
+        
+        #sidebar { width: 440px; min-width: 300px; max-width: 800px; background-color: var(--panel-bg); padding: 25px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; flex-shrink: 0; }
+        #resizer { width: 6px; background-color: var(--border); cursor: col-resize; flex-shrink: 0; z-index: 10; transition: background-color 0.2s; }
+        #resizer:hover, #resizer.active { background-color: var(--highlight); }
+        
+        /* Flexbox fix for infinite resize loops */
+        #main { flex: 1; padding: 20px; display: flex; flex-direction: column; position: relative; min-width: 0; min-height: 0; overflow: hidden; box-sizing: border-box; }
+        
+        h2, h3 { margin: 0; color: #fff; } 
+        h2 { font-size: 1.3rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); } 
+        h3 { font-size: 1.1rem; color: var(--highlight); }
+        
+        .control-group { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid rgba(69, 162, 158, 0.3); }
+        .helper-text { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; line-height: 1.5; }
+        .math-box { background: #000; padding: 15px; border-radius: 8px; font-family: "Courier New", monospace; font-size: 0.95rem; line-height: 1.8; border-left: 4px solid var(--highlight); margin-top: 10px; overflow-x: auto; }
+        .math-val { color: var(--highlight); font-weight: bold; }
+        
+        /* Explicit flex properties to prevent JSXGraph ResizeObserver loops */
+        .jxgbox { background-color: #000 !important; border: 1px solid var(--border) !important; border-radius: 8px; flex: 1; width: 100%; min-height: 0; overflow: hidden; position: relative; box-sizing: border-box; }
+        .JXGtext { color: #c5c6c7 !important; font-family: monospace !important; }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <!-- ZONE 1: SIDEBAR CONTENT (Title, Theory, Math Boxes) -->
+        
+    </div>
+    <div id="resizer"></div>
+    <div id="main">
+        <div id="jxgbox" class="jxgbox"></div>
+    </div>
+
+    <script>
+        // Adjustable Sidebar Logic
+        const resizer = document.getElementById('resizer');
+        const sidebar = document.getElementById('sidebar');
+        let isResizing = false;
+        resizer.addEventListener('mousedown', (e) => { isResizing = true; document.body.style.cursor = 'col-resize'; resizer.classList.add('active'); e.preventDefault(); });
+        document.addEventListener('mousemove', (e) => { if (!isResizing) return; let newWidth = e.clientX; if (newWidth < 300) newWidth = 300; if (newWidth > document.body.clientWidth - 200) newWidth = document.body.clientWidth - 200; sidebar.style.width = newWidth + 'px'; });
+        document.addEventListener('mouseup', () => { if (isResizing) { isResizing = false; document.body.style.cursor = 'default'; resizer.classList.remove('active'); } });
+
+        // JSXGraph Board Initialization
+        const board = JXG.JSXGraph.initBoard('jxgbox', {
+            boundingbox: [-5, 5, 5, -5], // ADJUST THESE BOUNDS BASED ON THE MATH
+            axis: true, showCopyright: false, showNavigation: true,
+            defaultAxes: {
+                x: { strokeColor: '#555', ticks: { strokeColor: '#555', label: { strokeColor: '#888' } } },
+                y: { strokeColor: '#555', ticks: { strokeColor: '#555', label: { strokeColor: '#888' } } }
+            }
+        });
+
+        // Resize hook to ensure canvas scales cleanly with the flex container
+        window.addEventListener('resize', () => { board.update(); });
+
+        // ZONE 2: SLIDERS & UI
+        
+
+        // ZONE 3: MATHEMATICS, PLOTTING, & DYNAMIC HTML UPDATES
+        /* Example dynamic update logic:
+        board.on('update', function() {
+            document.getElementById('val-equation').innerHTML = slider.Value().toFixed(2);
+        });
+        */
+
+    </script>
+</body>
+</html>
+
+
+Output ONLY the single, complete, runnable HTML file.
