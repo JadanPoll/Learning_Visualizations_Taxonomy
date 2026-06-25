@@ -64,5 +64,23 @@
     "file": "cs/rate_distortion.html",
     "tags": ["rate-distortion", "fidelity", "lossy-compression"],
     "description": "Interactive rate-distortion curve mapping Shannon's Theorem 22 limits, visualizing the absolute minimum required transmission rate for allowed distortion."
+  },
+  {
+    "concept": "J Robert Oppenheimer",
+    "file": "physics/oppenheimer_dirac_sea.html",
+    "tags": ["dirac-equation", "hole-theory", "pair-production"],
+    "description": "Interactive visualization of the Dirac Sea, demonstrating the promotion of negative-energy electrons to positive energy states via gamma-ray injection, leaving observable positron holes."
+  },
+  {
+    "concept": "J Robert Oppenheimer",
+    "file": "physics/oppenheimer_localization_limit.html",
+    "tags": ["heisenberg-microscope", "compton-wavelength", "localizability"],
+    "description": "Visual experiment demonstrating the limits of electron localizability, showing how probing below the Compton wavelength (λ₀) triggers uncontrolled pair production."
+  },
+  {
+    "concept": "J Robert Oppenheimer",
+    "file": "physics/oppenheimer_vacuum_polarization.html",
+    "tags": ["vacuum-polarization", "coulomb-law", "uehling-potential"],
+    "description": "Simulation of vacuum polarization around a central proton, visualizing the dielectric effect of virtual electron-positron pairs and the resulting modification to the effective Coulomb potential at small scales."
   }
 ]
