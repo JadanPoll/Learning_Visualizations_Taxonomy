@@ -36,5 +36,35 @@ Level 3 (The Mechanics): How the concept actually operates within the analogy.
 
 4. The Generative Leap: The analogy must be rich enough to show why this concept matters. How did this concept create a paradigm shift? What new ideas did it generate or make possible? Show how the analogy flexes to encompass this breakthrough.
 
+F. 
 
+## The Cohesive Physics Engine Prompt
 
+> **Concept to Master:** [INSERT MATH/PHYSICS CONCEPT OR EQUATION HERE]
+> **Goal:** I want to build both *symbolic rigor* and *tacit muscle memory* for this concept. I need to understand not just what the math says, but what it *feels* like to operate the system, mapping the Greek letters to physical sensations.
+> **CRITICAL ANALOGY CONSTRAINT:** You must use a **Singular Physics Engine** for your analogy. Choose ONE cohesive, elegant, real-world physical environment (e.g., fluid dynamics, orbital mechanics, thermodynamics, acoustics).
+> * **DO NOT** use "Frankenstein metaphors" (e.g., do not combine springs, syrup, puppets, and wooden blocks).
+> * **DO NOT** use clunky household objects.
+> * The analogy must be an immersive environment that smoothly scales to explain the most complex integrals without breaking its own internal logic.
+> 
+> 
+> Please break this down using the following constraints:
+> **1. The Mindset Shift & The Kinesthetic Map:** > * Rename this concept based strictly on its mechanical function.
+> * Introduce your Singular Physics Engine. Map the core variables ($x$, $y$, etc.) to tactile, physical sensations in this environment (e.g., inertia, fluid torsion, aerodynamic drag). Define what the baseline state "feels" like.
+> 
+> 
+> **2. The Sensation of the Problem & Failure:** > * What is the fundamental contradiction this math was invented to solve?
+> * If I try to use standard, everyday logic/math on this system, how does the system physically break or push back? (e.g., "the math shatters," "the system violently oscillates"). Describe this failure using your physical environment.
+> 
+> 
+> **3. The Core Mechanic (Equation = Sensation):** > * Identify the single most important equation or rule in this concept.
+> * Decompose it term-by-term. **Map every single mathematical term directly to a physical sensation from your specific environment.** >
+> **4. Reading the Hieroglyphs (The Verbs):** > * Take the most intimidating formula associated with this concept (like the primary integral, transform, or matrix).
+> * Break it into blocks. Do not explain how to compute it; explain the physical *verb* of each block. What physical action is that piece of the equation executing inside your environment?
+> 
+> 
+> **5. Boundary Play & The Hard Limit:** > * What happens to the math, and the physical sensation, if we crank the primary variables to infinity? What if we drop them to zero?
+> * What is the hard mathematical limit or theorem that proves this system is imperfect? What is the "tax" we must pay to use this math?
+> 
+> 
+> **Formatting:** Use LaTeX for all equations. Keep the tone conversational, authoritative, and deeply grounded in your cohesive physical analogy.
