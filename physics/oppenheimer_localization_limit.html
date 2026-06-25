@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limits of Localizability (Gamma-Ray Microscope)</title>
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --panel-bg: #1f2833;
+            --text-main: #c5c6c7;
+            --text-muted: #8b92a5;
+            --highlight: #66fcf1;
+            --warning: #ff5722;
+            --border: #45a29e;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 420px;
+            background-color: var(--panel-bg);
+            padding: 25px;
+            box-sizing: border-box;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #main {
+            flex-grow: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-color);
+            position: relative;
+        }
+
+        h2, h3 { margin: 0; color: #fff; }
+        h2 { font-size: 1.3rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 1.1rem; color: var(--highlight); }
+
+        .control-group {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(69, 162, 158, 0.3);
+        }
+
+        .helper-text { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; line-height: 1.5; }
+        
+        .slider-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        input[type=range] { width: 100%; accent-color: var(--highlight); cursor: pointer; }
+
+        .math-box {
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            border-left: 4px solid var(--highlight);
+            margin-top: 10px;
+        }
+
+        canvas {
+            background-color: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 100%;
+            height: 50%;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            margin-bottom: 20px;
+        }
+
+        .rich-text {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: var(--text-main);
+            background: rgba(255,255,255,0.03);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Localizability (Section 1)</h2>
+        
+        <div class="control-group">
+            <h3>Gamma-Ray Energy (E<sub>&gamma;</sub>)</h3>
+            <div class="helper-text">Increase the energy of the observing photon to attempt to precisely locate the electron.</div>
+            <div class="slider-row">
+                <div class="slider-header">
+                    <span>E<sub>&gamma;</sub> (Units of mc&sup2;)</span>
+                    <span id="val-energy" style="color: var(--highlight); font-family: monospace;">0.50 mc&sup2;</span>
+                </div>
+                <input type="range" id="slider-energy" min="0.1" max="5.0" step="0.1" value="0.5">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Calculated Uncertainty (&Delta;x)</h3>
+            <div class="math-box" id="math-box">
+                <span style="color: var(--text-muted)">Classical &Delta;x &approx; hc / E<sub>&gamma;</sub></span><br>
+                &Delta;x = <span id="val-dx" style="font-weight: bold; color: var(--highlight);">2.00 &lambda;<sub>0</sub></span>
+            </div>
+            <div id="pair-warning" style="color: var(--warning); font-weight: bold; margin-top: 10px; display: none;">
+                WARNING: E &gt; 2mc&sup2;<br>Pair Production Occurring! Identifiability Lost.
+            </div>
+        </div>
+
+        <div class="rich-text" style="margin-top: auto;">
+            <strong>Furry & Oppenheimer (1934):</strong><br>
+            "Because of these considerations it is not in general possible, in experimental situations where electron pairs are produced, to localize the region in which they are produced with a precision much greater than the Compton wave-length (&lambda;<sub>0</sub>)."
+            <br><br>
+            Coordinates are not purely <i>even operators</i>. Attempting to measure them with arbitrary precision causes an uncontrollable indeterminacy in the number of particles present.
+        </div>
+    </div>
+
+    <div id="main">
+        <!-- Visual Microscope View -->
+        <h3 style="margin-bottom: 10px;">Microscope Observation View</h3>
+        <canvas id="canvas-microscope"></canvas>
+        
+        <!-- Graph View -->
+        <h3 style="margin-bottom: 10px;">Uncertainty &Delta;x vs Energy E<sub>&gamma;</sub></h3>
+        <canvas id="canvas-graph"></canvas>
+    </div>
+
+    <script>
+        const sliderEnergy = document.getElementById('slider-energy');
+        const valEnergy = document.getElementById('val-energy');
+        const valDx = document.getElementById('val-dx');
+        const warning = document.getElementById('pair-warning');
+        
+        const cMicro = document.getElementById('canvas-microscope');
+        const ctxMicro = cMicro.getContext('2d');
+        
+        const cGraph = document.getElementById('canvas-graph');
+        const ctxGraph = cGraph.getContext('2d');
+
+        let energy = 0.5; // units of mc^2
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            cMicro.width = cMicro.parentElement.clientWidth - 40;
+            cMicro.height = (cMicro.parentElement.clientHeight / 2) - 50;
+            cGraph.width = cGraph.parentElement.clientWidth - 40;
+            cGraph.height = (cGraph.parentElement.clientHeight / 2) - 50;
+            updateSystem();
+        }
+        window.addEventListener('resize', resize);
+
+        function updateSystem() {
+            energy = parseFloat(sliderEnergy.value);
+            valEnergy.textContent = energy.toFixed(2) + " mc²";
+            
+            // Classical Delta x = 1 / E (in units of lambda_0 = hc/mc^2)
+            let classicalDx = 1 / energy;
+            
+            // Relativistic limit: Approaches 1 (lambda_0) as E gets large, due to pair confusion.
+            // A rough phenomenological curve to illustrate F&O's point:
+            let effectiveDx = Math.max(1, classicalDx); 
+            
+            if (energy > 2.0) {
+                valDx.innerHTML = `~1.00 &lambda;<sub>0</sub> (Limited by Pair Threshold)`;
+                warning.style.display = 'block';
+                document.getElementById('math-box').style.borderColor = 'var(--warning)';
+            } else {
+                valDx.innerHTML = `${classicalDx.toFixed(2)} &lambda;<sub>0</sub>`;
+                warning.style.display = 'none';
+                document.getElementById('math-box').style.borderColor = 'var(--highlight)';
+            }
+
+            drawGraph(classicalDx);
+        }
+
+        function drawMicroscope() {
+            ctxMicro.clearRect(0, 0, cMicro.width, cMicro.height);
+            
+            let cx = cMicro.width / 2;
+            let cy = cMicro.height / 2;
+            
+            // The effective blur radius based on energy
+            let blurRadius = Math.max(1, 1/energy) * 30; // 30px = 1 lambda_0
+
+            // Draw the "true" target electron fuzzy region
+            let grad = ctxMicro.createRadialGradient(cx, cy, 0, cx, cy, blurRadius);
+            grad.addColorStop(0, 'rgba(102, 252, 241, 1)');
+            grad.addColorStop(1, 'rgba(102, 252, 241, 0)');
+            
+            ctxMicro.fillStyle = grad;
+            ctxMicro.beginPath();
+            ctxMicro.arc(cx, cy, blurRadius, 0, Math.PI*2);
+            ctxMicro.fill();
+
+            // Draw fluctuating pairs if E > 2
+            if (energy > 2) {
+                let numPairs = Math.floor((energy - 2) * 2);
+                
+                for(let i=0; i<numPairs; i++) {
+                    // Random position within ~ lambda_0
+                    let px = cx + (Math.random()*60 - 30);
+                    let py = cy + (Math.random()*60 - 30);
+                    
+                    if (Math.random() > 0.8) { // flickering effect
+                        // Draw e-
+                        ctxMicro.fillStyle = '#66fcf1';
+                        ctxMicro.beginPath(); ctxMicro.arc(px-5, py, 3, 0, Math.PI*2); ctxMicro.fill();
+                        
+                        // Draw e+
+                        ctxMicro.strokeStyle = '#ff5722';
+                        ctxMicro.lineWidth = 1.5;
+                        ctxMicro.beginPath(); ctxMicro.arc(px+5, py, 3, 0, Math.PI*2); ctxMicro.stroke();
+                    }
+                }
+            }
+            
+            // Scale Reference
+            ctxMicro.strokeStyle = '#888';
+            ctxMicro.lineWidth = 1;
+            ctxMicro.beginPath();
+            ctxMicro.moveTo(20, cMicro.height - 20);
+            ctxMicro.lineTo(50, cMicro.height - 20);
+            ctxMicro.stroke();
+            ctxMicro.fillStyle = '#888';
+            ctxMicro.font = '10px sans-serif';
+            ctxMicro.fillText('1 λ₀', 25, cMicro.height - 8);
+        }
+
+        function drawGraph(classicalDx) {
+            ctxGraph.clearRect(0, 0, cGraph.width, cGraph.height);
+            
+            let pad = 40;
+            let gw = cGraph.width - 2*pad;
+            let gh = cGraph.height - 2*pad;
+
+            // Axes
+            ctxGraph.strokeStyle = '#555';
+            ctxGraph.lineWidth = 1;
+            ctxGraph.beginPath();
+            ctxGraph.moveTo(pad, pad); ctxGraph.lineTo(pad, cGraph.height - pad);
+            ctxGraph.lineTo(cGraph.width - pad, cGraph.height - pad);
+            ctxGraph.stroke();
+
+            // Labels
+            ctxGraph.fillStyle = '#888';
+            ctxGraph.font = '12px sans-serif';
+            ctxGraph.textAlign = 'center';
+            ctxGraph.fillText('E (mc²)', cGraph.width/2, cGraph.height - 10);
+            ctxGraph.save();
+            ctxGraph.translate(15, cGraph.height/2);
+            ctxGraph.rotate(-Math.PI/2);
+            ctxGraph.fillText('Δx (λ₀)', 0, 0);
+            ctxGraph.restore();
+
+            const mapX = (E) => pad + (E / 5.0) * gw;
+            const mapY = (dx) => cGraph.height - pad - (dx / 5.0) * gh;
+
+            // Draw pair creation threshold E = 2
+            let x2 = mapX(2.0);
+            ctxGraph.strokeStyle = '#ff5722';
+            ctxGraph.setLineDash([5, 5]);
+            ctxGraph.beginPath();
+            ctxGraph.moveTo(x2, pad); ctxGraph.lineTo(x2, cGraph.height - pad);
+            ctxGraph.stroke();
+            ctxGraph.setLineDash([]);
+            ctxGraph.fillText('2mc² Threshold', x2 + 40, pad + 10);
+
+            // Draw Classical Curve (1/E)
+            ctxGraph.strokeStyle = '#888';
+            ctxGraph.lineWidth = 2;
+            ctxGraph.beginPath();
+            for(let e = 0.2; e <= 5.0; e+=0.1) {
+                let px = mapX(e);
+                let py = mapY(1/e);
+                if (py > pad) {
+                    if (e === 0.2) ctxGraph.moveTo(px, py);
+                    else ctxGraph.lineTo(px, py);
+                }
+            }
+            ctxGraph.stroke();
+
+            // Draw QED Effective Limit Curve
+            ctxGraph.strokeStyle = '#66fcf1';
+            ctxGraph.lineWidth = 3;
+            ctxGraph.beginPath();
+            for(let e = 0.2; e <= 5.0; e+=0.1) {
+                let dx = Math.max(1, 1/e);
+                let px = mapX(e);
+                let py = mapY(dx);
+                if (py > pad) {
+                    if (e === 0.2) ctxGraph.moveTo(px, py);
+                    else ctxGraph.lineTo(px, py);
+                }
+            }
+            ctxGraph.stroke();
+
+            // Current point
+            let curX = mapX(energy);
+            let curY = mapY(Math.max(1, classicalDx));
+            ctxGraph.fillStyle = energy > 2 ? '#ff5722' : '#66fcf1';
+            ctxGraph.beginPath();
+            ctxGraph.arc(curX, curY, 6, 0, Math.PI*2);
+            ctxGraph.fill();
+        }
+
+        sliderEnergy.addEventListener('input', updateSystem);
+
+        function animate() {
+            drawMicroscope();
+            requestAnimationFrame(animate);
+        }
+
+        setTimeout(() => { resize(); animate(); }, 100);
+    </script>
+</body>
+</html>
