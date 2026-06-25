@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Dirac Sea & Pair Production</title>
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --panel-bg: #1f2833;
+            --text-main: #c5c6c7;
+            --text-muted: #8b92a5;
+            --electron: #66fcf1;
+            --positron: #ff5722;
+            --photon: #f2e3c6;
+            --border: #45a29e;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 400px;
+            background-color: var(--panel-bg);
+            padding: 25px;
+            box-sizing: border-box;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex-shrink: 0;
+        }
+
+        #main {
+            flex-grow: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-color);
+            position: relative;
+        }
+
+        h2, h3 { margin: 0; color: #fff; }
+        h2 { font-size: 1.3rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 1.1rem; color: var(--electron); }
+
+        .control-group {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(69, 162, 158, 0.3);
+        }
+
+        .helper-text { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; line-height: 1.5; }
+
+        .math-box {
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            border-left: 4px solid var(--electron);
+            margin-top: 10px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--electron);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: rgba(102, 252, 241, 0.1);
+        }
+
+        canvas {
+            background-color: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 100%;
+            flex-grow: 1;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-val { font-size: 1.5rem; font-weight: bold; font-family: monospace; }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            padding: 10px 0;
+            font-size: 0.9rem;
+            justify-content: center;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .dot-box { width: 14px; height: 14px; border-radius: 50%; }
+
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>The Dirac Sea (Eq. 1.1 - 1.3)</h2>
+        
+        <div class="control-group">
+            <h3>Hole Theory Formalism</h3>
+            <div class="helper-text">
+                Dirac's equation admits solutions with both positive and negative kinetic energies.
+            </div>
+            <div class="math-box">
+                ih &part;&psi;/&part;t = H<sub>0</sub>&psi;<br><br>
+                <span style="color: var(--electron)">Positive State: E &ge; mc&sup2;</span><br>
+                <span style="color: var(--positron)">Negative State: E &le; -mc&sup2;</span>
+            </div>
+            <div class="helper-text" style="margin-top: 10px;">
+                Furry and Oppenheimer formalized that the vacuum is a completely filled sea of negative energy states. An absence of an electron in this sea (a hole) is observed as a positive electron (positron).
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Interactive Experiment</h3>
+            <div class="helper-text">Fire a high-energy gamma ray photon (E > 2mc&sup2;) into the vacuum. It will promote a negative-energy electron to a positive energy state, creating an observable electron-positron pair.</div>
+            <button onclick="injectPhoton()">Inject Photon (&gamma;)</button>
+            <button onclick="resetSea()" style="border-color: #555; color: #aaa;">Reset Vacuum</button>
+        </div>
+
+        <div class="control-group">
+            <h3>Observable System State</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-val" id="obs-e" style="color: var(--electron);">0</div>
+                    <div class="stat-label">Observable e&horbar;</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="obs-p" style="color: var(--positron);">0</div>
+                    <div class="stat-label">Observable e+</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="obs-charge">0</div>
+                    <div class="stat-label">Net Charge (v)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="obs-energy">0</div>
+                    <div class="stat-label">Energy (x mc&sup2;)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="main">
+        <div class="legend">
+            <div class="legend-item"><div class="dot-box" style="background: var(--electron);"></div> Electron (e&horbar;)</div>
+            <div class="legend-item"><div class="dot-box" style="background: transparent; border: 2px solid var(--positron); box-sizing: border-box;"></div> Positron Hole (e+)</div>
+            <div class="legend-item"><div class="dot-box" style="background: rgba(102, 252, 241, 0.2);"></div> Vacuum State</div>
+        </div>
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let particles = [];
+        let photons = [];
+        let observables = { e: 0, p: 0 };
+        
+        // Grid setup for the Dirac Sea
+        const cols = 25;
+        const rows = 12;
+
+        function resize() {
+            canvas.width = canvas.parentElement.clientWidth - 40;
+            canvas.height = canvas.parentElement.clientHeight - 80;
+            width = canvas.width;
+            height = canvas.height;
+            initSea();
+        }
+        window.addEventListener('resize', resize);
+
+        class Particle {
+            constructor(x, y, state, targetX = null, targetY = null) {
+                this.x = x;
+                this.y = y;
+                this.originX = x;
+                this.originY = y;
+                this.state = state; // 'vacuum' (filled negative), 'observable' (positive)
+                this.targetX = targetX;
+                this.targetY = targetY;
+                this.isHole = false;
+            }
+
+            draw() {
+                if (this.state === 'vacuum' && !this.isHole) {
+                    ctx.fillStyle = 'rgba(102, 252, 241, 0.3)';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 6, 0, Math.PI*2);
+                    ctx.fill();
+                } else if (this.isHole) {
+                    // Draw Positron (Hole)
+                    ctx.strokeStyle = '#ff5722';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(this.originX, this.originY, 6, 0, Math.PI*2);
+                    ctx.stroke();
+                }
+
+                if (this.state === 'observable') {
+                    // Draw excited electron
+                    ctx.fillStyle = '#66fcf1';
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#66fcf1';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 6, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+
+            update() {
+                if (this.targetX !== null && this.targetY !== null) {
+                    this.x += (this.targetX - this.x) * 0.05;
+                    this.y += (this.targetY - this.y) * 0.05;
+                }
+            }
+        }
+
+        class Photon {
+            constructor() {
+                this.x = -20;
+                this.y = height * 0.25;
+                // Target a random vacuum particle
+                let validTargets = particles.filter(p => p.state === 'vacuum' && !p.isHole);
+                if(validTargets.length > 0) {
+                    this.target = validTargets[Math.floor(Math.random() * validTargets.length)];
+                } else {
+                    this.target = null;
+                }
+                this.speed = 15;
+            }
+
+            draw() {
+                ctx.strokeStyle = '#f2e3c6';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(this.x - 20, this.y + Math.sin(Date.now() * 0.02) * 10);
+                ctx.lineTo(this.x - 40, this.y - Math.sin(Date.now() * 0.02) * 10);
+                ctx.stroke();
+            }
+
+            update() {
+                if (!this.target) return false;
+                
+                let dx = this.target.x - this.x;
+                let dy = this.target.y - this.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if (dist < this.speed) {
+                    // Hit!
+                    this.target.isHole = true;
+                    // Create new observable electron
+                    let e = new Particle(this.target.x, this.target.y, 'observable', 
+                        this.target.x + (Math.random()*100 - 50), 
+                        height * 0.25 + (Math.random()*100 - 50)
+                    );
+                    particles.push(e);
+                    
+                    observables.e++;
+                    observables.p++;
+                    updateStats();
+                    return false; // remove photon
+                }
+                
+                this.x += (dx/dist) * this.speed;
+                this.y += (dy/dist) * this.speed;
+                return true;
+            }
+        }
+
+        function initSea() {
+            particles = [];
+            observables = { e: 0, p: 0 };
+            photons = [];
+            
+            let startY = height * 0.6; // -mc^2 boundary
+            let cellW = width / cols;
+            let cellH = (height - startY) / rows;
+
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    particles.push(new Particle(
+                        i * cellW + cellW/2,
+                        startY + j * cellH + cellH/2,
+                        'vacuum'
+                    ));
+                }
+            }
+            updateStats();
+        }
+
+        function injectPhoton() {
+            photons.push(new Photon());
+        }
+
+        function resetSea() {
+            initSea();
+        }
+
+        function updateStats() {
+            document.getElementById('obs-e').textContent = observables.e;
+            document.getElementById('obs-p').textContent = observables.p;
+            document.getElementById('obs-charge').textContent = observables.p - observables.e;
+            
+            // Energy: Each e- is >= mc^2, each e+ is >= mc^2.
+            let e = (observables.e * 1.5 + observables.p * 1.5).toFixed(1); // arbitrary > 1 kinetic 
+            document.getElementById('obs-energy').textContent = observables.e === 0 ? "0" : e;
+        }
+
+        function drawBackground() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw gap
+            ctx.fillStyle = 'rgba(255,255,255,0.05)';
+            ctx.fillRect(0, height*0.4, width, height*0.2);
+            
+            ctx.strokeStyle = '#45a29e';
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(0, height*0.4); ctx.lineTo(width, height*0.4);
+            ctx.moveTo(0, height*0.6); ctx.lineTo(width, height*0.6);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.fillStyle = '#45a29e';
+            ctx.font = '14px monospace';
+            ctx.fillText('+mc² (Positive Energy Continuum)', 10, height*0.4 - 10);
+            ctx.fillText('-mc² (Negative Energy Sea)', 10, height*0.6 + 20);
+        }
+
+        function loop() {
+            drawBackground();
+
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            for (let i = photons.length - 1; i >= 0; i--) {
+                if (!photons[i].update()) {
+                    photons.splice(i, 1);
+                } else {
+                    photons[i].draw();
+                }
+            }
+
+            requestAnimationFrame(loop);
+        }
+
+        setTimeout(() => { resize(); loop(); }, 100);
+    </script>
+</body>
+</html>
