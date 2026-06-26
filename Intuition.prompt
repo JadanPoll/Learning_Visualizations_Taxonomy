@@ -1,72 +1,60 @@
-A. motivating reason for invention. what was the motivating problem.
-what was being used before and what did it enable after
+Concept to Master: [INSERT CONCEPT / EQUATION / PAPER HERE]
 
-B. Absorbing an equation
+Target: A technically literate person with strong physical intuition and zero prior exposure to this specific field.
 
-i. Taxonomy of equations related to this
-ii. Start from the bases, what are the levels of complexity, then decompose them(
-(Thoughts: The fundamental problem is my symbol recognition intuition, to know a concept and to do math on it are very different)
+0. Functional Rename
+Ignore the historical name entirely. Based purely on its mechanical role in its system, give it a descriptive functional name. Use this name throughout.
 
-C. I don't understand this, what is it basically saying
+1. Origin & Necessity
 
-D. Do a timeline on the basis papers you need to read to begin to understand this
+What was the precise problem that forced this concept into existence? State it as a contradiction or failure in the prior framework.
+What tool was being used before, why did it break, and what did this concept unlock that was previously impossible?
+2. Why This Word
 
+How does the name (or eponym) relate to the actual mechanism? When and why was it coined?
+If the name is misleading or historically contingent, say so explicitly.
+3. The Physics Engine
+Choose one cohesive physical domain (signal processing, thermodynamics, fluid dynamics, orbital mechanics, acoustics, structural mechanics — whichever is the tightest structural fit, not the most obvious one). Commit to it completely. Do not mix domains.
 
-E. why the word? how does the name related to its meaning? 
-how did it historically develop?
-Target Audience: A smart, curious peer who has zero background in this specific field, but deeply understands everyday physical systems, technology, and common sense logic.
+Map every core variable and operation to a specific, nameable physical quantity in that domain. State the mapping table explicitly:
 
-Please break this concept down using the following constraints:
+Mathematical object	Physical quantity in the engine
+...	...
+Then describe what the baseline system looks like, what it looks like from an orthogonal angle, and where its structure naturally breaks or strains.
 
-1. The Functional Translation: Ignore the historical name or eponyms entirely. If you had to rename this concept based purely on what it does or the mechanical role it plays in its system, what would you name it? Start your response with this functional name.
+4. Progressive Build
 
-2. The Anchor Analogy: Decompose the concept using a rich, intuitive analogy rooted in everyday physical reality, common technology, or human experience.
+Level 1 — Ground state: The simplest non-trivial case. What does one element, one operation, one equation look like in the engine?
 
-CRITICAL: Do not map abstract concepts to other abstract concepts.
+Level 2 — The friction: What specific failure or quirk in the engine is this concept designed to handle? What goes wrong without it?
 
-Do not use forced, overly clever, or niche analogies (e.g., obscure chess rules, intricate plumbing diagrams). The baseline analogy must be instantly recognizable.
+Level 3 — The full mechanism: How does the concept operate at full generality inside the engine? What invariant does it preserve or quantity does it extremize?
 
-3. Progressive Enrichment: Do not explain the whole thing at once. Build the analogy in three stages:
+5. Equation Dissection
+Take the primary equation or definition. Break it into atomic blocks. For each block:
 
-Level 1 (The Basics): The intuitively simple foundation of the analogy.
+State what it says mathematically
+State what physical sensation it corresponds to in the engine
+State what pathology occurs if you remove that term
+Then show the full hierarchy of complexity: what is the simplest version, what assumptions are relaxed at each level, what does the most general form look like.
 
-Level 2 (The Friction): Introduce the specific problem, quirk, or complexity that this concept solves within the analogy.
+6. Symbol Muscle Memory
+List every non-obvious symbol. For each: what quantity it tracks, what its units or type are, what happens physically when it goes to zero, to infinity, and to a negative or complex value.
 
-Level 3 (The Mechanics): How the concept actually operates within the analogy.
+7. Boundary Behavior
 
-4. The Generative Leap: The analogy must be rich enough to show why this concept matters. How did this concept create a paradigm shift? What new ideas did it generate or make possible? Show how the analogy flexes to encompass this breakthrough.
-no not use pretentious english or prose analogies, use physics/mathematics or engineering analogies
+Crank the primary parameters to their extremes. What does the engine do? What does the math predict?
+What is the hard theorem that gives this concept its fundamental limitation or cost? What is the "tax"?
+What is the richest or most surprising class of problems this concept solved that was previously intractable?
+8. Taxonomy of Related Mathematics
+Give a dependency graph: what must you understand before this, what runs alongside it, what does it unlock. One sentence per node, grounded in the engine's language.
 
-F. 
+9. Reading Sequence
+List 5–8 papers or texts in chronological order of conceptual dependency — not publication date. For each: one sentence on what it contributes and why you cannot skip it.
 
-## The Cohesive Physics Engine Prompt
+Hard constraints throughout:
 
-> **Concept to Master:** [INSERT MATH/PHYSICS CONCEPT OR EQUATION HERE]
-> **Goal:** I want to build both *symbolic rigor* and *tacit muscle memory* for this concept. I need to understand not just what the math says, but what it *feels* like to operate the system, mapping the Greek letters to physical sensations.
-> **CRITICAL ANALOGY CONSTRAINT:** You must use a **Singular Physics Engine** for your analogy. Choose ONE cohesive, elegant, real-world physical environment (e.g., fluid dynamics, orbital mechanics, thermodynamics, acoustics).
-> * **DO NOT** use "pretentious metaphors" (e.g., do not combine springs, syrup, puppets, and wooden blocks).
-> * The analogy must be an immersive environment that smoothly scales to explain the most complex integrals without breaking its own internal logic.
-> 
-> 
-> Please break this down using the following constraints:
-> **1. Rich Mindset & Mental space:** > * Lens this concept based through its mechanical function.
-> * Introduce your Singular Physics Engine. Map the core variables ($x$, $y$, etc.) to the form of this environment (e.g., inertia, fluid torsion, aerodynamic drag). What does the baseline look like, what does it look like from a different angle. Where are its rich applicabilites and problems it solves?
-> 
-> 
-> **2. The Intuition of the Problem & Failure:** > * What is the fundamental contradiction this math was invented to solve?
-> * What naivities in understanding causes problems or lack of rich use of the idea.
-> 
-> 
-> **3. The Core Mechanic (Equation = Sensation):** > * Identify the important basis set of ideas or rules for concept.
-> * Decompose it term-by-term. **Map every single mathematical term directly to a physical sensation from your specific environment.** >
-> **4. Reading the Hieroglyphs (The Verbs):** > * Take the most intimidating formula associated with this concept (like the primary integral, transform, or matrix).
-> * Break it into blocks. > 
-> 
-> **5. Boundary Play & The Hard Limit:** > * What happens to the math, and the physical sensation, if we crank the primary variables to infinity? What if we drop them to zero?
-> * What is the hard mathematical limit or theorem that proves this system is imperfect? What is the "tax" we must pay to use this math? Alternatively, what richness has this math enabled especially in the kind of problems that can be solved
-> 
-?**6. Enrichment:"" > *Enrich this concept with a taxonomy of analogous often related mathematics you would usually have to understand or use alongside this concept
-> 
-> **Formatting:** Use LaTeX for all equations. Keep the tone conversational, authoritative, and deeply grounded in your cohesive physical analogy.
-
-do not use pretentious english or prose analogies, use physics/mathematics or engineering analogies
+One physics engine, never mixed
+Every analogy maps to a physical quantity with units, not a feeling or a story
+LaTeX for all equations
+No decorative prose — every sentence either states a fact, makes a prediction, or draws a structural parallel
