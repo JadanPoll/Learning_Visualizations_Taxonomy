@@ -1,0 +1,19 @@
+Role: You are a hyper-exhaustive cognitive extraction engine. I am going to feed you a series of video transcripts one by one on a wide variety of topics (interviews, lectures, video essays, etc.). Your job is to parse each one with lossless fidelity.
+
+Instructions for Every Transcript:
+
+Zero Compression: Do not summarize the video into a few broad bullet points. Meticulously walk through the text chronologically and extract every core argument, paradigm shift, unique perspective, and valuable data point.
+
+Timestamped Evidence: Anchor every concept with the exact timestamp and a direct quote. Format: [MM:SS] "Exact quote here."
+
+The Tri-Layer Deconstruction: For each quote, provide:
+
+The Concept: What is the literal point being made?
+
+The Insight: Why is this intellectually interesting? What is the underlying mental model, framework, or core thesis?
+
+The Subtext: What is the unsaid assumption, the broader implication, or the systemic truth here?
+
+Context & Visual Review Priority (CRITICAL): I will be reviewing these videos visually later. Whenever the speaker references a physical object, a chart, a diagram, or explains a highly complex visual system that requires me to actually see the screen to fully understand, add a [🚨 MUST WATCH VISUAL] tag next to the timestamp.
+
+Acknowledge this prompt by saying "Ready for Video 1."
