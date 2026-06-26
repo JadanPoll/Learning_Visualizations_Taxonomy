@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mathematical Fields — Engineering Visualization</title>
+
+    <script type="text/javascript" charset="UTF-8"
+        src="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js"></script>
+    <link rel="stylesheet" type="text/css"
+        href="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css" />
+
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] }
+        };
+    </script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg:    #0b0c10;
+            --panel: #1a1f2e;
+            --text:  #c5c6c7;
+            --muted: #5a6172;
+            --hl:    #66fcf1;
+            --bdr:   #45a29e;
+            --a1:    #ff4b4b;
+            --a2:    #ff9d00;
+            --a3:    #4caf50;
+            --a4:    #c77dff;
+            --a5:    #38bdf8;
+            --a6:    #f97316;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            display: flex; height: 100vh; overflow: hidden;
+            background: var(--bg); color: var(--text);
+            font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 13.5px;
+        }
+
+        /* ── SIDEBAR ── */
+        #sidebar {
+            width: 470px; min-width: 300px; max-width: 680px;
+            background: var(--panel); display: flex; flex-direction: column;
+            overflow-y: auto; flex-shrink: 0; border-right: 1px solid rgba(69,162,158,0.2);
+        }
+        #sid-header {
+            padding: 16px 18px 12px;
+            background: linear-gradient(135deg,#0d1b2a,#1a1f2e);
+            border-bottom: 2px solid var(--bdr);
+            position: sticky; top: 0; z-index: 20;
+        }
+        #sid-header h1 { font-size: 1.05rem; color: var(--hl); letter-spacing:.05em; text-transform:uppercase; }
+        #sid-header p  { font-size: .76rem; color: var(--muted); line-height:1.4; margin-top:3px; }
+
+        #sid-body { padding: 10px; display: flex; flex-direction: column; gap: 7px; }
+
+        /* Accordion */
+        .acc { border: 1px solid rgba(69,162,158,.22); border-radius: 6px; overflow: hidden; }
+        .acc-hd {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 9px 13px; cursor: pointer; background: rgba(0,0,0,.25);
+            user-select: none; transition: background .2s;
+        }
+        .acc-hd:hover { background: rgba(102,252,241,.05); }
+        .acc-hd h3 { font-size:.85rem; color:var(--hl); display:flex; align-items:center; gap:7px; }
+        .badge {
+            font-size:.68rem; background:rgba(102,252,241,.1);
+            color:var(--hl); border-radius:10px; padding:1px 7px;
+        }
+        .chev { color:var(--muted); transition:transform .22s; font-size:.85rem; }
+        .acc.open .chev { transform:rotate(180deg); }
+        .acc-bd { display:none; padding:11px 13px 13px; border-top:1px solid rgba(69,162,158,.18); }
+        .acc.open .acc-bd { display:block; }
+
+        p.inf { line-height:1.65; color:var(--text); font-size:.82rem; margin-bottom:7px; }
+        p.inf:last-child { margin-bottom:0; }
+
+        /* Axiom list */
+        .axl { list-style:none; display:flex; flex-direction:column; gap:3px; margin:6px 0; }
+        .axl li {
+            padding:5px 10px; border-left:3px solid var(--bdr);
+            background:rgba(0,0,0,.18); border-radius:0 4px 4px 0;
+            font-size:.8rem; line-height:1.5;
+        }
+        .axl li .lbl { color:var(--hl); font-weight:700; margin-right:6px; }
+        .axl li .mt  { color:var(--muted); font-size:.75rem; display:block; margin-top:2px; }
+
+        /* Math data box */
+        .mb {
+            background:#000; padding:11px 13px; border-radius:6px;
+            font-family:'Courier New',monospace; font-size:.8rem; line-height:1.95;
+            border-left:4px solid var(--hl); margin:7px 0; overflow-x:auto;
+        }
+        .mb.or { border-left-color:var(--a2); }
+        .mb.gr { border-left-color:var(--a3); }
+        .mb.pu { border-left-color:var(--a4); }
+        .mb.re { border-left-color:var(--a1); }
+        .mb.bl { border-left-color:var(--a5); }
+
+        .v  { color:var(--hl);  font-weight:700; }
+        .vo { color:var(--a2); font-weight:700; }
+        .vg { color:var(--a3); font-weight:700; }
+        .vp { color:var(--a4); font-weight:700; }
+        .vr { color:var(--a1); font-weight:700; }
+        .vb { color:var(--a5); font-weight:700; }
+
+        /* F4 table */
+        .ftw { display:flex; gap:14px; margin:7px 0; flex-wrap:wrap; }
+        .ft  { border-collapse:collapse; font-size:.78rem; font-family:monospace; }
+        .ft caption { color:var(--muted); font-size:.72rem; margin-bottom:3px; text-align:left; }
+        .ft td,.ft th { border:1px solid rgba(69,162,158,.28); padding:4px 9px; text-align:center; }
+        .ft th { background:rgba(102,252,241,.07); color:var(--hl); }
+        .ft td.h  { background:rgba(102,252,241,.07); color:var(--hl); font-weight:700; }
+        .ft td.sp { color:var(--a2); font-weight:700; }
+
+        /* Warning */
+        .warn {
+            display:none; margin-top:7px; background:rgba(255,75,75,.14);
+            border:1px solid var(--a1); border-radius:4px; padding:7px 12px;
+            color:var(--a1); font-weight:700; font-size:.8rem; text-align:center;
+        }
+        .warn.show { display:block; }
+
+        /* Timeline */
+        .tl { display:flex; flex-direction:column; gap:4px; margin:6px 0; }
+        .tl-row { display:flex; gap:9px; align-items:flex-start; }
+        .tl-yr { min-width:38px; color:var(--a2); font-weight:700; font-size:.76rem; font-family:monospace; padding-top:2px; }
+        .tl-dot { width:7px; height:7px; border-radius:50%; background:var(--bdr); margin-top:5px; flex-shrink:0; }
+        .tl-txt { font-size:.79rem; line-height:1.5; }
+        .tl-txt b { color:var(--hl); }
+
+        /* ── RESIZER ── */
+        #resizer { width:5px; background:var(--bdr); cursor:col-resize; flex-shrink:0; transition:background .2s; }
+        #resizer:hover, #resizer.act { background:var(--hl); }
+
+        /* ── MAIN ── */
+        #main { flex:1; display:flex; flex-direction:column; min-width:0; padding:14px; gap:10px; overflow:hidden; }
+
+        #tab-bar { display:flex; gap:5px; flex-shrink:0; flex-wrap:wrap; }
+        .tb {
+            padding:5px 13px; border-radius:4px; border:1px solid rgba(69,162,158,.35);
+            background:rgba(0,0,0,.25); color:var(--muted); cursor:pointer; font-size:.78rem;
+            transition:all .18s; white-space:nowrap;
+        }
+        .tb:hover { border-color:var(--hl); color:var(--hl); }
+        .tb.act  { background:rgba(102,252,241,.1); border-color:var(--hl); color:var(--hl); }
+
+        .vp-panel { flex:1; min-height:0; display:none; flex-direction:column; }
+        .vp-panel.act { display:flex; }
+
+        .jxgbox {
+            flex:1; min-height:0; width:100%;
+            background:#000 !important; border:1px solid var(--bdr) !important;
+            border-radius:6px; overflow:hidden; position:relative;
+        }
+        .svgpanel {
+            flex:1; min-height:0; width:100%;
+            background:#000; border:1px solid var(--bdr); border-radius:6px; overflow:auto;
+        }
+
+        .istrip {
+            flex-shrink:0; display:flex; gap:14px; flex-wrap:wrap;
+            font-size:.77rem; font-family:monospace; color:var(--muted); padding-top:4px;
+        }
+        .istrip .kv { display:flex; gap:4px; align-items:center; }
+        .istrip .k  { color:var(--muted); }
+        .istrip .iv { color:var(--hl); font-weight:700; }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════ SIDEBAR ═══════════════════════════════ -->
+<div id="sidebar">
+<div id="sid-header">
+    <h1>Mathematical Fields</h1>
+    <p>Engineering decomposition — axioms through algebraic geometry &amp; number theory</p>
+</div>
+<div id="sid-body">
+
+<!-- 1. AXIOMS -->
+<div class="acc open">
+<div class="acc-hd" onclick="toggleAcc(this)">
+    <h3><span style="color:var(--a2)">⚙</span> 1. The Universal Gearbox <span class="badge">Axioms</span></h3>
+    <span class="chev">▼</span>
+</div>
+<div class="acc-bd">
+<p class="inf">A <b>field</b> $(F,+,\cdot)$ is a perfectly machined reversible transmission. Every element is a gear; every operation a coupling. The design is governed by six structural guarantees:</p>
+<ul class="axl">
+    <li><span class="lbl">Assoc.</span>Gear-chain order is immaterial: $(a+b)+c = a+(b+c)$, $(ab)c = a(bc)$.
+        <span class="mt">Re-routing shafts doesn't change output speed.</span></li>
+    <li><span class="lbl">Comm.</span>Input and output are interchangeable: $a+b=b+a$, $ab=ba$.
+        <span class="mt">Bidirectional shaft coupling — symmetric torque transfer.</span></li>
+    <li><span class="lbl">Identity</span>Neutral gear $\mathbf{0}$ (locked casing) and direct drive $\mathbf{1}$: $a+0=a$, $a{\cdot}1=a$.
+        <span class="mt">The only two "do-nothing" states in the machine.</span></li>
+    <li><span class="lbl">Add. Inv.</span>Every gear $a$ has a counter-gear $-a$ cancelling torque: $a+(-a)=0$.
+        <span class="mt">Guaranteed reverse-torque cancellation; defines subtraction.</span></li>
+    <li><span class="lbl">Mult. Inv.</span>Every non-zero gear $a$ has a ratio restorer $a^{-1}$: $a\cdot a^{-1}=1$.
+        <span class="mt">No dead-ratio lock except the null casing $0$. Defines division.</span></li>
+    <li><span class="lbl">Distrib.</span>Parallel routing combines with series: $a(b+c)=ab+ac$.
+        <span class="mt">The load-sharing coupling law — the heart of linearity.</span></li>
+</ul>
+<p class="inf">A field is also a <em>commutative ring</em> with $0\neq1$ in which every nonzero element is a unit. Integers $\mathbb{Z}$ fail: $2^{-1}\notin\mathbb{Z}$. A <em>division ring</em> drops commutativity — the quaternions $\mathbb{H}$ (where $ij=k\neq ji=-k$) are the canonical example. Wedderburn's theorem: every finite division ring is commutative (hence a field).</p>
+<div class="mb">
+    Z (input gear): <span id="val-z" class="v">—</span><br>
+    Z⁻¹ (ratio restorer): <span id="val-zinv" class="vo">—</span><br>
+    |Z⁻¹| (back-drive torque): <span id="val-torque" class="v">—</span>
+</div>
+<div id="warn-zero" class="warn">MECHANICAL FAILURE: Division by Zero<br>Cannot extract energy from locked casing (Z = 0)</div>
+</div></div>
+
+<!-- 2. NUMBER SYSTEMS -->
+<div class="acc">
+<div class="acc-hd" onclick="toggleAcc(this)">
+    <h3><span style="color:var(--a5)">⬡</span> 2. Number System Hierarchy <span class="badge">Examples</span></h3>
+    <span class="chev">▼</span>
+</div>
+<div class="acc-bd">
+<p class="inf"><b>Rationals $\mathbb{Q}$</b> — The prototype field. Every fraction $a/b$ ($b\neq0$) is a gear ratio. Additive inverse: $-a/b$. Multiplicative inverse: $b/a$. Prime field of characteristic 0. Verification of distributivity: $\frac{a}{b}\!\cdot\!\left(\frac{c}{d}+\frac{e}{f}\right) = \frac{a}{b}\!\cdot\!\frac{cf+ed}{df} = \frac{a(cf+ed)}{bdf} = \frac{ac}{bd}+\frac{ae}{bf}$.</p>
+<p class="inf"><b>Reals $\mathbb{R}$</b> — The continuous-casting completion of $\mathbb{Q}$: every Cauchy gap filled. The unique Dedekind-complete ordered field (no measurement gaps, no infinite elements). Algebraically deficient: $x^2+1=0$ has no real solution.</p>
+<p class="inf"><b>Complex $\mathbb{C}$</b> — The 2D rotational alloy. Adjoin $i$ (satisfying $i^2=-1$) to $\mathbb{R}$. Elements: $a+bi$. Multiplication is rotation by $\arg(Z)$ and scaling by $|Z|$. Algebraically <em>closed</em> by the Fundamental Theorem of Algebra: every polynomial has a root in $\mathbb{C}$. $[\mathbb{C}:\mathbb{R}]=2$.</p>
+<p class="inf"><b>Constructible Numbers</b> — The compass-and-straightedge sub-field of $\mathbb{R}$, built from $\{0,1\}$ by $+,-,\times,\div,\sqrt{\phantom x}$. Extensions have degree a power of 2. This kills trisection (requires degree 3) and squaring the circle ($\pi$ is transcendental, not even algebraic).</p>
+<div class="mb bl">
+    Chain: $\mathbb{F}_p \subset \mathbb{Q} \subset \mathbb{Q}(\sqrt{2}) \subset \cdots \subset \mathbb{R} \subset \mathbb{C}$<br>
+    $[\mathbb{C}:\mathbb{R}]=2$ &nbsp;·&nbsp; $[\mathbb{R}:\mathbb{Q}]=\infty$ &nbsp;·&nbsp; $[\mathbb{Q}(\sqrt{2}):\mathbb{Q}]=2$<br>
+    Ostrowski: only completions of $\mathbb{Q}$ are $\mathbb{R}$ and $\mathbb{Q}_p$
+</div>
+</div></div>
+
+<!-- 3. FIELD EXTENSIONS -->
+<div class="acc">
+<div class="acc-hd" onclick="toggleAcc(this)">
+    <h3><span style="color:var(--a4)">⬆</span> 3. Extension Towers <span class="badge">Degree &amp; Algebra</span></h3>
+    <span class="chev">▼</span>
+</div>
+<div class="acc-bd">
+<p class="inf">A <b>field extension</b> $F/E$ is a bolt-on module: new degrees of freedom attached to the base field. The <b>degree</b> $[F:E] = \dim_E F$ counts the independent directions in the new assembly.</p>
+<p class="inf"><b>Tower Law</b> (series gear multiplication): $[G:E]=[G:F]\cdot[F:E]$. Stack gear stages — total ratio is the product of stage ratios.</p>
+<p class="inf"><b>Algebraic elements</b> satisfy a polynomial equation over the base — they "meet a design spec." Transcendental elements (like $\pi$ or $e$) are free indeterminates. Adjoining $x$ algebraic of minimal degree $n$: $$E(x)\cong E[X]/(f(X)),\quad [E(x):E]=n,\quad\text{elements: }\textstyle\sum_{k=0}^{n-1}a_k x^k$$</p>
+<p class="inf"><b>Constructing from rings — two routes:</b><br>
+(1) <em>Field of fractions</em>: promoting an integral domain $R$ to $Q(R)$ by forming all ratios $a/b$ ($b\neq0$). $Q(\mathbb{Z})=\mathbb{Q}$. Like taking the full span of bolt-ratio specifications.<br>
+(2) <em>Residue field</em>: quotienting a ring by a maximal ideal $\mathfrak{m}$ — enforcing a specific tolerance spec. $\mathbb{Z}/p\mathbb{Z}=\mathbb{F}_p$. Adjoining a root of irreducible $f$: $E[X]/(f(X))$.</p>
+<p class="inf"><b>Algebraic closure $\bar{F}$</b> — the fully-commissioned factory where every polynomial has a root. $\bar{\mathbb{R}}=\mathbb{C}$ (Artin–Schreier: if $[\bar{F}:F]<\infty$ then it equals 2 and $F\equiv\mathbb{R}$). Every field has a unique algebraic closure up to isomorphism.</p>
+<p class="inf"><b>Transcendence basis</b> — a maximal algebraically-independent set $S\subset F$ over $E$: the minimal set of free design parameters from which all of $F$ is algebraic. Every extension splits as purely transcendental then algebraic.</p>
+<div class="mb pu">
+    $\mathbb{Q}(\sqrt{2})/\mathbb{Q}$: degree <span class="vp">2</span>, min-poly $X^2-2$<br>
+    Elements: $\{a+b\sqrt{2}\mid a,b\in\mathbb{Q}\}$<br>
+    $\mathbb{Q}(\sqrt[4]{2})/\mathbb{Q}$: degree <span class="vp">4</span> $=2\times2$ (Tower Law)<br>
+    $\mathbb{C}/\mathbb{R}=E[X]/(X^2+1)$: degree <span class="vp">2</span>, root $i$
+</div>
+</div></div>
+
+<!-- 4. GALOIS THEORY -->
+<div class="acc">
+<div class="acc-hd" onclick="toggleAcc(this)">
+    <h3><span style="color:var(--a1)">⟳</span> 4. Galois Theory <span class="badge">Symmetry</span></h3>
+    <span class="chev">▼</span>
+</div>
+<div class="acc-bd">
+<p class="inf">A <b>Galois extension</b> $F/E$ is a finite separable normal extension — an assembly with full interchangeable-parts symmetry. Its <b>Galois group</b> $\text{Gal}(F/E)$ is the group of field automorphisms fixing $E$ pointwise — the valid component swaps preserving all structural relationships.</p>
+<p class="inf"><b>Fundamental Theorem</b> (the master wiring diagram): $$\bigl\{\text{subgroups of }\text{Gal}(F/E)\bigr\}\xleftrightarrow{\ \ 1{:}1\ \ }\bigl\{\text{intermediate fields }E\!\subset\! K\!\subset\! F\bigr\}$$ The degree $[F:K]$ equals the order of the corresponding subgroup. Sub-assemblies of symmetry $\leftrightarrow$ intermediate structural layers.</p>
+<p class="inf"><b>Solvability by radicals</b>: Zeros of $f$ are expressible by $+,-,\times,\div,\!\sqrt[n]{\phantom x}$ iff $\text{Gal}(F/E)$ is <em>solvable</em> — constructible layer-by-layer from cyclic gears. The symmetric group $S_n$ is not solvable for $n\geq5$, proving <b>Abel–Ruffini</b>: no radical formula exists for the general quintic. $f(X)=X^5-4X+2$ is a concrete unsolvable example.</p>
+<p class="inf"><b>Trisection impossibility</b>: $\cos(20°)$ is a root of $8x^3-6x-1$ — irreducible of degree 3 over $\mathbb{Q}$. Constructible extensions have degree $2^k$. Since $3\nmid 2^k$, trisection is geometrically impossible.</p>
+<p class="inf"><b>Cyclotomic fields</b> $\mathbb{Q}(\zeta_n)$: adjoining a primitive $n$th root of unity. $\text{Gal}(\mathbb{Q}(\zeta_n)/\mathbb{Q})\cong(\mathbb{Z}/n\mathbb{Z})^\times$, order $\varphi(n)$. Kummer used these to prove Fermat's Last Theorem for regular prime exponents.</p>
+<div class="mb re">
+    arg(Z): <span id="val-arg" class="vr">—</span> &nbsp; arg(Z̄): <span id="val-carg" class="vr">—</span><br>
+    arg(Z²): <span id="val-sqarg" class="vr">—</span> &nbsp; (multiplication doubles angle)<br>
+    Gal(ℂ/ℝ) = {id, complex conjugation} ≅ ℤ/2ℤ
+</div>
+</div></div>
+
+<!-- 5. FINITE FIELDS -->
+<div class="acc">
+<div class="acc-hd" onclick="toggleAcc(this)">
+    <h3><span style="color:var(--a3)">⬡</span> 5. Finite Fields $\mathbb{F}_{p^n}$ <span class="badge">Galois Fields</span></h3>
+    <span class="chev">▼</span>
+</div>
+<div class="acc-bd">
+<p class="inf">A <b>finite field</b> $GF(q)$ has exactly $q=p^n$ elements — a combination lock with $q$ positions. It is the splitting field of $x^q-x$ over $\mathbb{F}_p$: every element satisfies $a^q=a$. Two finite fields of the same order are isomorphic — one lock per size.</p>
+<p class="inf">$\mathbb{F}_q$ viewed as an $n$-dimensional vector space over $\mathbb{F}_p$ — $n$ independent DOF over the base. The multiplicative group $\mathbb{F}_q^\times$ is cyclic of order $q-1$ — a single master gear driving everything.</p>
+<p class="inf"><b>$\mathbb{F}_4 = \{O,I,A,B\}$</b> — char 2, min-poly $X^2+X+1$ for $A$. $\{O,I\}=\mathbb{F}_2$ is a subfield:</p>
+<div class="ftw">
+    <table class="ft">
+        <caption>Addition in $\mathbb{F}_4$</caption>
+        <tr><th>+</th><th>O</th><th>I</th><th>A</th><th>B</th></tr>
+        <tr><td class="h">O</td><td>O</td><td>I</td><td>A</td><td>B</td></tr>
+        <tr><td class="h">I</td><td>I</td><td class="sp">O</td><td>B</td><td>A</td></tr>
+        <tr><td class="h">A</td><td>A</td><td>B</td><td class="sp">O</td><td>I</td></tr>
+        <tr><td class="h">B</td><td>B</td><td>A</td><td>I</td><td class="sp">O</td></tr>
+    </table>
+    <table class="ft">
+        <caption>Multiplication in $\mathbb{F}_4$</caption>
+        <tr><th>·</th><th>O</th><th>I</th><th>A</th><th>B</th></tr>
+        <tr><td class="h">O</td><td>O</td><td>O</td><td>O</td><td>O</td></tr>
+        <tr><td class="h">I</td><td>O</td><td>I</td><td>A</td><td>B</td></tr>
+        <tr><td class="h">A</td><td>O</td><td>A</td><td class="sp">B</td><td>I</td></tr>
+        <tr><td class="h">B</td><td>O</td><td>B</td><td>I</td><td class="sp">A</td></tr>
+    </table>
+</div>
+<p class="inf" style="margin-top:5px;">Orange: $I{+}I=O$ (char 2 reset), $A\cdot A=B\neq A$ (non-trivial product). Distributivity check: $A(B{+}A)=A\cdot I=A=AB+A^2=I+B=A$ ✓</p>
+<p class="inf"><b>Applications</b>: AES encryption runs on $\mathbb{F}_{2^8}$; Reed-Solomon codes (CDs, QR codes, satellite) use $\mathbb{F}_{2^8}$; elliptic curve crypto uses $\mathbb{F}_p$ for large prime $p$.</p>
+</div></div>
+
+<!-- 6. CHARACTERISTIC & FROBENIUS -->
+<div class="acc">
+<div class="acc-hd" onclick="toggleAcc(this)">
+    <h3><span style="color:var(--a6)">↺</span> 6. Characteristic &amp; Frobenius <span class="badge">Resonance</span></h3>
+    <span class="chev">▼</span>
+</div>
+<div class="acc-bd">
+<p class="inf">The <b>characteristic</b> of $F$ is its resonance frequency — the smallest prime $p>0$ with $\underbrace{1+\cdots+1}_{p}=0$. If no such $p$, char $=0$ (no resonance). Characteristic is always 0 or prime.</p>
+<p class="inf">The <b>Frobenius endomorphism</b> $\phi:x\mapsto x^p$ is the canonical self-test automorphism in char $p$. It preserves both addition and multiplication, and satisfies the <em>freshman's dream</em>: $(a+b)^p=a^p+b^p$ because all middle binomial coefficients $\binom{p}{k}$ are divisible by $p$.</p>
+<p class="inf">The <b>prime field</b> of $F$ is the factory's base module — $\mathbb{F}_p$ if char $p$, or $\mathbb{Q}$ if char 0. The prime field is isomorphic to $\mathbb{Z}/p\mathbb{Z}$ or $\mathbb{Q}$ respectively and cannot be further reduced.</p>
+<p class="inf">Every field $F$ of char $p$ satisfies $p\cdot a=0$ for all $a$. This makes $\mathbb{F}_p$-fields radically different from char-0 fields: the Frobenius map is a non-trivial automorphism that "twists" structure in ways with no char-0 analogue.</p>
+<div class="mb or">
+    Characteristic $p$: <span id="val-p" class="vo">—</span><br>
+    $|Z| \bmod p$: <span id="val-mod" class="vo">—</span><br>
+    Frobenius: $x\mapsto x^p$ fixes $\mathbb{F}_p$ and permutes $\mathbb{F}_{p^n}$<br>
+    <span style="color:var(--muted)">$(a+b)^p = a^p+b^p$ in char $p$ — no cross terms</span>
+</div>
+</div></div>
+
+<!-- 7. ORDERED & COMPLETE -->
+<div class="acc">
+<div class="acc-hd" onclick="toggleAcc(this)">
+    <h3><span style="color:var(--hl)">⇌</span> 7. Ordered &amp; Complete Fields <span class="badge">Measurement</span></h3>
+    <span class="chev">▼</span>
+</div>
+<div class="acc-bd">
+<p class="inf">An <b>ordered field</b> carries a total order $\geq$ compatible with both $+$ and $\cdot$ (positive cone is closed). A directed flow metric. $\mathbb{R}$, $\mathbb{Q}$ are ordered; $\mathbb{C}$ and $\mathbb{F}_p$ are not.</p>
+<p class="inf"><b>Artin–Schreier theorem</b>: $F$ can be ordered iff it is <em>formally real</em> — every sum of squares $\sum x_i^2=0$ forces all $x_i=0$. Equivalently: $-1$ is not a sum of squares in $F$.</p>
+<p class="inf">An <b>Archimedean field</b> has no infinite elements — every element is bounded by some $1+1+\cdots+1$. A well-calibrated instrument with no runaway readings. Equivalently: $F$ embeds in $\mathbb{R}$.</p>
+<p class="inf">A <b>Dedekind-complete ordered field</b> has every bounded subset admitting a least upper bound — no gaps in the measurement scale. $\mathbb{R}$ is the unique such field (up to isomorphism). This directly implies: the intermediate value theorem, extreme value theorem, and the convergence of Cauchy sequences.</p>
+<p class="inf">The <b>hyperreals $\mathbb{R}^*$</b> are a non-Archimedean ordered extension: $\exists\varepsilon\!>\!0$ with $\varepsilon<1/n$ for all $n\in\mathbb{N}$ (infinitesimals) and $\exists H$ with $H>n$ for all $n$ (infinite elements). Basis of non-standard analysis.</p>
+<div class="mb">
+    Dedekind cut: $\sup\{r\in\mathbb{Q}:r^2&lt;2\}=\sqrt{2}\in\mathbb{R}\setminus\mathbb{Q}$<br>
+    Archimedean: $\forall x\in\mathbb{R},\;\exists n\in\mathbb{N}: n>x$<br>
+    $\mathbb{R}$ = unique Dedekind-complete ordered field
+</div>
+</div></div>
+
+<!-- 8. TOPOLOGICAL & P-ADIC -->
+<div class="acc">
+<div class="acc-hd" onclick="toggleAcc(this)">
+    <h3><span style="color:var(--a5)">⊕</span> 8. Topological &amp; p-adic Fields <span class="badge">Completions</span></h3>
+    <span class="chev">▼</span>
+</div>
+<div class="acc-bd">
+<p class="inf">A <b>topological field</b> makes all four operations continuous. For metric fields, <b>completion</b> fills Cauchy gaps. The completion of $\mathbb{Q}$ under the usual absolute value is $\mathbb{R}$.</p>
+<p class="inf">The <b>$p$-adic valuation</b> $v_p(x)$ counts the exact power of prime $p$ in $x$ — a divisibility pressure gauge. Metric: $|x|_p=p^{-v_p(x)}$. Numbers highly divisible by $p$ are "close to 0" — a completely alien notion of proximity. Completing $\mathbb{Q}$ under $|\cdot|_p$ gives the <b>$p$-adic numbers $\mathbb{Q}_p$</b>.</p>
+<p class="inf"><b>Local fields</b>: finite extensions of $\mathbb{Q}_p$ (char 0) or finite extensions of $\mathbb{F}_p((t))$ (char $p$, Laurent series). Both types share a deep structural analogy: $p\in\mathbb{Q}_p$ plays the same role as $t\in\mathbb{F}_p((t))$ (the uniformizer). Elements of both expand as power series in the uniformizer with $\mathbb{F}_p$ coefficients.</p>
+<p class="inf">Adjoining all $p$-power roots of the uniformizer yields <b>perfectoid fields</b>. Strikingly: $\text{Gal}(\mathbb{Q}_p(p^{1/p^\infty}))\cong\text{Gal}(\mathbb{F}_p((t))(t^{1/p^\infty}))$ — a glimpse of the deep Langlands correspondence between these two worlds.</p>
+<p class="inf"><b>Algebraic $K$-theory</b> connects field units to topology: $K_1(F)=F^\times$, $K_2(F)$ (Matsumoto) $\cong K_2^M(F)$ (Milnor). The Norm Residue Isomorphism (Voevodsky, ~2000) bridges Milnor $K$-theory to Galois cohomology: $K_n^M(F)/p\cong H^n(F,\mu_p^{\otimes n})$.</p>
+<div class="mb bl">
+    Field → Metric → Completion → Zero-seq.<br>
+    $\mathbb{Q}$ → $|x{-}y|$ → $\mathbb{R}$ → $1/n$<br>
+    $\mathbb{Q}$ → $|x{-}y|_p$ → $\mathbb{Q}_p$ → $p^n$<br>
+    $F(t)$ → $t$-adic → $F((t))$ → $t^n$
+</div>
+</div></div>
+
+<!-- 9. APPLICATIONS -->
+<div class="acc">
+<div class="acc-hd" onclick="toggleAcc(this)">
+    <h3><span style="color:var(--a3)">⚡</span> 9. Applications <span class="badge">Use Cases</span></h3>
+    <span class="chev">▼</span>
+</div>
+<div class="acc-bd">
+<p class="inf"><b>Linear Algebra</b>: Fields are the scalar domains of vector spaces. $ax=b$ ($a\neq0$) has unique solution $x=a^{-1}b$ — a single pivot point. Gaussian elimination and the existence of bases both rely on multiplicative inverses. Over a ring (no inverses), systems may have zero, one, or many solutions.</p>
+<p class="inf"><b>Cryptography (Discrete Log)</b>: In $\mathbb{F}_q$, computing $a^n$ is fast; inverting it (discrete logarithm) is computationally intractable — a one-way ratchet. ECC replaces multiplication with point addition on $y^2=x^3+ax+b$ over $\mathbb{F}_p$: same one-way structure, smaller key sizes.</p>
+<p class="inf"><b>Coding Theory</b>: Reed-Solomon codes use polynomial evaluation over $\mathbb{F}_{2^8}$. The field structure guarantees clean interpolation: $n$ points uniquely determine a degree-$(n{-}1)$ polynomial. Error correction = solving a linear system over a finite field.</p>
+<p class="inf"><b>Algebraic Geometry (Function Fields)</b>: The function field $F(X)$ is the spectral fingerprint of variety $X$. For a smooth projective curve, $X$ is completely reconstructed from $F(X)$. Dimension of $X$ = transcendence degree of $F(X)$. Birational geometry studies varieties via their function fields.</p>
+<p class="inf"><b>Number Theory (Global Fields)</b>: Number fields (extensions of $\mathbb{Q}$) and function fields over $\mathbb{F}_q$ are "global fields." Local–global principle: questions about $\mathbb{Q}$ reduce to $\mathbb{Q}_p$ and $\mathbb{R}$ (Hasse–Minkowski for quadratic forms). Class field theory describes abelian Galois extensions. Kronecker–Weber: $\mathbb{Q}^{ab}=\mathbb{Q}(\zeta_n,n\geq2)$.</p>
+<p class="inf"><b>Differential Fields</b>: Equip $F$ with a derivation $D$ satisfying $D(ab)=D(a)b+aD(b)$. Differential Galois theory (Picard–Vessiot) controls solvability of linear ODEs — the exact analogue of classical Galois theory for polynomial equations, with algebraic groups replacing finite groups.</p>
+</div></div>
+
+<!-- 10. HISTORY -->
+<div class="acc">
+<div class="acc-hd" onclick="toggleAcc(this)">
+    <h3><span style="color:var(--muted)">📜</span> 10. Historical Development <span class="badge">Timeline</span></h3>
+    <span class="chev">▼</span>
+</div>
+<div class="acc-bd">
+<div class="tl">
+    <div class="tl-row"><div class="tl-yr">1770</div><div class="tl-dot"></div><div class="tl-txt"><b>Lagrange</b>: symmetries of polynomial roots; Vandermonde studies $x^p=1$. First link of fields and groups.</div></div>
+    <div class="tl-row"><div class="tl-yr">1799</div><div class="tl-dot"></div><div class="tl-txt"><b>Ruffini</b>: incomplete argument that quintics are unsolvable by radicals.</div></div>
+    <div class="tl-row"><div class="tl-yr">1801</div><div class="tl-dot"></div><div class="tl-txt"><b>Gauss</b>: <em>Disquisitiones Arithmeticae</em>; cyclic Galois groups; regular $p$-gon constructible iff $p=2^{2^k}+1$.</div></div>
+    <div class="tl-row"><div class="tl-yr">1824</div><div class="tl-dot"></div><div class="tl-txt"><b>Abel</b>: rigorous proof — general quintic has no radical solution.</div></div>
+    <div class="tl-row"><div class="tl-yr">1832</div><div class="tl-dot"></div><div class="tl-txt"><b>Galois</b>: necessary and sufficient criteria for solvability; birth of Galois theory.</div></div>
+    <div class="tl-row"><div class="tl-yr">1844</div><div class="tl-dot"></div><div class="tl-txt"><b>Liouville</b>: proves existence of transcendental numbers.</div></div>
+    <div class="tl-row"><div class="tl-yr">1871</div><div class="tl-dot"></div><div class="tl-txt"><b>Dedekind</b>: coins <em>Körper</em> (body) for arithmetically closed sets of real/complex numbers.</div></div>
+    <div class="tl-row"><div class="tl-yr">1873–82</div><div class="tl-dot"></div><div class="tl-txt"><b>Hermite, Lindemann</b>: $e$ and $\pi$ are transcendental — squaring the circle is impossible.</div></div>
+    <div class="tl-row"><div class="tl-yr">1881</div><div class="tl-dot"></div><div class="tl-txt"><b>Kronecker</b>: abstract "domain of rationality" — rational function fields $\mathbb{Q}(X)$.</div></div>
+    <div class="tl-row"><div class="tl-yr">1893</div><div class="tl-dot"></div><div class="tl-txt"><b>Weber</b>: first clean abstract field definition including $\mathbb{F}_p$. <b>Moore</b>: coins "field" in English.</div></div>
+    <div class="tl-row"><div class="tl-yr">1904</div><div class="tl-dot"></div><div class="tl-txt"><b>Hensel</b>: introduces $p$-adic numbers as completions.</div></div>
+    <div class="tl-row"><div class="tl-yr">1910</div><div class="tl-dot"></div><div class="tl-txt"><b>Steinitz</b>: axiomatic synthesis of all abstract field theory. The modern foundation.</div></div>
+    <div class="tl-row"><div class="tl-yr">1927</div><div class="tl-dot"></div><div class="tl-txt"><b>Artin–Schreier</b>: ordered fields and formally real fields; real closed fields.</div></div>
+    <div class="tl-row"><div class="tl-yr">1928–42</div><div class="tl-dot"></div><div class="tl-txt"><b>Artin</b>: rebuilds Galois theory without primitive element theorem.</div></div>
+    <div class="tl-row"><div class="tl-yr">~2000</div><div class="tl-dot"></div><div class="tl-txt"><b>Voevodsky</b>: Norm Residue Isomorphism — Milnor $K$-theory $\cong$ Galois cohomology.</div></div>
+</div>
+</div></div>
+
+</div><!-- sid-body -->
+</div><!-- sidebar -->
+
+<!-- ══ RESIZER ══ -->
+<div id="resizer"></div>
+
+<!-- ══════════════════════════════════ MAIN ══════════════════════════════════ -->
+<div id="main">
+<div id="tab-bar">
+    <button class="tb act"  data-tab="complex"   onclick="switchTab('complex')">Complex Plane</button>
+    <button class="tb"      data-tab="finite"     onclick="switchTab('finite')">Finite Field Clock</button>
+    <button class="tb"      data-tab="tower"      onclick="switchTab('tower')">Extension Tower</button>
+    <button class="tb"      data-tab="galois"     onclick="switchTab('galois')">Galois / Roots of Unity</button>
+    <button class="tb"      data-tab="construct"  onclick="switchTab('construct')">Constructible √p</button>
+</div>
+
+<!-- Panel: Complex -->
+<div id="panel-complex" class="vp-panel act">
+    <div id="jxg-complex" class="jxgbox"></div>
+    <div class="istrip">
+        <div class="kv"><span class="k">Z =</span><span id="is-z" class="iv">—</span></div>
+        <div class="kv"><span class="k">Z⁻¹ =</span><span id="is-zinv" class="iv">—</span></div>
+        <div class="kv"><span class="k">Z̄ =</span><span id="is-zbar" class="iv">—</span></div>
+        <div class="kv"><span class="k">Z² =</span><span id="is-zsq" class="iv">—</span></div>
+        <div class="kv"><span class="k">arg(Z) =</span><span id="is-arg" class="iv">—</span></div>
+        <div class="kv"><span class="k">|Z| =</span><span id="is-mag" class="iv">—</span></div>
+    </div>
+</div>
+
+<!-- Panel: Finite Field -->
+<div id="panel-finite" class="vp-panel">
+    <div id="jxg-finite" class="jxgbox"></div>
+    <div class="istrip">
+        <div class="kv"><span class="k">p =</span><span id="is-p" class="iv">—</span></div>
+        <div class="kv"><span class="k">n mod p =</span><span id="is-modp" class="iv">—</span></div>
+        <div class="kv"><span class="k">Frobenius nᵖ mod p =</span><span id="is-frob" class="iv">—</span></div>
+    </div>
+</div>
+
+<!-- Panel: Extension Tower -->
+<div id="panel-tower" class="vp-panel">
+    <div class="svgpanel" id="svg-tower-wrap"></div>
+</div>
+
+<!-- Panel: Galois / Roots of Unity -->
+<div id="panel-galois" class="vp-panel">
+    <div id="jxg-galois" class="jxgbox"></div>
+    <div class="istrip">
+        <div class="kv"><span class="k">n =</span><span id="is-n" class="iv">—</span></div>
+        <div class="kv"><span class="k">φ(n) =</span><span id="is-phi" class="iv">—</span></div>
+        <div class="kv"><span class="k">|Gal(ℚ(ζₙ)/ℚ)| =</span><span id="is-galord" class="iv">—</span></div>
+    </div>
+</div>
+
+<!-- Panel: Constructible -->
+<div id="panel-construct" class="vp-panel">
+    <div id="jxg-construct" class="jxgbox"></div>
+    <div class="istrip">
+        <div class="kv"><span class="k">p =</span><span id="is-cp" class="iv">—</span></div>
+        <div class="kv"><span class="k">√p =</span><span id="is-sqp" class="iv">—</span></div>
+        <div class="kv"><span class="k">h² =</span><span id="is-h2" class="iv">—</span></div>
+    </div>
+</div>
+
+</div><!-- main -->
+
+<script>
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function gcd(a,b){ return b===0?a:gcd(b,a%b); }
+function euler(n){ let c=0; for(let k=1;k<=n;k++) if(gcd(k,n)===1) c++; return c; }
+function modpow(b,e,m){
+    let r=1; b%=m;
+    while(e>0){if(e&1) r=r*b%m; e>>=1; b=b*b%m;} return r;
+}
+function fmtC(a,b,dp=3){
+    let rs=(Math.abs(a)<1e-9?'0':a.toFixed(dp));
+    let is=(Math.abs(b)<1e-9?'0':Math.abs(b).toFixed(dp));
+    return rs+' '+(b>=0?'+':'−')+' '+is+'i';
+}
+
+// ── Accordion ────────────────────────────────────────────────────────────────
+function toggleAcc(hd){
+    hd.parentElement.classList.toggle('open');
+    if(window.MathJax&&MathJax.typesetPromise)
+        setTimeout(()=>MathJax.typesetPromise().catch(()=>{}),40);
+}
+
+// ── Resizer ──────────────────────────────────────────────────────────────────
+const sidebar=document.getElementById('sidebar');
+const resizer=document.getElementById('resizer');
+let resizing=false;
+resizer.addEventListener('mousedown',e=>{resizing=true;document.body.style.cursor='col-resize';resizer.classList.add('act');e.preventDefault();});
+document.addEventListener('mousemove',e=>{if(!resizing)return;let w=Math.max(300,Math.min(e.clientX,window.innerWidth-200));sidebar.style.width=w+'px';});
+document.addEventListener('mouseup',()=>{if(!resizing)return;resizing=false;document.body.style.cursor='';resizer.classList.remove('act');});
+
+// ── Tab system ───────────────────────────────────────────────────────────────
+const initDone={};
+function switchTab(name){
+    document.querySelectorAll('.vp-panel').forEach(p=>p.classList.remove('act'));
+    document.querySelectorAll('.tb').forEach(b=>b.classList.toggle('act',b.dataset.tab===name));
+    document.getElementById('panel-'+name).classList.add('act');
+    if(name==='tower'&&!initDone.tower){buildTower();initDone.tower=true;}
+    if(name==='finite'&&!initDone.finite){initFinite();initDone.finite=true;}
+    if(name==='galois'&&!initDone.galois){initGalois();initDone.galois=true;}
+    if(name==='construct'&&!initDone.construct){initConstruct();initDone.construct=true;}
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PANEL 1 — Complex Plane
+// ══════════════════════════════════════════════════════════════════════════════
+const bC = JXG.JSXGraph.initBoard('jxg-complex',{
+    boundingbox:[-5.5,5.5,5.5,-5.5], axis:true,
+    showCopyright:false, showNavigation:true,
+    defaultAxes:{
+        x:{strokeColor:'#2a2a2a',ticks:{strokeColor:'#2a2a2a',label:{strokeColor:'#444'}}},
+        y:{strokeColor:'#2a2a2a',ticks:{strokeColor:'#2a2a2a',label:{strokeColor:'#444'}}}
+    }
+});
+
+const cOrig = bC.create('point',[0,0],{visible:false});
+bC.create('circle',[cOrig,1],{strokeColor:'#1e2a1e',dash:2,strokeWidth:1,fixed:true});
+
+const sA = bC.create('slider',[[-5,5.1],[-1.2,5.1],[-4,1.5,4]],{
+    name:'Re(Z)',strokeColor:'#45a29e',fillColor:'#1a1f2e',label:{strokeColor:'#66fcf1'},size:3});
+const sB = bC.create('slider',[[-5,4.6],[-1.2,4.6],[-4,0.8,4]],{
+    name:'Im(Z)',strokeColor:'#45a29e',fillColor:'#1a1f2e',label:{strokeColor:'#66fcf1'},size:3});
+
+// Z
+const pZ = bC.create('point',[()=>sA.Value(),()=>sB.Value()],
+    {name:'Z',color:'#66fcf1',size:5});
+bC.create('arrow',[cOrig,pZ],{strokeColor:'#66fcf1',strokeWidth:2.5});
+
+// Z⁻¹
+const pZi = bC.create('point',[
+    ()=>{let a=sA.Value(),b=sB.Value(),m2=a*a+b*b;return m2<1e-10?0:a/m2;},
+    ()=>{let a=sA.Value(),b=sB.Value(),m2=a*a+b*b;return m2<1e-10?0:-b/m2;}
+],{name:'Z⁻¹',color:'#ff9d00',size:4});
+bC.create('arrow',[cOrig,pZi],{strokeColor:'#ff9d00',strokeWidth:1.8,dash:2});
+
+// Z̄ (Galois conjugate over ℝ)
+const pZb = bC.create('point',[()=>sA.Value(),()=>-sB.Value()],
+    {name:'Z̄',color:'#c77dff',size:3});
+bC.create('segment',[pZ,pZb],{strokeColor:'#c77dff',dash:2,strokeWidth:1});
+bC.create('arrow',[cOrig,pZb],{strokeColor:'#c77dff',strokeWidth:1.5,dash:3});
+
+// Z²  (multiplication doubles angle, squares magnitude)
+const pZsq = bC.create('point',[
+    ()=>{let a=sA.Value(),b=sB.Value();return a*a-b*b;},
+    ()=>{let a=sA.Value(),b=sB.Value();return 2*a*b;}
+],{name:'Z²',color:'#ff4b4b',size:3});
+bC.create('arrow',[cOrig,pZsq],{strokeColor:'#ff4b4b',strokeWidth:1.5,dash:2});
+
+// Z+Z̄ = 2Re(Z) — lies on real axis
+const pSum = bC.create('point',[()=>2*sA.Value(),0],{name:'Z+Z̄=2Re(Z)',color:'#4caf50',size:2});
+bC.create('segment',[pZ,pZb],{strokeColor:'#4caf50',strokeWidth:0.5,dash:3});
+
+// Dashed projections
+const pRx=bC.create('point',[()=>sA.Value(),0],{visible:false});
+const pIy=bC.create('point',[0,()=>sB.Value()],{visible:false});
+bC.create('segment',[pZ,pRx],{strokeColor:'#222',dash:2,strokeWidth:1});
+bC.create('segment',[pZ,pIy],{strokeColor:'#222',dash:2,strokeWidth:1});
+
+// Labels
+bC.create('text',[0.08,-0.28,'0'],{color:'#444',fontSize:12});
+bC.create('text',[1.06,-0.22,'1'],{color:'#555',fontSize:11});
+
+bC.on('update',function(){
+    const a=sA.Value(),b=sB.Value();
+    const m2=a*a+b*b, mag=Math.sqrt(m2);
+    const arg=Math.atan2(b,a)*180/Math.PI;
+
+    const zs=fmtC(a,b);
+    document.getElementById('val-z').innerHTML=zs;
+    document.getElementById('is-z').textContent=zs;
+    document.getElementById('is-mag').textContent=mag.toFixed(4);
+    document.getElementById('is-arg').textContent=arg.toFixed(2)+'°';
+    document.getElementById('val-arg').innerHTML=arg.toFixed(1)+'°';
+    document.getElementById('val-carg').innerHTML=(-arg).toFixed(1)+'°';
+    document.getElementById('val-sqarg').innerHTML=(2*arg).toFixed(1)+'°';
+
+    if(m2<0.005){
+        document.getElementById('val-zinv').innerHTML='∞ &mdash; Locked casing';
+        document.getElementById('val-torque').innerHTML='∞';
+        document.getElementById('is-zinv').textContent='∞';
+        document.getElementById('warn-zero').classList.add('show');
+        pZi.setAttribute({visible:false});
+    } else {
+        const ia=a/m2, ib=-b/m2;
+        const zis=fmtC(ia,ib);
+        document.getElementById('val-zinv').innerHTML=zis;
+        document.getElementById('val-torque').innerHTML=(1/mag).toFixed(4);
+        document.getElementById('is-zinv').textContent=zis;
+        document.getElementById('warn-zero').classList.remove('show');
+        pZi.setAttribute({visible:true});
+    }
+    document.getElementById('is-zbar').textContent=fmtC(a,-b);
+    document.getElementById('is-zsq').textContent=fmtC(a*a-b*b,2*a*b);
+});
+bC.update();
+window.addEventListener('resize',()=>bC.update());
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PANEL 2 — Finite Field Clock
+// ══════════════════════════════════════════════════════════════════════════════
+function initFinite(){
+    const bF=JXG.JSXGraph.initBoard('jxg-finite',{
+        boundingbox:[-6.5,6.5,6.5,-6.5],
+        axis:false,showCopyright:false,showNavigation:false
+    });
+
+    const sP=bF.create('slider',[[-6,6.1],[1,6.1],[2,5,17]],{
+        name:'Characteristic p',snapWidth:1,
+        strokeColor:'#4caf50',fillColor:'#1a1f2e',label:{strokeColor:'#4caf50'},size:3});
+    const sN=bF.create('slider',[[-6,5.5],[1,5.5],[0,3,17]],{
+        name:'Element n',snapWidth:1,
+        strokeColor:'#66fcf1',fillColor:'#1a1f2e',label:{strokeColor:'#66fcf1'},size:3});
+
+    const ctr=bF.create('point',[0,0],{visible:false});
+    bF.create('circle',[ctr,4],{strokeColor:'#4caf50',strokeWidth:1.5});
+
+    // Field elements on the clock face (up to 17)
+    const maxPts=17;
+    const pts=[];
+    for(let k=0;k<maxPts;k++){
+        pts.push(bF.create('point',[
+            ()=>4*Math.sin(k*2*Math.PI/Math.round(sP.Value())),
+            ()=>4*Math.cos(k*2*Math.PI/Math.round(sP.Value()))
+        ],{
+            name:k.toString(), size:()=>k<Math.round(sP.Value())?4:0,
+            visible:()=>k<Math.round(sP.Value()),
+            color:k===0?'#ff4b4b':'#4caf50',
+            label:{strokeColor:k===0?'#ff4b4b':'#c5c6c7',fontSize:14}
+        }));
+    }
+
+    // Element needle (n mod p)
+    const needleTip=bF.create('point',[
+        ()=>{let n=Math.round(sN.Value())%Math.round(sP.Value());
+             return 4*Math.sin(n*2*Math.PI/Math.round(sP.Value()));},
+        ()=>{let n=Math.round(sN.Value())%Math.round(sP.Value());
+             return 4*Math.cos(n*2*Math.PI/Math.round(sP.Value()));}
+    ],{visible:false});
+    bF.create('arrow',[ctr,needleTip],{strokeColor:'#66fcf1',strokeWidth:2.5});
+
+    // Frobenius arrow (n^p mod p = n by Fermat's little theorem if p prime)
+    const frobTip=bF.create('point',[
+        ()=>{let n=Math.round(sN.Value()),p=Math.round(sP.Value());
+             let fn=modpow(n,p,p);
+             return 3.1*Math.sin(fn*2*Math.PI/p);},
+        ()=>{let n=Math.round(sN.Value()),p=Math.round(sP.Value());
+             let fn=modpow(n,p,p);
+             return 3.1*Math.cos(fn*2*Math.PI/p);}
+    ],{name:'φ(n)',color:'#ff9d00',size:5});
+    bF.create('arrow',[ctr,frobTip],{strokeColor:'#ff9d00',strokeWidth:1.8,dash:2});
+
+    // Additive cycle: show n → n+1 mod p arrow
+    bF.create('text',[-6.2,-3.8,()=>{
+        const p=Math.round(sP.Value()),n=Math.round(sN.Value());
+        return 'Char '+p+': '+Array.from({length:p},(_,i)=>i).join('+1→')+' →0';
+    }],{color:'#4caf50',fontSize:11});
+    bF.create('text',[-6.2,-4.4,()=>{
+        const p=Math.round(sP.Value()),n=Math.round(sN.Value());
+        return 'Frobenius: n='+n+' → n^'+p+'≡'+modpow(n,p,p)+' (mod '+p+')';
+    }],{color:'#ff9d00',fontSize:12});
+    bF.create('text',[-6.2,-5.0,()=>{
+        const p=Math.round(sP.Value()),n=Math.round(sN.Value());
+        return '(a+b)^'+p+'= a^'+p+'+b^'+p+' — Freshman dream in char '+p;
+    }],{color:'#c77dff',fontSize:11});
+    bF.create('text',[-6.2,-5.6,()=>{
+        const p=Math.round(sP.Value());
+        return '|F_p^x| = p-1 = '+(p-1)+' (cyclic multiplicative group)';
+    }],{color:'#38bdf8',fontSize:11});
+
+    bF.create('text',[0,-5.2,'0 (additive identity)'],{color:'#ff4b4b',fontSize:12,anchorX:'middle'});
+    bF.create('text',[0,5.2,()=>'ℤ/'+Math.round(sP.Value())+'ℤ — Modular clock'],
+        {color:'#4caf50',fontSize:13,anchorX:'middle'});
+
+    bF.on('update',()=>{
+        const p=Math.round(sP.Value()),n=Math.round(sN.Value());
+        document.getElementById('val-p').innerHTML=p;
+        document.getElementById('val-mod').innerHTML=(n%p).toString();
+        document.getElementById('is-p').textContent=p;
+        document.getElementById('is-modp').textContent=(n%p).toString();
+        document.getElementById('is-frob').textContent=modpow(n,p,p).toString();
+    });
+    bF.update();
+    window.addEventListener('resize',()=>bF.update());
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PANEL 3 — Extension Tower (SVG)
+// ══════════════════════════════════════════════════════════════════════════════
+function buildTower(){
+    const wrap=document.getElementById('svg-tower-wrap');
+    wrap.innerHTML='';
+    const W=wrap.clientWidth||700, H=wrap.clientHeight||520;
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+    svg.style.cssText='width:100%;height:100%;';
+
+    // node positions
+    const N={
+        // Finite fields (left column)
+        Fp:    {x:W*.12, y:H*.82, c:'#4caf50', l:'𝔽ₚ',      s:'Prime field, char p'},
+        Fpn:   {x:W*.12, y:H*.60, c:'#4caf50', l:'𝔽_{pⁿ}',   s:'Finite field, q=pⁿ'},
+        Fpbar: {x:W*.12, y:H*.38, c:'#4caf50', l:'𝔽̄ₚ',      s:'Alg. closure of 𝔽ₚ'},
+        // p-adic (right column)
+        Qp:    {x:W*.88, y:H*.68, c:'#38bdf8', l:'ℚₚ',        s:'p-adic numbers'},
+        Cp:    {x:W*.88, y:H*.45, c:'#38bdf8', l:'ℂₚ',        s:'p-adic closure'},
+        // Rational tower (centre)
+        Q:     {x:W*.50, y:H*.88, c:'#66fcf1', l:'ℚ',          s:'Rationals, char 0'},
+        Qsq2:  {x:W*.34, y:H*.70, c:'#c77dff', l:'ℚ(√2)',      s:'deg 2 alg. ext.'},
+        Qcb2:  {x:W*.50, y:H*.70, c:'#c77dff', l:'ℚ(∛2)',      s:'deg 3 alg. ext.'},
+        Qze:   {x:W*.66, y:H*.70, c:'#f97316', l:'ℚ(ζₙ)',      s:'cyclotomic field'},
+        Q4th:  {x:W*.34, y:H*.52, c:'#c77dff', l:'ℚ(⁴√2)',     s:'deg 4, tower 2×2'},
+        Qbar:  {x:W*.50, y:H*.34, c:'#f97316', l:'ℚ̄',          s:'Alg. numbers'},
+        R:     {x:W*.68, y:H*.18, c:'#38bdf8', l:'ℝ',           s:'Reals (complete)'},
+        C:     {x:W*.50, y:H*.06, c:'#ff4b4b', l:'ℂ',           s:'Alg. closed, char 0'},
+    };
+    const edges=[
+        {f:'Fp',   t:'Fpn',  lb:'n',      c:'#4caf50'},
+        {f:'Fpn',  t:'Fpbar',lb:'∞',      c:'#4caf50'},
+        {f:'Q',    t:'Qsq2', lb:'2',      c:'#c77dff'},
+        {f:'Q',    t:'Qcb2', lb:'3',      c:'#c77dff'},
+        {f:'Q',    t:'Qze',  lb:'φ(n)',   c:'#f97316'},
+        {f:'Qsq2', t:'Q4th', lb:'2',      c:'#c77dff'},
+        {f:'Q4th', t:'Qbar', lb:'',       c:'#f97316'},
+        {f:'Qcb2', t:'Qbar', lb:'',       c:'#f97316'},
+        {f:'Qze',  t:'Qbar', lb:'',       c:'#f97316'},
+        {f:'Qbar', t:'C',    lb:'',       c:'#ff4b4b'},
+        {f:'Q',    t:'R',    lb:'∞',      c:'#38bdf8'},
+        {f:'R',    t:'C',    lb:'2',      c:'#ff4b4b'},
+        {f:'Q',    t:'Qp',   lb:'p-adic', c:'#38bdf8'},
+        {f:'Qp',   t:'Cp',   lb:'cl+cmp', c:'#38bdf8'},
+    ];
+
+    function mk(tag,attrs){
+        const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+        for(const[k,v] of Object.entries(attrs)) el.setAttribute(k,v);
+        return el;
+    }
+
+    // edges
+    edges.forEach(e=>{
+        const a=N[e.f],b=N[e.t];
+        svg.appendChild(mk('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,
+            stroke:e.c||'#555','stroke-width':1.5,'stroke-opacity':.45}));
+        if(e.lb){
+            const mx=(a.x+b.x)/2+5,my=(a.y+b.y)/2;
+            const t=mk('text',{x:mx,y:my,fill:e.c||'#888','font-size':11,'font-family':'monospace'});
+            t.textContent=e.lb; svg.appendChild(t);
+        }
+    });
+
+    // nodes
+    Object.values(N).forEach(n=>{
+        const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+        g.appendChild(mk('circle',{cx:n.x,cy:n.y,r:23,fill:'#0b0c10',stroke:n.c,'stroke-width':2}));
+        const lt=mk('text',{x:n.x,y:n.y+5,'text-anchor':'middle',fill:n.c,
+            'font-size':15,'font-weight':'bold','font-family':'serif'});
+        lt.textContent=n.l; g.appendChild(lt);
+        const ls=mk('text',{x:n.x,y:n.y+37,'text-anchor':'middle',fill:'#5a6172',
+            'font-size':9,'font-family':'sans-serif'});
+        ls.textContent=n.s; g.appendChild(ls);
+        svg.appendChild(g);
+    });
+
+    // legend
+    const leg=[
+        {c:'#4caf50',l:'Finite fields (char p)'},
+        {c:'#66fcf1',l:'ℚ and alg. extensions'},
+        {c:'#f97316',l:'Cyclotomic / alg. closure'},
+        {c:'#38bdf8',l:'Completions (ℝ, ℚₚ)'},
+        {c:'#ff4b4b',l:'Alg. closed (ℂ, ℂₚ)'},
+    ];
+    leg.forEach((item,i)=>{
+        const lx=18+i*(W/5.2), ly=H-12;
+        svg.appendChild(mk('circle',{cx:lx,cy:ly,r:5,fill:item.c}));
+        const t=mk('text',{x:lx+9,y:ly+4,fill:'#5a6172','font-size':9});
+        t.textContent=item.l; svg.appendChild(t);
+    });
+
+    // title
+    const ti=mk('text',{x:W/2,y:16,'text-anchor':'middle',fill:'#66fcf1','font-size':13,'font-weight':'bold'});
+    ti.textContent='Field Extension Tower — edges labelled by degree [F:E]';
+    svg.appendChild(ti);
+
+    wrap.appendChild(svg);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PANEL 4 — Galois / Roots of Unity
+// ══════════════════════════════════════════════════════════════════════════════
+function initGalois(){
+    const bG=JXG.JSXGraph.initBoard('jxg-galois',{
+        boundingbox:[-4.5,4.5,4.5,-4.5], axis:true,
+        showCopyright:false, showNavigation:true,
+        defaultAxes:{
+            x:{strokeColor:'#222',ticks:{strokeColor:'#222',label:{strokeColor:'#444'}}},
+            y:{strokeColor:'#222',ticks:{strokeColor:'#222',label:{strokeColor:'#444'}}}
+        }
+    });
+
+    const go=bG.create('point',[0,0],{visible:false});
+    bG.create('circle',[go,1],{strokeColor:'#1e1e1e',dash:2,strokeWidth:1});
+    bG.create('circle',[go,1],{strokeColor:'rgba(102,252,241,0.08)',strokeWidth:8});
+
+    const sN=bG.create('slider',[[-4.2,4.2],[2.5,4.2],[2,5,12]],{
+        name:'Degree n', snapWidth:1,
+        strokeColor:'#c77dff',fillColor:'#1a1f2e',label:{strokeColor:'#c77dff'},size:3});
+
+    const cols=['#66fcf1','#ff4b4b','#ff9d00','#c77dff','#4caf50','#38bdf8',
+                '#f97316','#ff6eb4','#a8ff78','#78d1ff','#ffe156','#ff9eaa'];
+
+    // Draw up to 12 roots
+    for(let k=0;k<12;k++){
+        const pt=bG.create('point',[
+            ()=>k<Math.round(sN.Value())?Math.cos(k*2*Math.PI/Math.round(sN.Value())):1e9,
+            ()=>k<Math.round(sN.Value())?Math.sin(k*2*Math.PI/Math.round(sN.Value())):1e9
+        ],{
+            name:()=>k===0?'ζ⁰=1':`ζ^${k}`,
+            color:cols[k],size:5,
+            visible:()=>k<Math.round(sN.Value()),
+            label:{strokeColor:cols[k],fontSize:13}
+        });
+        bG.create('arrow',[go,pt],{
+            strokeColor:cols[k],strokeWidth:k===0?2:1.2,dash:k===0?0:2,
+            visible:()=>k<Math.round(sN.Value())
+        });
+        // Connect consecutive roots to show polygon
+        if(k>0){
+            const prev=k-1;
+            bG.create('segment',[
+                bG.create('point',[
+                    ()=>prev<Math.round(sN.Value())?Math.cos(prev*2*Math.PI/Math.round(sN.Value())):1e9,
+                    ()=>prev<Math.round(sN.Value())?Math.sin(prev*2*Math.PI/Math.round(sN.Value())):1e9
+                ],{visible:false}),
+                pt
+            ],{strokeColor:'rgba(102,252,241,0.15)',strokeWidth:1,
+               visible:()=>k<Math.round(sN.Value())});
+        }
+    }
+    // Close the polygon
+    bG.create('segment',[
+        bG.create('point',[
+            ()=>{let n=Math.round(sN.Value()); return Math.cos((n-1)*2*Math.PI/n);},
+            ()=>{let n=Math.round(sN.Value()); return Math.sin((n-1)*2*Math.PI/n);}
+        ],{visible:false}),
+        bG.create('point',[1,0],{visible:false})
+    ],{strokeColor:'rgba(102,252,241,0.15)',strokeWidth:1});
+
+    bG.create('text',[-4.3,-2.6,()=>{
+        const n=Math.round(sN.Value());
+        return 'Roots of X^'+n+' − 1 on unit circle (nth roots of unity)';
+    }],{color:'#c77dff',fontSize:12});
+    bG.create('text',[-4.3,-3.1,()=>{
+        const n=Math.round(sN.Value()),phi=euler(n);
+        return 'Gal(ℚ(ζₙ)/ℚ) ≅ (ℤ/'+n+'ℤ)×, order φ('+n+') = '+phi;
+    }],{color:'#ff9d00',fontSize:12});
+    bG.create('text',[-4.3,-3.6,()=>{
+        const n=Math.round(sN.Value());
+        const prims=[];
+        for(let k=1;k<n;k++) if(gcd(k,n)===1) prims.push('ζ^'+k);
+        return 'Primitive roots: '+prims.join(', ');
+    }],{color:'#4caf50',fontSize:11});
+    bG.create('text',[-4.3,-4.1,()=>{
+        const n=Math.round(sN.Value());
+        return 'Frobenius σₖ: ζ ↦ ζ^k  for gcd(k,n)=1 — the Galois action';
+    }],{color:'#38bdf8',fontSize:11});
+
+    bG.on('update',()=>{
+        const n=Math.round(sN.Value()),phi=euler(n);
+        document.getElementById('is-n').textContent=n;
+        document.getElementById('is-phi').textContent=phi;
+        document.getElementById('is-galord').textContent=phi;
+    });
+    bG.update();
+    window.addEventListener('resize',()=>bG.update());
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PANEL 5 — Constructible Numbers (Geometric Mean)
+// ══════════════════════════════════════════════════════════════════════════════
+function initConstruct(){
+    const bK=JXG.JSXGraph.initBoard('jxg-construct',{
+        boundingbox:[-0.8,5.5,8,-1.2], axis:true,
+        showCopyright:false, showNavigation:true,
+        defaultAxes:{
+            x:{strokeColor:'#2a2a2a',ticks:{strokeColor:'#2a2a2a',label:{strokeColor:'#555'}}},
+            y:{strokeColor:'#2a2a2a',ticks:{strokeColor:'#2a2a2a',label:{strokeColor:'#555'}}}
+        }
+    });
+
+    const sP=bK.create('slider',[[0.2,5.1],[4.5,5.1],[0.1,2.5,7]],{
+        name:'p',strokeColor:'#66fcf1',fillColor:'#1a1f2e',label:{strokeColor:'#66fcf1'},size:3});
+
+    // A=0, D=p, B=p+1, O=midpoint of AB
+    const ptA=bK.create('point',[0,0],{name:'A (0)',color:'#888',size:4,fixed:true});
+    const ptD=bK.create('point',[()=>sP.Value(),0],{name:'D',color:'#ff9d00',size:4});
+    const ptB=bK.create('point',[()=>sP.Value()+1,0],{name:'B',color:'#888',size:4});
+    const ptO=bK.create('midpoint',[ptA,ptB],{name:'O (centre)',color:'#555',size:3});
+
+    // Semicircle
+    bK.create('arc',[ptO,ptA,ptB],{strokeColor:'#45a29e',strokeWidth:2.5});
+
+    // C at perpendicular from D — the geometric mean C: h=sqrt(p)
+    const ptC=bK.create('point',[()=>sP.Value(),()=>Math.sqrt(sP.Value())],
+        {name:'C (h=√p)',color:'#66fcf1',size:6});
+
+    // Construction lines
+    bK.create('segment',[ptD,ptC],{strokeColor:'#66fcf1',strokeWidth:2,dash:2});
+    bK.create('segment',[ptA,ptC],{strokeColor:'#c77dff',strokeWidth:1.5});
+    bK.create('segment',[ptB,ptC],{strokeColor:'#ff4b4b',strokeWidth:1.5});
+
+    // Right-angle mark at D
+    const s=0.12;
+    bK.create('polygon',[
+        bK.create('point',[()=>sP.Value()+s,0],{visible:false}),
+        bK.create('point',[()=>sP.Value()+s,s],{visible:false}),
+        bK.create('point',[()=>sP.Value(),s],{visible:false}),
+        ptD
+    ],{fillColor:'rgba(255,255,255,0.04)',strokeColor:'#444',strokeWidth:1});
+
+    // Dimension labels
+    bK.create('text',[()=>sP.Value()/2,-0.3,()=>'p = '+sP.Value().toFixed(2)],
+        {color:'#ff9d00',fontSize:13});
+    bK.create('text',[()=>sP.Value()+0.5,-0.3,'1'],
+        {color:'#888',fontSize:13});
+    bK.create('text',[()=>sP.Value()+0.18,()=>Math.sqrt(sP.Value())/2,
+        ()=>'h = √'+sP.Value().toFixed(3)+' ≈ '+Math.sqrt(sP.Value()).toFixed(5)],
+        {color:'#66fcf1',fontSize:12});
+
+    // Theorem annotation
+    bK.create('text',[0.1,4.5,'Geometric Mean Theorem: h² = AD · DB = p · 1'],
+        {color:'#45a29e',fontSize:12});
+    bK.create('text',[0.1,4.1,'∴ h = √p  — constructible from p with compass & straightedge'],
+        {color:'#c77dff',fontSize:11});
+    bK.create('text',[0.1,3.7,'Constructible numbers form a field closed under √'],
+        {color:'#4caf50',fontSize:11});
+    bK.create('text',[0.1,3.3,'∛2 requires degree 3 ∤ 2^k — NOT constructible (Abel 1824)'],
+        {color:'#ff4b4b',fontSize:11});
+    bK.create('text',[0.1,2.9,'π transcendental ⟹ squaring circle impossible (Lindemann 1882)'],
+        {color:'#ff4b4b',fontSize:11});
+
+    bK.on('update',()=>{
+        const p=sP.Value(),sq=Math.sqrt(p);
+        document.getElementById('is-cp').textContent=p.toFixed(4);
+        document.getElementById('is-sqp').textContent=sq.toFixed(6);
+        document.getElementById('is-h2').textContent=(sq*sq).toFixed(6)+' = p ✓';
+    });
+    bK.update();
+    window.addEventListener('resize',()=>bK.update());
+}
+
+</script>
+</body>
+</html>
