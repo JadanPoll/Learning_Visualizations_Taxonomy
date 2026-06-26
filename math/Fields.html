@@ -178,39 +178,39 @@
 <div id="sidebar">
 <div id="sid-header">
     <h1>Mathematical Fields</h1>
-    <p>Engineering decomposition — axioms through algebraic geometry &amp; number theory</p>
+    <p>Circuit decomposition — axioms through algebraic geometry &amp; number theory</p>
 </div>
 <div id="sid-body">
 
 <!-- 1. AXIOMS -->
 <div class="acc open">
 <div class="acc-hd" onclick="toggleAcc(this)">
-    <h3><span style="color:var(--a2)">⚙</span> 1. The Universal Gearbox <span class="badge">Axioms</span></h3>
+    <h3><span style="color:var(--a2)">⚡</span> 1. The Closed Circuit <span class="badge">Axioms</span></h3>
     <span class="chev">▼</span>
 </div>
 <div class="acc-bd">
-<p class="inf">A <b>field</b> $(F,+,\cdot)$ is a perfectly machined reversible transmission. Every element is a gear; every operation a coupling. The design is governed by six structural guarantees:</p>
+<p class="inf">A <b>field</b> $(F,+,\cdot)$ is a closed, lossless circuit: every signal has a return path, every gain has an inverse attenuation. Elements are signals; operations are network primitives. Six laws guarantee the circuit never gets stuck:</p>
 <ul class="axl">
-    <li><span class="lbl">Assoc.</span>Gear-chain order is immaterial: $(a+b)+c = a+(b+c)$, $(ab)c = a(bc)$.
-        <span class="mt">Re-routing shafts doesn't change output speed.</span></li>
-    <li><span class="lbl">Comm.</span>Input and output are interchangeable: $a+b=b+a$, $ab=ba$.
-        <span class="mt">Bidirectional shaft coupling — symmetric torque transfer.</span></li>
-    <li><span class="lbl">Identity</span>Neutral gear $\mathbf{0}$ (locked casing) and direct drive $\mathbf{1}$: $a+0=a$, $a{\cdot}1=a$.
-        <span class="mt">The only two "do-nothing" states in the machine.</span></li>
-    <li><span class="lbl">Add. Inv.</span>Every gear $a$ has a counter-gear $-a$ cancelling torque: $a+(-a)=0$.
-        <span class="mt">Guaranteed reverse-torque cancellation; defines subtraction.</span></li>
-    <li><span class="lbl">Mult. Inv.</span>Every non-zero gear $a$ has a ratio restorer $a^{-1}$: $a\cdot a^{-1}=1$.
-        <span class="mt">No dead-ratio lock except the null casing $0$. Defines division.</span></li>
-    <li><span class="lbl">Distrib.</span>Parallel routing combines with series: $a(b+c)=ab+ac$.
-        <span class="mt">The load-sharing coupling law — the heart of linearity.</span></li>
+    <li><span class="lbl">Assoc.</span>Node ordering in superposition is irrelevant: $(a+b)+c = a+(b+c)$, $(ab)c = a(bc)$.
+        <span class="mt">Re-routing signal paths doesn't change the net output.</span></li>
+    <li><span class="lbl">Comm.</span>Ports are symmetric: $a+b=b+a$, $ab=ba$.
+        <span class="mt">No preferred signal direction — the network is reciprocal.</span></li>
+    <li><span class="lbl">Identity</span>Ground $\mathbf{0}$ (zero signal) and unity buffer $\mathbf{1}$ (×1 gain): $a+0=a$, $a{\cdot}1=a$.
+        <span class="mt">The two transparent elements — one adds nothing, one multiplies nothing.</span></li>
+    <li><span class="lbl">Add. Inv.</span>Every signal $a$ has an anti-phase signal $-a$ that cancels by superposition: $a+(-a)=0$.
+        <span class="mt">Guaranteed destructive interference back to ground.</span></li>
+    <li><span class="lbl">Mult. Inv.</span>Every non-zero signal $a$ has a reciprocal gain stage $a^{-1}$: $a\cdot a^{-1}=1$.
+        <span class="mt">No irreversible attenuation except into ground (0). Defines division.</span></li>
+    <li><span class="lbl">Distrib.</span>A gain stage after a summing junction equals parallel gain stages before it: $a(b+c)=ab+ac$.
+        <span class="mt">Amplification distributes over superposition — the core linearity law.</span></li>
 </ul>
-<p class="inf">A field is also a <em>commutative ring</em> with $0\neq1$ in which every nonzero element is a unit. Integers $\mathbb{Z}$ fail: $2^{-1}\notin\mathbb{Z}$. A <em>division ring</em> drops commutativity — the quaternions $\mathbb{H}$ (where $ij=k\neq ji=-k$) are the canonical example. Wedderburn's theorem: every finite division ring is commutative (hence a field).</p>
+<p class="inf">A field is also a <em>commutative ring</em> with $0\neq1$ in which every nonzero element is a unit. Integers $\mathbb{Z}$ fail: $2^{-1}\notin\mathbb{Z}$ — the ×2 gain stage has no matching ×½ stage in the integer network. A <em>division ring</em> drops commutativity — the quaternions $\mathbb{H}$ (where $ij=k\neq ji=-k$) route signals through ordered 3D gain stages. Wedderburn's theorem: every finite division ring is commutative (hence a field).</p>
 <div class="mb">
-    Z (input gear): <span id="val-z" class="v">—</span><br>
-    Z⁻¹ (ratio restorer): <span id="val-zinv" class="vo">—</span><br>
-    |Z⁻¹| (back-drive torque): <span id="val-torque" class="v">—</span>
+    Z (signal / gain stage): <span id="val-z" class="v">—</span><br>
+    Z⁻¹ (reciprocal attenuation): <span id="val-zinv" class="vo">—</span><br>
+    |Z⁻¹| (attenuation factor): <span id="val-torque" class="v">—</span>
 </div>
-<div id="warn-zero" class="warn">MECHANICAL FAILURE: Division by Zero<br>Cannot extract energy from locked casing (Z = 0)</div>
+<div id="warn-zero" class="warn">SHORT CIRCUIT: Division by Zero<br>Cannot invert ground — no return path from zero signal (Z = 0)</div>
 </div></div>
 
 <!-- 2. NUMBER SYSTEMS -->
@@ -220,10 +220,10 @@
     <span class="chev">▼</span>
 </div>
 <div class="acc-bd">
-<p class="inf"><b>Rationals $\mathbb{Q}$</b> — The prototype field. Every fraction $a/b$ ($b\neq0$) is a gear ratio. Additive inverse: $-a/b$. Multiplicative inverse: $b/a$. Prime field of characteristic 0. Verification of distributivity: $\frac{a}{b}\!\cdot\!\left(\frac{c}{d}+\frac{e}{f}\right) = \frac{a}{b}\!\cdot\!\frac{cf+ed}{df} = \frac{a(cf+ed)}{bdf} = \frac{ac}{bd}+\frac{ae}{bf}$.</p>
-<p class="inf"><b>Reals $\mathbb{R}$</b> — The continuous-casting completion of $\mathbb{Q}$: every Cauchy gap filled. The unique Dedekind-complete ordered field (no measurement gaps, no infinite elements). Algebraically deficient: $x^2+1=0$ has no real solution.</p>
-<p class="inf"><b>Complex $\mathbb{C}$</b> — The 2D rotational alloy. Adjoin $i$ (satisfying $i^2=-1$) to $\mathbb{R}$. Elements: $a+bi$. Multiplication is rotation by $\arg(Z)$ and scaling by $|Z|$. Algebraically <em>closed</em> by the Fundamental Theorem of Algebra: every polynomial has a root in $\mathbb{C}$. $[\mathbb{C}:\mathbb{R}]=2$.</p>
-<p class="inf"><b>Constructible Numbers</b> — The compass-and-straightedge sub-field of $\mathbb{R}$, built from $\{0,1\}$ by $+,-,\times,\div,\sqrt{\phantom x}$. Extensions have degree a power of 2. This kills trisection (requires degree 3) and squaring the circle ($\pi$ is transcendental, not even algebraic).</p>
+<p class="inf"><b>Rationals $\mathbb{Q}$</b> — The prototype circuit. Every fraction $a/b$ is a precise voltage divider ratio. The anti-phase signal is $-a/b$; the reciprocal gain stage is $b/a$. Superposition distributes over gain: $\frac{a}{b}(\frac{c}{d}+\frac{e}{f}) = \frac{ac}{bd}+\frac{ae}{bf}$. Prime network of characteristic 0 — the clock never resets.</p>
+<p class="inf"><b>Reals $\mathbb{R}$</b> — The continuous-bandwidth completion of $\mathbb{Q}$: every Cauchy gap filled, every irrational frequency admitted. The unique gapless ordered field — no measurement resolution limit. Still band-limited: $x^2+1=0$ has no real-valued solution; the $90°$ phase-shift network has no real fixed point.</p>
+<p class="inf"><b>Complex $\mathbb{C}$</b> — The full phasor plane. Adjoin $i$ ($i^2=-1$, a pure $90°$ phase rotator) to $\mathbb{R}$. Elements $a+bi$ are phasors: $|Z|$ is amplitude, $\arg(Z)$ is phase. Multiplication = gain staging + phase rotation simultaneously. Algebraically closed: every polynomial network equation has a phasor solution.</p>
+<p class="inf"><b>Constructible Numbers</b> — The sub-circuit reachable from $\{0,1\}$ using only $+,-,\times,\div,\sqrt{\phantom x}$. Each extension doubles the available frequency resolution (degree a power of 2). Trisection requires a cube-root stage (degree 3, never a power of 2) — outside the constructible network.</p>
 <div class="mb bl">
     Chain: $\mathbb{F}_p \subset \mathbb{Q} \subset \mathbb{Q}(\sqrt{2}) \subset \cdots \subset \mathbb{R} \subset \mathbb{C}$<br>
     $[\mathbb{C}:\mathbb{R}]=2$ &nbsp;·&nbsp; $[\mathbb{R}:\mathbb{Q}]=\infty$ &nbsp;·&nbsp; $[\mathbb{Q}(\sqrt{2}):\mathbb{Q}]=2$<br>
@@ -238,14 +238,14 @@
     <span class="chev">▼</span>
 </div>
 <div class="acc-bd">
-<p class="inf">A <b>field extension</b> $F/E$ is a bolt-on module: new degrees of freedom attached to the base field. The <b>degree</b> $[F:E] = \dim_E F$ counts the independent directions in the new assembly.</p>
-<p class="inf"><b>Tower Law</b> (series gear multiplication): $[G:E]=[G:F]\cdot[F:E]$. Stack gear stages — total ratio is the product of stage ratios.</p>
-<p class="inf"><b>Algebraic elements</b> satisfy a polynomial equation over the base — they "meet a design spec." Transcendental elements (like $\pi$ or $e$) are free indeterminates. Adjoining $x$ algebraic of minimal degree $n$: $$E(x)\cong E[X]/(f(X)),\quad [E(x):E]=n,\quad\text{elements: }\textstyle\sum_{k=0}^{n-1}a_k x^k$$</p>
-<p class="inf"><b>Constructing from rings — two routes:</b><br>
-(1) <em>Field of fractions</em>: promoting an integral domain $R$ to $Q(R)$ by forming all ratios $a/b$ ($b\neq0$). $Q(\mathbb{Z})=\mathbb{Q}$. Like taking the full span of bolt-ratio specifications.<br>
-(2) <em>Residue field</em>: quotienting a ring by a maximal ideal $\mathfrak{m}$ — enforcing a specific tolerance spec. $\mathbb{Z}/p\mathbb{Z}=\mathbb{F}_p$. Adjoining a root of irreducible $f$: $E[X]/(f(X))$.</p>
-<p class="inf"><b>Algebraic closure $\bar{F}$</b> — the fully-commissioned factory where every polynomial has a root. $\bar{\mathbb{R}}=\mathbb{C}$ (Artin–Schreier: if $[\bar{F}:F]<\infty$ then it equals 2 and $F\equiv\mathbb{R}$). Every field has a unique algebraic closure up to isomorphism.</p>
-<p class="inf"><b>Transcendence basis</b> — a maximal algebraically-independent set $S\subset F$ over $E$: the minimal set of free design parameters from which all of $F$ is algebraic. Every extension splits as purely transcendental then algebraic.</p>
+<p class="inf">A <b>field extension</b> $F/E$ is a circuit layer stacked on a base network: new independent signal dimensions added on top. The <b>degree</b> $[F:E]=\dim_E F$ counts the number of independent signal channels the new layer introduces.</p>
+<p class="inf"><b>Tower Law</b> (cascaded stages multiply): $[G:E]=[G:F]\cdot[F:E]$. Like cascaded amplifier stages — total gain is the product of individual stage gains.</p>
+<p class="inf"><b>Algebraic elements</b> satisfy a polynomial equation over the base — they are <em>resonant frequencies</em> of a filter defined over $E$. Transcendental elements ($\pi$, $e$) are free carrier frequencies with no polynomial resonance condition. Adjoining an algebraic $x$ of minimal degree $n$: $$E(x)\cong E[X]/(f(X)),\quad [E(x):E]=n,\quad\text{signals: }\textstyle\sum_{k=0}^{n-1}a_k x^k$$</p>
+<p class="inf"><b>Building fields from rings — two circuit techniques:</b><br>
+(1) <em>Field of fractions</em>: add a reciprocal channel for every non-zero element of ring $R$. $Q(\mathbb{Z})=\mathbb{Q}$ — the integers upgraded to a full voltage-divider network.<br>
+(2) <em>Residue field</em>: short-circuit a maximal ideal $\mathfrak{m}$ to zero — collapse an entire equivalence class of signals to ground. $\mathbb{Z}/p\mathbb{Z}=\mathbb{F}_p$. Adjoining a root of irreducible $f$: $E[X]/(f(X))$.</p>
+<p class="inf"><b>Algebraic closure $\bar{F}$</b> — the fully terminated network: every polynomial filter has at least one resonant frequency inside $\bar{F}$. $\bar{\mathbb{R}}=\mathbb{C}$ — adding the $90°$ phase rotator $i$ completes $\mathbb{R}$ into a closed spectral space. Every field has a unique algebraic closure up to isomorphism.</p>
+<p class="inf"><b>Transcendence basis</b> — the minimal set of free carrier frequencies $S\subset F$ from which the rest of $F$ is algebraic (resonant). Every extension splits: a purely transcendental stage (free carriers) followed by an algebraic stage (resonances over those carriers).</p>
 <div class="mb pu">
     $\mathbb{Q}(\sqrt{2})/\mathbb{Q}$: degree <span class="vp">2</span>, min-poly $X^2-2$<br>
     Elements: $\{a+b\sqrt{2}\mid a,b\in\mathbb{Q}\}$<br>
@@ -261,9 +261,9 @@
     <span class="chev">▼</span>
 </div>
 <div class="acc-bd">
-<p class="inf">A <b>Galois extension</b> $F/E$ is a finite separable normal extension — an assembly with full interchangeable-parts symmetry. Its <b>Galois group</b> $\text{Gal}(F/E)$ is the group of field automorphisms fixing $E$ pointwise — the valid component swaps preserving all structural relationships.</p>
-<p class="inf"><b>Fundamental Theorem</b> (the master wiring diagram): $$\bigl\{\text{subgroups of }\text{Gal}(F/E)\bigr\}\xleftrightarrow{\ \ 1{:}1\ \ }\bigl\{\text{intermediate fields }E\!\subset\! K\!\subset\! F\bigr\}$$ The degree $[F:K]$ equals the order of the corresponding subgroup. Sub-assemblies of symmetry $\leftrightarrow$ intermediate structural layers.</p>
-<p class="inf"><b>Solvability by radicals</b>: Zeros of $f$ are expressible by $+,-,\times,\div,\!\sqrt[n]{\phantom x}$ iff $\text{Gal}(F/E)$ is <em>solvable</em> — constructible layer-by-layer from cyclic gears. The symmetric group $S_n$ is not solvable for $n\geq5$, proving <b>Abel–Ruffini</b>: no radical formula exists for the general quintic. $f(X)=X^5-4X+2$ is a concrete unsolvable example.</p>
+<p class="inf">A <b>Galois extension</b> $F/E$ is a fully symmetric circuit: every valid rewiring of signal channels that leaves the base network $E$ fixed is a symmetry. The <b>Galois group</b> $\text{Gal}(F/E)$ is the complete set of these channel-permutation symmetries — the automorphisms that look identical from $E$'s perspective.</p>
+<p class="inf"><b>Fundamental Theorem</b> (the master circuit diagram): $$\bigl\{\text{subgroups of }\text{Gal}(F/E)\bigr\}\xleftrightarrow{\ \ 1{:}1\ \ }\bigl\{\text{intermediate fields }E\!\subset\! K\!\subset\! F\bigr\}$$ Symmetry sub-networks $\leftrightarrow$ intermediate circuit layers. The degree $[F:K]$ equals the order of the corresponding subgroup.</p>
+<p class="inf"><b>Solvability by radicals</b>: Resonant frequencies of $f$ can be expressed with $+,-,\times,\div,\sqrt[n]{\phantom x}$ iff $\text{Gal}(F/E)$ is <em>solvable</em> — decomposable into cascaded cyclic symmetry stages. $S_n$ for $n\geq5$ is not solvable: its symmetry cannot be unwound stage by stage. This is why the general quintic circuit has no closed-form frequency formula — <b>Abel–Ruffini</b>.</p>
 <p class="inf"><b>Trisection impossibility</b>: $\cos(20°)$ is a root of $8x^3-6x-1$ — irreducible of degree 3 over $\mathbb{Q}$. Constructible extensions have degree $2^k$. Since $3\nmid 2^k$, trisection is geometrically impossible.</p>
 <p class="inf"><b>Cyclotomic fields</b> $\mathbb{Q}(\zeta_n)$: adjoining a primitive $n$th root of unity. $\text{Gal}(\mathbb{Q}(\zeta_n)/\mathbb{Q})\cong(\mathbb{Z}/n\mathbb{Z})^\times$, order $\varphi(n)$. Kummer used these to prove Fermat's Last Theorem for regular prime exponents.</p>
 <div class="mb re">
@@ -280,8 +280,8 @@
     <span class="chev">▼</span>
 </div>
 <div class="acc-bd">
-<p class="inf">A <b>finite field</b> $GF(q)$ has exactly $q=p^n$ elements — a combination lock with $q$ positions. It is the splitting field of $x^q-x$ over $\mathbb{F}_p$: every element satisfies $a^q=a$. Two finite fields of the same order are isomorphic — one lock per size.</p>
-<p class="inf">$\mathbb{F}_q$ viewed as an $n$-dimensional vector space over $\mathbb{F}_p$ — $n$ independent DOF over the base. The multiplicative group $\mathbb{F}_q^\times$ is cyclic of order $q-1$ — a single master gear driving everything.</p>
+<p class="inf">A <b>finite field</b> $GF(q)$ has exactly $q=p^n$ elements — a digital register with $q$ discrete states, wrapping perfectly. It is the splitting field of $x^q-x$ over $\mathbb{F}_p$: every signal satisfies $a^q=a$ (every state is a fixed point of the $q$-fold clock cycle). Two finite fields of the same order are isomorphic — one register architecture per size.</p>
+<p class="inf">$\mathbb{F}_q$ is an $n$-channel bus over $\mathbb{F}_p$: $n$ independent signal lines, each carrying a $p$-state value. The multiplicative group $\mathbb{F}_q^\times$ is a cyclic shift register of period $q-1$ — a single generator drives every non-zero state.</p>
 <p class="inf"><b>$\mathbb{F}_4 = \{O,I,A,B\}$</b> — char 2, min-poly $X^2+X+1$ for $A$. $\{O,I\}=\mathbb{F}_2$ is a subfield:</p>
 <div class="ftw">
     <table class="ft">
@@ -312,10 +312,10 @@
     <span class="chev">▼</span>
 </div>
 <div class="acc-bd">
-<p class="inf">The <b>characteristic</b> of $F$ is its resonance frequency — the smallest prime $p>0$ with $\underbrace{1+\cdots+1}_{p}=0$. If no such $p$, char $=0$ (no resonance). Characteristic is always 0 or prime.</p>
-<p class="inf">The <b>Frobenius endomorphism</b> $\phi:x\mapsto x^p$ is the canonical self-test automorphism in char $p$. It preserves both addition and multiplication, and satisfies the <em>freshman's dream</em>: $(a+b)^p=a^p+b^p$ because all middle binomial coefficients $\binom{p}{k}$ are divisible by $p$.</p>
-<p class="inf">The <b>prime field</b> of $F$ is the factory's base module — $\mathbb{F}_p$ if char $p$, or $\mathbb{Q}$ if char 0. The prime field is isomorphic to $\mathbb{Z}/p\mathbb{Z}$ or $\mathbb{Q}$ respectively and cannot be further reduced.</p>
-<p class="inf">Every field $F$ of char $p$ satisfies $p\cdot a=0$ for all $a$. This makes $\mathbb{F}_p$-fields radically different from char-0 fields: the Frobenius map is a non-trivial automorphism that "twists" structure in ways with no char-0 analogue.</p>
+<p class="inf">The <b>characteristic</b> of $F$ is its clock overflow frequency — the smallest prime $p>0$ such that $\underbrace{1+\cdots+1}_{p}=0$: the accumulator wraps back to zero after $p$ clock ticks. Char $0$ means the accumulator never overflows — infinite dynamic range. Characteristic is always 0 or prime (a composite wrap period would create zero-divisors, breaking the invertibility of the network).</p>
+<p class="inf">The <b>Frobenius endomorphism</b> $\phi:x\mapsto x^p$ is the canonical clock-cycle automorphism in char $p$ — one full wrap of the register. It is a field homomorphism: $(a+b)^p=a^p+b^p$ because in char $p$, all cross-terms $\binom{p}{k}$ vanish (they are divisible by $p$, hence zero). Superposition commutes with the clock cycle.</p>
+<p class="inf">The <b>prime field</b> is the base clock domain — $\mathbb{F}_p$ in char $p$, or $\mathbb{Q}$ in char 0. It is the irreducible substrate every signal in $F$ lives over, and cannot be further sub-divided.</p>
+<p class="inf">In char $p$: $p\cdot a=0$ for all $a$ — every signal is $p$-periodic. The Frobenius twists the circuit in ways that have no char-0 analogue; it is the reason finite-field arithmetic is so structurally different from integer arithmetic.</p>
 <div class="mb or">
     Characteristic $p$: <span id="val-p" class="vo">—</span><br>
     $|Z| \bmod p$: <span id="val-mod" class="vo">—</span><br>
@@ -331,11 +331,11 @@
     <span class="chev">▼</span>
 </div>
 <div class="acc-bd">
-<p class="inf">An <b>ordered field</b> carries a total order $\geq$ compatible with both $+$ and $\cdot$ (positive cone is closed). A directed flow metric. $\mathbb{R}$, $\mathbb{Q}$ are ordered; $\mathbb{C}$ and $\mathbb{F}_p$ are not.</p>
-<p class="inf"><b>Artin–Schreier theorem</b>: $F$ can be ordered iff it is <em>formally real</em> — every sum of squares $\sum x_i^2=0$ forces all $x_i=0$. Equivalently: $-1$ is not a sum of squares in $F$.</p>
-<p class="inf">An <b>Archimedean field</b> has no infinite elements — every element is bounded by some $1+1+\cdots+1$. A well-calibrated instrument with no runaway readings. Equivalently: $F$ embeds in $\mathbb{R}$.</p>
-<p class="inf">A <b>Dedekind-complete ordered field</b> has every bounded subset admitting a least upper bound — no gaps in the measurement scale. $\mathbb{R}$ is the unique such field (up to isomorphism). This directly implies: the intermediate value theorem, extreme value theorem, and the convergence of Cauchy sequences.</p>
-<p class="inf">The <b>hyperreals $\mathbb{R}^*$</b> are a non-Archimedean ordered extension: $\exists\varepsilon\!>\!0$ with $\varepsilon<1/n$ for all $n\in\mathbb{N}$ (infinitesimals) and $\exists H$ with $H>n$ for all $n$ (infinite elements). Basis of non-standard analysis.</p>
+<p class="inf">An <b>ordered field</b> carries a total ordering $\geq$ compatible with $+$ and $\cdot$ — a unipolar signal domain where every value has a definite polarity. $\mathbb{R}$ and $\mathbb{Q}$ are ordered; $\mathbb{C}$ and $\mathbb{F}_p$ are not (no consistent notion of "positive phasor" or "positive modular residue").</p>
+<p class="inf"><b>Artin–Schreier</b>: $F$ can be ordered iff $-1$ is not a sum of squares — the $180°$ phase flip cannot be achieved by superimposing in-phase signals. Equivalently: no combination of positive-power signals sums to a negative-power signal.</p>
+<p class="inf">An <b>Archimedean field</b> has no DC offset that exceeds all finite multiples of the unit — no runaway bias rail, no infinitely large or infinitely small signal level. Every signal is bounded within the finite-gain network.</p>
+<p class="inf">A <b>Dedekind-complete ordered field</b> has no missing frequency: every bounded set of signal values has a least upper bound within the field — no spectral gap. $\mathbb{R}$ is the unique such field. This completeness directly yields the intermediate value theorem, extreme value theorem, and Cauchy convergence.</p>
+<p class="inf">The <b>hyperreals $\mathbb{R}^*$</b> admit infinitesimal signal levels $\varepsilon>0$ smaller than any rational, and infinite bias levels $H$ larger than any integer — a non-Archimedean network with unbounded dynamic range in both directions. Foundation of non-standard analysis.</p>
 <div class="mb">
     Dedekind cut: $\sup\{r\in\mathbb{Q}:r^2&lt;2\}=\sqrt{2}\in\mathbb{R}\setminus\mathbb{Q}$<br>
     Archimedean: $\forall x\in\mathbb{R},\;\exists n\in\mathbb{N}: n>x$<br>
@@ -350,9 +350,9 @@
     <span class="chev">▼</span>
 </div>
 <div class="acc-bd">
-<p class="inf">A <b>topological field</b> makes all four operations continuous. For metric fields, <b>completion</b> fills Cauchy gaps. The completion of $\mathbb{Q}$ under the usual absolute value is $\mathbb{R}$.</p>
-<p class="inf">The <b>$p$-adic valuation</b> $v_p(x)$ counts the exact power of prime $p$ in $x$ — a divisibility pressure gauge. Metric: $|x|_p=p^{-v_p(x)}$. Numbers highly divisible by $p$ are "close to 0" — a completely alien notion of proximity. Completing $\mathbb{Q}$ under $|\cdot|_p$ gives the <b>$p$-adic numbers $\mathbb{Q}_p$</b>.</p>
-<p class="inf"><b>Local fields</b>: finite extensions of $\mathbb{Q}_p$ (char 0) or finite extensions of $\mathbb{F}_p((t))$ (char $p$, Laurent series). Both types share a deep structural analogy: $p\in\mathbb{Q}_p$ plays the same role as $t\in\mathbb{F}_p((t))$ (the uniformizer). Elements of both expand as power series in the uniformizer with $\mathbb{F}_p$ coefficients.</p>
+<p class="inf">A <b>topological field</b> makes all four operations continuous — a field where arbitrarily small signal perturbations produce arbitrarily small output perturbations. For metric fields, <b>completion</b> fills Cauchy gaps: any Cauchy sequence of signals converges to a signal in the field. Completing $\mathbb{Q}$ under the standard absolute value gives $\mathbb{R}$.</p>
+<p class="inf">The <b>$p$-adic valuation</b> $v_p(x)$ is a divisibility-depth sensor: it measures the exact power of prime $p$ dividing $x$. The $p$-adic metric $|x|_p=p^{-v_p(x)}$ inverts normal intuition — signals with high $p$-divisibility are "close to zero." Completing $\mathbb{Q}$ under this metric gives <b>$\mathbb{Q}_p$</b>: a field where the bandwidth is measured in powers of $p$, not real magnitude.</p>
+<p class="inf"><b>Local fields</b>: finite extensions of $\mathbb{Q}_p$ (char 0) or of $\mathbb{F}_p((t))$ (char $p$). In both, elements are power series in a uniformizer ($p$ or $t$) with $\mathbb{F}_p$ coefficients — signals expressed as base-$p$ expansions. The two types are structurally parallel: the same first-order circuit equations hold in both (Ax–Kochen), and their absolute Galois groups become isomorphic after adjoining all $p$-power roots of the uniformizer.</p>
 <p class="inf">Adjoining all $p$-power roots of the uniformizer yields <b>perfectoid fields</b>. Strikingly: $\text{Gal}(\mathbb{Q}_p(p^{1/p^\infty}))\cong\text{Gal}(\mathbb{F}_p((t))(t^{1/p^\infty}))$ — a glimpse of the deep Langlands correspondence between these two worlds.</p>
 <p class="inf"><b>Algebraic $K$-theory</b> connects field units to topology: $K_1(F)=F^\times$, $K_2(F)$ (Matsumoto) $\cong K_2^M(F)$ (Milnor). The Norm Residue Isomorphism (Voevodsky, ~2000) bridges Milnor $K$-theory to Galois cohomology: $K_n^M(F)/p\cong H^n(F,\mu_p^{\otimes n})$.</p>
 <div class="mb bl">
@@ -370,12 +370,12 @@
     <span class="chev">▼</span>
 </div>
 <div class="acc-bd">
-<p class="inf"><b>Linear Algebra</b>: Fields are the scalar domains of vector spaces. $ax=b$ ($a\neq0$) has unique solution $x=a^{-1}b$ — a single pivot point. Gaussian elimination and the existence of bases both rely on multiplicative inverses. Over a ring (no inverses), systems may have zero, one, or many solutions.</p>
-<p class="inf"><b>Cryptography (Discrete Log)</b>: In $\mathbb{F}_q$, computing $a^n$ is fast; inverting it (discrete logarithm) is computationally intractable — a one-way ratchet. ECC replaces multiplication with point addition on $y^2=x^3+ax+b$ over $\mathbb{F}_p$: same one-way structure, smaller key sizes.</p>
-<p class="inf"><b>Coding Theory</b>: Reed-Solomon codes use polynomial evaluation over $\mathbb{F}_{2^8}$. The field structure guarantees clean interpolation: $n$ points uniquely determine a degree-$(n{-}1)$ polynomial. Error correction = solving a linear system over a finite field.</p>
-<p class="inf"><b>Algebraic Geometry (Function Fields)</b>: The function field $F(X)$ is the spectral fingerprint of variety $X$. For a smooth projective curve, $X$ is completely reconstructed from $F(X)$. Dimension of $X$ = transcendence degree of $F(X)$. Birational geometry studies varieties via their function fields.</p>
-<p class="inf"><b>Number Theory (Global Fields)</b>: Number fields (extensions of $\mathbb{Q}$) and function fields over $\mathbb{F}_q$ are "global fields." Local–global principle: questions about $\mathbb{Q}$ reduce to $\mathbb{Q}_p$ and $\mathbb{R}$ (Hasse–Minkowski for quadratic forms). Class field theory describes abelian Galois extensions. Kronecker–Weber: $\mathbb{Q}^{ab}=\mathbb{Q}(\zeta_n,n\geq2)$.</p>
-<p class="inf"><b>Differential Fields</b>: Equip $F$ with a derivation $D$ satisfying $D(ab)=D(a)b+aD(b)$. Differential Galois theory (Picard–Vessiot) controls solvability of linear ODEs — the exact analogue of classical Galois theory for polynomial equations, with algebraic groups replacing finite groups.</p>
+<p class="inf"><b>Linear Algebra</b>: Fields are the gain domains of vector spaces. $ax=b$ ($a\neq0$) has unique solution $x=a^{-1}b$ — a single well-defined operating point. Gaussian elimination is field arithmetic on a gain matrix; the existence of bases relies entirely on multiplicative inverses. Over a ring (missing inverses), the signal routing may be degenerate — no solution, or infinitely many.</p>
+<p class="inf"><b>Cryptography (Discrete Log)</b>: In $\mathbb{F}_q$, repeated gain-staging $a^n$ is fast to compute forward; recovering $n$ from the output (discrete log) is computationally infeasible — a one-way amplifier with no inverse circuit. ECC uses point-addition on $y^2=x^3+ax+b$ over $\mathbb{F}_p$ as an even harder one-way network with smaller key sizes.</p>
+<p class="inf"><b>Coding Theory</b>: Reed-Solomon codes sample a polynomial signal at $n$ distinct frequencies in $\mathbb{F}_{2^8}$. Field structure guarantees exact reconstruction: $n$ sample values uniquely recover the degree-$(n{-}1)$ source signal. Errors = extra sample points that deviate; correction = solving a linear system over the finite field.</p>
+<p class="inf"><b>Algebraic Geometry (Function Fields)</b>: The function field $F(X)$ is the full transfer-function algebra of variety $X$ — all rational signal ratios on the geometric object. For a smooth projective curve, this spectral signature completely determines $X$. Dimension of $X$ = number of independent carrier frequencies (transcendence degree of $F(X)$).</p>
+<p class="inf"><b>Number Theory (Global Fields)</b>: Number fields and $\mathbb{F}_q$-function fields are "global circuits." The local–global principle probes a global circuit by measuring it at every local frequency band ($\mathbb{Q}_p$, $\mathbb{R}$) — Hasse–Minkowski does this for quadratic forms. Class field theory classifies all abelian channel extensions of a global field. Kronecker–Weber: $\mathbb{Q}^{ab}=\mathbb{Q}(\zeta_n,n\geq2)$.</p>
+<p class="inf"><b>Differential Fields</b>: Equip $F$ with a derivation $D$ satisfying $D(ab)=D(a)b+aD(b)$ — a continuous rate-of-change monitor on the signal network. Differential Galois theory (Picard–Vessiot) controls which linear ODE networks admit closed-form solutions, with algebraic symmetry groups playing the role that permutation groups play for polynomial equations.</p>
 </div></div>
 
 <!-- 10. HISTORY -->
