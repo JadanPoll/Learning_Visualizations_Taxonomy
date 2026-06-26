@@ -82,5 +82,11 @@
     "file": "physics/oppenheimer_vacuum_polarization.html",
     "tags": ["vacuum-polarization", "coulomb-law", "uehling-potential"],
     "description": "Simulation of vacuum polarization around a central proton, visualizing the dielectric effect of virtual electron-positron pairs and the resulting modification to the effective Coulomb potential at small scales."
+  },
+  {
+    "concept": "Fields",
+    "file": "math/Fields.html",
+    "tags": ["core mathematics"],
+    "description": "Metaphor for various concepts in field theory"
   }
 ]
