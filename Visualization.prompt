@@ -1,29 +1,33 @@
-Role: You are an expert physicist, mathematician, and educational UI/UX developer.
+Role: You are an expert in the target domain, a visual mathematician, and an educational UI/UX developer.
 
-Task: Create a self-contained interactive JSXGraph visualization for the following concept:
-
+Task: Create a self-contained interactive JSXGraph visualization for:
 
 $$INSERT CONCEPT / PAPER / EQUATIONS HERE$$
 
-Core Directives (Maximize Token Efficiency & Consistency):
+Core Directives:
 
-Use the Preloaded Shell: DO NOT write HTML/CSS/Layout from scratch. Use the exact boilerplate provided below. It contains the dark mode styling, JSXGraph imports, MathJax for LaTeX formatting, and an adjustable sidebar.
+Before writing any code, answer internally:
 
-Fill the 3 Zones: Only insert content into the designated zones:
+What is the single most load-bearing intuition in this concept — the thing that, once seen, makes everything else click?
+What physical or engineering domain has the most structurally isomorphic behavior? (circuits, fluid dynamics, optics, mechanics, thermodynamics — pick the tightest fit, not the most obvious one)
+What does a beginner wrongly picture, and how does the visualization correct it?
+Use those answers to drive every metaphor, every axis label, every slider name, and every annotation. The metaphor must be consistent and load-bearing — not decorative. Every element of the UI should be nameable in both the mathematical language and the metaphor language simultaneously.
 
-<!-- ZONE 1: SIDEBAR CONTENT -->: Pedagogical text, definitions, and mathematical equations. Wrap variable numbers in <span id="..."> tags so they can be updated. Use $$...$$ for block math and $...$ for inline math.
+Shell: Use the boilerplate below exactly.
 
-// ZONE 2: SLIDERS & UI: Define JSXGraph sliders (board.create('slider', ...)). DO NOT build HTML <input> sliders.
+Fill 4 Zones:
 
-// ZONE 3: MATHEMATICS & PLOTTING: Define the mathematical curves, points, AND the board.on('update', ...) event listener to update the HTML math equations in real-time.
+<!-- ZONE 1 --> Accordion sidebar sections, one per major sub-concept. Each: metaphor paragraph first, rigorous math second, live <div class="math-box"> with <span id="..."> values third.
+<!-- ZONE 2 --> Multiple named visualization tabs (at least 3), one JSXGraph board per tab, initialized lazily on first click.
+// ZONE 3 Sliders, points, curves, arrows — one coherent interactive scene per tab, each isolating one key relationship.
+// ZONE 4 board.on('update', ...) per board writing all live values into sidebar spans in real time.
+Pedagogical Richness:
 
-Pedagogical Richness & Dynamic Math:
+The metaphor should make a non-obvious prediction that the visualization then confirms visually
+Each tab should show something the other tabs cannot — not the same scene with different parameters
+Slider names should be in metaphor language, with the mathematical symbol in parentheses
+Warn the user what to drag and what invariant or surprise to watch for
 
-Deep Theory: Provide a rigorous explanation of the physical/mathematical significance using direct context from the theory. Quote the source material if applicable.
-
-Live Equations: Inside <div class="math-box">, show the core equations. As the user drags the sliders in the graph, the numeric values inside the math-box MUST update in real-time to reflect the current state. Use document.getElementById('...').innerHTML = ... inside the JSXGraph update loop.
-
-Interaction Guide: Tell the user exactly what to drag and what physical/mathematical relationship they should be observing.
 
 The Boilerplate (Copy this and fill in the Zones):
 
