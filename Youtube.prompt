@@ -8,9 +8,11 @@ Timestamped Evidence: Anchor every concept with the exact timestamp and a direct
 Timestamped Evidence: You MUST begin every single extraction block with the exact timestamp and a direct quote or ellipse(...) in between to cut up a larger quote into its key phrasals
 . DO NOT output a quote without its corresponding (MM:SS) timestamp. Format: (MM:SS) "Exact quote here."
 
-The Tri-Layer Deconstruction: For each quote, provide:
+The Tri-Layer + 1 Deconstruction: For each provide:
 
 Principale: What is the literal point being made?
+
+The timestamped quote (yes principale before the timestamped quote)
 
 Aperçu: Why is this intellectually interesting? What is the underlying mental model, framework, or core thesis?
 
