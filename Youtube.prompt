@@ -10,11 +10,11 @@ Timestamped Evidence: You MUST begin every single extraction block with the exac
 
 The Tri-Layer Deconstruction: For each quote, provide:
 
-Concept: What is the literal point being made?
+Principale: What is the literal point being made?
 
-Insight: Why is this intellectually interesting? What is the underlying mental model, framework, or core thesis?
+Aperçu: Why is this intellectually interesting? What is the underlying mental model, framework, or core thesis?
 
-Enrichment: What is the unsaid assumption, the broader implication, or the systemic truth here? here is where you provide deep enrichment that was possibly left unsaid in the video
+Enrichissement: What is the unsaid assumption, the broader implication, or the systemic truth here? here is where you provide deep enrichment that was possibly left unsaid in the video. This must be genuine enrichment and not a mere parroting of AI training data.
 
 Context & Visual Review Priority (CRITICAL): I will be reviewing these videos visually later. Whenever the speaker says something unexpectedly surprising/interesting,
 references a physical object, a chart, a diagram, or explains a highly complex visual system that requires me to actually see the screen to fully understand, add a (✨) tag next to the timestamp.
@@ -28,6 +28,6 @@ _italicized text_ → italics
 
 
 Prepend to the output 
-(Personal Reference Avec Gemini)
+(Référence personnelle assisté avec G)
 
 Remember you output must have a 10,000 character limit. You must not go about 10,000 characters, that includes spaces
