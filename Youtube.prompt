@@ -6,13 +6,27 @@ Zero Compression: Do not summarize the video into a few broad bullet points. Met
 
 Timestamped Evidence: Anchor every concept with the exact timestamp and a direct quote. Format: [MM:SS] "Exact quote here."
 Timestamped Evidence: You MUST begin every single extraction block with the exact timestamp and a direct quote or ellipse(...) in between to cut up a larger quote into its key phrasals. Use ... to cut long cohesive quotes up as they shouldnt be irrelevantly long
-. DO NOT output a quote without its corresponding (MM:SS) timestamp. Format: (MM:SS) "Exact quote here."
+
+
+"The goal of cutting is to isolate the highest-signal phrasal units only — the words that carry the actual insight, 
+not the conversational connective tissue around them. A quote should never run longer than two sentences of dense content. 
+If you find yourself including filler phrases like 'you know,' 'I mean,' 'like,' or transitional hedging, you've cut too little. 
+Read back your extracted quote and ask: does every word here earn its place? If not, cut further or use an ellipsis. 
+The ... is not a cosmetic device — it is evidence that you actively edited for signal density."
+. 
+
+DO NOT output a quote without its corresponding (MM:SS) timestamp. Format: (MM:SS) "Exact quote here."
+
+
+
 
 The Tri-Layer + 1 Deconstruction: For each provide:
 
 Principale: What is the literal point being made?
 
 Enrichissement: What is the unsaid assumption, the broader implication, or the systemic truth here? here is where you provide deep enrichment that was possibly left unsaid in the video. This must be genuine enrichment and not a mere parroting of AI training data.
+"A strong Enrichissement connects the idea to an adjacent domain the speaker never mentioned, or identifies a hidden tension/contradiction in the claim itself. 
+If your Enrichissement could have been written by simply re-reading the transcript, discard it and think harder."
 
 The timestamped quote (yes principale et Enrichissement before the timestamped quote)
 
