@@ -20,53 +20,56 @@
   // SCHEMA CONSTANTS — edit these if YouTube changes the response shape
   // Run parsePage() in console with a raw response to debug
   // ─────────────────────────────────────────────
-  const SCHEMA = {
-    // Path to get the list of continuation items per page
-    continuationItems: (data) =>
-      (data?.onResponseReceivedEndpoints ?? [])
+    const SCHEMA = {
+        // Path to get the list of continuation items per page
+        continuationItems: (data) =>
+        (data?.onResponseReceivedEndpoints ?? [])
         .flatMap(ep =>
-          ep?.appendContinuationItemsAction?.continuationItems ??
-          ep?.reloadContinuationItemsCommand?.continuationItems ?? []),
+                 ep?.appendContinuationItemsAction?.continuationItems ??
+                 ep?.reloadContinuationItemsCommand?.continuationItems ?? []),
 
-    // From a continuationItem, get the commentThreadRenderer (top-level or subThread)
-    threadRenderer: (item) => item?.commentThreadRenderer,
+        // From a continuationItem, get the commentThreadRenderer
+        threadRenderer: (item) => item?.commentThreadRenderer,
 
-    // From a commentThreadRenderer, get the commentKey used to look up the mutation
-    commentKey: (thread) => thread?.commentViewModel?.commentViewModel?.commentKey,
+        // From a commentThreadRenderer, get the commentKey for mutation lookup
+        commentKey: (thread) => thread?.commentViewModel?.commentViewModel?.commentKey,
 
-    // From a commentThreadRenderer, get inline subThreads (pre-loaded replies)
-    subThreads: (thread) =>
-      thread?.replies?.commentRepliesRenderer?.subThreads ?? [],
+        // From a commentThreadRenderer, get inline pre-loaded subThreads
+        subThreads: (thread) =>
+        thread?.replies?.commentRepliesRenderer?.subThreads ?? [],
 
-    // From a continuationItem, get the next-page continuation token
-    nextToken: (item) =>
-      item?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token,
+        // From a commentThreadRenderer, get the reply continuation token (if replies exist beyond subThreads)
+        repliesContinuationToken: (thread) =>
+        thread?.replies?.commentRepliesRenderer?.subThreads?.[0]
+        ?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token,
 
-    // From the full response, get all entity mutations
-    mutations: (data) =>
-      data?.frameworkUpdates?.entityBatchUpdate?.mutations ?? [],
+        // From a continuationItem, get the next-page continuation token
+        nextToken: (item) =>
+        item?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token,
 
-    // From a mutation, get the commentEntityPayload (returns null for non-comment mutations)
-    commentPayload: (mutation) =>
-      mutation?.payload?.commentEntityPayload ?? null,
+        // From the full response, get all entity mutations
+        mutations: (data) =>
+        data?.frameworkUpdates?.entityBatchUpdate?.mutations ?? [],
 
-    // From a commentEntityPayload, extract fields
-    text:      (p) => p?.properties?.content?.content ?? '',
-    author:    (p) => p?.author?.displayName ?? p?.properties?.authorButtonA11y ?? '?',
-    commentId: (p) => p?.properties?.commentId ?? '',
-    replyLevel:(p) => p?.properties?.replyLevel ?? 0,   // 0=top, 1=reply, 2=subreply
-    likes:     (p) => {
-      // "0 likes", "1 like", "1.2K likes" — parse the number out
-      const a11y = p?.toolbar?.likeCountA11y ?? '';
-      const m = a11y.match(/([\d,.]+[KMBkmb]?)/);
-      if (!m) return 0;
-      const s = m[1].replace(/,/g, '');
-      if (/[Kk]$/.test(s)) return Math.round(parseFloat(s) * 1000);
-      if (/[Mm]$/.test(s)) return Math.round(parseFloat(s) * 1_000_000);
-      return parseInt(s) || 0;
-    },
-  };
+        // From a mutation, get the commentEntityPayload (null for non-comment mutations)
+        commentPayload: (mutation) =>
+        mutation?.payload?.commentEntityPayload ?? null,
 
+        // From a commentEntityPayload, extract fields
+        text:       (p) => p?.properties?.content?.content ?? '',
+        author:     (p) => p?.author?.displayName ?? p?.properties?.authorButtonA11y ?? '?',
+        commentId:  (p) => p?.properties?.commentId ?? '',
+        replyLevel: (p) => p?.properties?.replyLevel ?? 0,  // 0=top, 1=reply, 2=subreply
+        likes:      (p) => {
+            const a11y = p?.toolbar?.likeCountA11y ?? '';
+            const m = a11y.match(/([\d,.]+[KMBkmb]?)/);
+            if (!m) return 0;
+            const s = m[1].replace(/,/g, '');
+            if (/[Kk]$/.test(s)) return Math.round(parseFloat(s) * 1000);
+            if (/[Mm]$/.test(s)) return Math.round(parseFloat(s) * 1_000_000);
+            return parseInt(s) || 0;
+        },
+    };
   // ─────────────────────────────────────────────
   // CONFIG
   // ─────────────────────────────────────────────
@@ -516,6 +519,33 @@
 
         const { newComments, next } = parsePage(data);
         comments.push(...newComments);
+
+          // Chase reply continuations for this page's threads
+          const pageThreads = SCHEMA.continuationItems(data)
+              .map(i => SCHEMA.threadRenderer(i)).filter(Boolean);
+          if (page === 1) {
+              const withReplies = pageThreads.filter(t => t?.replies?.commentRepliesRenderer);
+              const withToken   = withReplies.filter(t => SCHEMA.repliesContinuationToken(t));
+              if (withReplies.length > 0 && withToken.length === 0)
+                  showSchemaWarning(`${withReplies.length} thread(s) have replies but none yielded a continuation token — reply fetching is broken (repliesContinuationToken path may be wrong).`);
+          }
+          for (const thread of pageThreads) {
+              const replyToken = SCHEMA.repliesContinuationToken(thread);
+              if (!replyToken) continue;
+              let rToken = replyToken;
+              let rPage = 0;
+              while (rToken && rPage++ < 6) {
+                  setStatus(`p${page} replies · ${comments.length}`);
+                  const rData = await post(
+                      `https://www.youtube.com/youtubei/v1/next?key=${key}`,
+                      { context: ctx, continuation: rToken }
+                  );
+                  const { newComments: rComments, next: rNext } = parsePage(rData);
+                  comments.push(...rComments);
+                  rToken = rNext;
+                  await sleep(80);
+              }
+          }
         token = next;
         await sleep(150);
       }
