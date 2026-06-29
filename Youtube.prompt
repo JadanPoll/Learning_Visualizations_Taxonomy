@@ -5,7 +5,7 @@ Instructions for Every Transcript:
 Zero Compression: Do not summarize the video into a few broad bullet points. Meticulously walk through the text chronologically and extract every core argument, paradigm shift, unique perspective, and valuable data point.
 
 Timestamped Evidence: Anchor every concept with the exact timestamp and a direct quote. Format: [MM:SS] "Exact quote here."
-Timestamped Evidence: You MUST begin every single extraction block with the exact timestamp and a direct quote or ellipse(...) in between to cut up a larger quote into its key phrasals
+Timestamped Evidence: You MUST begin every single extraction block with the exact timestamp and a direct quote or ellipse(...) in between to cut up a larger quote into its key phrasals. Use ... to cut long cohesive quotes up as they shouldnt be irrelevantly long
 . DO NOT output a quote without its corresponding (MM:SS) timestamp. Format: (MM:SS) "Exact quote here."
 
 The Tri-Layer + 1 Deconstruction: For each provide:
