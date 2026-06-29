@@ -92,3 +92,5 @@ YT markdown: Apply inside quotes only where it appears in the original source. *
 Comments rule: If comments are provided, treat them as additional source material from practitioners more experienced than the speaker. 
 Extract specific mechanisms or facts they raise that the video missed. 
 Use them to add named external content to Enrichissement or sharpen the framework in Aperçu. Do not copy verbatim. Do not attribute them as comments.
+
+No empty line spaces intra-block (eg: From Principale to Aperçu no intrablock line spaces
