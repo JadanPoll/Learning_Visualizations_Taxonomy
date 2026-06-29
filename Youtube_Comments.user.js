@@ -13,8 +13,9 @@
 (function () {
   'use strict';
 
-  if (window.__YT_CE_LOADED__) return;
+  if (window.__YT_CE_LOADED__) { console.log('[YT-CE] Already loaded, skipping.'); return; }
   window.__YT_CE_LOADED__ = true;
+  console.log('[YT-CE] Script loaded.');
 
   // ─────────────────────────────────────────────
   // SCHEMA CONSTANTS — edit these if YouTube changes the response shape
@@ -124,6 +125,10 @@
     #yt-ce-val { font-size: 11px; font-weight: 700; color: #e55; min-width: 26px; text-align: right; }
     #yt-ce-stats { font-size: 10px; color: #444; margin-top: 5px; }
     #yt-ce-stats b { color: #aaa; }
+    #yt-ce-diag { font-size: 9px; margin-top: 4px; padding: 3px 6px; border-radius: 3px; line-height: 1.5; display: none; }
+    #yt-ce-diag.ok   { display: block; background: #0a1f0f; color: #3a8; border: 1px solid #1a3f2f; }
+    #yt-ce-diag.warn { display: block; background: #1f1800; color: #b80; border: 1px solid #3f3200; }
+    #yt-ce-diag.err  { display: block; background: #1f0a00; color: #f74; border: 1px solid #5a1a00; }
 
     /* ── schema warning banner ── */
     #yt-ce-warn {
@@ -214,6 +219,7 @@
     });
 
     const stats = el('div', { id: 'yt-ce-stats', txt: '—' });
+    const diag  = el('div', { id: 'yt-ce-diag' });
     const list  = el('div', { id: 'yt-ce-list' });
     list.appendChild(emptyMsg('Click Fetch to load comments.'));
     const foot = el('div', { id: 'yt-ce-foot' });
@@ -224,7 +230,7 @@
         el('div', { id: 'yt-ce-title', txt: 'Comment Extractor' }),
         el('div', { id: 'yt-ce-slider-row' },
           el('span', { id: 'yt-ce-slider-lbl', txt: 'Min chars' }), slider, sliderVal),
-        stats),
+        stats, diag),
       list, foot);
 
     const tab = el('div', { id: 'yt-ce-tab', txt: '💬' });
@@ -271,6 +277,20 @@
   function clearSchemaWarning() {
     const old = document.getElementById('yt-ce-warn');
     if (old) old.remove();
+  }
+
+  function setDiag(msg, type = 'ok') {
+    const d = document.getElementById('yt-ce-diag');
+    if (!d) return;
+    d.textContent = msg;
+    d.className = type;
+  }
+
+  function clearDiag() {
+    const d = document.getElementById('yt-ce-diag');
+    if (!d) return;
+    d.textContent = '';
+    d.className = '';
   }
 
   // ─────────────────────────────────────────────
@@ -401,7 +421,6 @@
     }
 
     let threadsFound = 0;
-    let commentsExtracted = 0;
     let misses = 0;
 
     for (const item of items) {
@@ -414,12 +433,12 @@
       threadsFound++;
 
       // extract this thread's comment
-      extractFromThread(thread, entityMap, newComments, 0);
+      if (!extractFromThread(thread, entityMap, newComments)) misses++;
 
       // extract pre-loaded subThreads (inline replies)
       for (const sub of SCHEMA.subThreads(thread)) {
         const subThread = SCHEMA.threadRenderer(sub);
-        if (subThread) extractFromThread(subThread, entityMap, newComments, 1);
+        if (subThread && !extractFromThread(subThread, entityMap, newComments)) misses++;
       }
     }
 
@@ -439,30 +458,31 @@
       console.log('[YT-CE] Sample item keys:', Object.keys(items[0] || {}));
     }
 
-    console.log(`[YT-CE] page: ${threadsFound} threads → ${newComments.length} comments, next=${!!next}`);
+    console.log(`[YT-CE] page: ${threadsFound} threads → ${newComments.length} comments, next=${!!next} | entityMap: ${entityMap.size}, misses: ${misses}`);
     return { newComments, next };
   }
 
-  function extractFromThread(thread, entityMap, out, depthHint) {
+  function extractFromThread(thread, entityMap, out) {
     const key = SCHEMA.commentKey(thread);
-    if (!key) return;
+    if (!key) return false;
 
     const payload = entityMap.get(key);
     if (!payload) {
       console.warn('[YT-CE] commentKey not found in entityMap:', key?.slice(0, 40));
-      return;
+      return false;
     }
 
     const text = SCHEMA.text(payload);
-    if (!text) return; // skip empty
+    if (!text) return false;
 
     out.push({
       author:     SCHEMA.author(payload),
       text,
       likes:      SCHEMA.likes(payload),
-      replyLevel: SCHEMA.replyLevel(payload), // 0=top, 1=reply, 2=subreply
+      replyLevel: SCHEMA.replyLevel(payload),
       commentId:  SCHEMA.commentId(payload),
     });
+    return true;
   }
 
   // ─────────────────────────────────────────────
@@ -488,12 +508,21 @@
     try {
       const vid = getVid();
       if (!vid) throw new Error('No video ID in URL.');
+      console.log('[YT-CE] Starting fetch for video:', vid);
 
       const key = getKey();
+      console.log('[YT-CE] API key:', key?.slice(0, 12) + '…');
       const ctx = getCtx();
 
-      // First continuation token lives in ytInitialData
-      const initData   = getYtInitialData();
+      // Fetch the page HTML fresh — window.ytInitialData is never updated on SPA nav
+      setDiag(`vid: ${vid} · loading page…`, 'ok');
+      const initData   = await fetchInitialData(vid);
+      const initVid    = initData?.currentVideoEndpoint?.watchEndpoint?.videoId ?? '(not found)';
+      const vidMatch   = initVid === vid;
+      console.log('[YT-CE] initData videoId:', initVid, '| URL videoId:', vid, vidMatch ? '✓ match' : '⚠ MISMATCH');
+      if (!vidMatch) setDiag(`⚠ initData vid: ${initVid} ≠ url vid: ${vid}`, 'err');
+      else           setDiag(`vid: ${vid} ✓  fetching…`, 'ok');
+
       const firstToken = getFirstToken(initData);
 
       if (!firstToken) {
@@ -503,12 +532,18 @@
           'Also check the browser console for more detail.'
         );
       }
+      console.log('[YT-CE] First token found ✓');
 
       comments = [];
       let token = firstToken;
       let page  = 0;
+      const sessionVid = vid; // guard against mid-fetch navigation
 
       while (token && page < 60) {
+        if (getVid() !== sessionVid) {
+          console.log('[YT-CE] Video changed mid-fetch, aborting loop (was:', sessionVid, 'now:', getVid(), ')');
+          return;
+        }
         page++;
         setStatus(`p${page} · ${comments.length}`);
 
@@ -534,7 +569,9 @@
               if (!replyToken) continue;
               let rToken = replyToken;
               let rPage = 0;
+              const rStart = comments.length;
               while (rToken && rPage++ < 6) {
+                  if (getVid() !== sessionVid) { console.log('[YT-CE] Video changed mid-reply-fetch, aborting.'); return; }
                   setStatus(`p${page} replies · ${comments.length}`);
                   const rData = await post(
                       `https://www.youtube.com/youtubei/v1/next?key=${key}`,
@@ -545,6 +582,9 @@
                   rToken = rNext;
                   await sleep(80);
               }
+              const rFetched = comments.length - rStart;
+              if (rFetched > 0 || rPage > 1)
+                  console.log(`[YT-CE]   reply thread: ${rFetched} replies over ${rPage} page(s)${rToken ? ' (hit 6-page cap)' : ''}`);
           }
         token = next;
         await sleep(150);
@@ -561,11 +601,16 @@
         return;
       }
 
-      console.log(`[YT-CE] Done. ${comments.length} total comments.`);
+      const topLevel   = comments.filter(c => c.replyLevel === 0).length;
+      const replies    = comments.filter(c => c.replyLevel === 1).length;
+      const subReplies = comments.filter(c => c.replyLevel === 2).length;
+      console.log(`[YT-CE] Done. ${comments.length} total | top-level: ${topLevel}, replies: ${replies}, sub-replies: ${subReplies} | pages: ${page}`);
+      setDiag(`✓ ${comments.length} total · top:${topLevel} rep:${replies} sub:${subReplies} · ${page}pg`, 'ok');
       renderList();
 
     } catch (err) {
       fetching = false;
+      setDiag('✗ ' + err.message.split('\n')[0], 'err');
       foot.textContent = ''; foot.appendChild(makeFetchBtn());
       list.textContent = ''; list.appendChild(emptyMsg('Error: ' + err.message));
       console.error('[YT-CE] Fetch error:', err);
@@ -604,24 +649,31 @@
     return { client: { clientName: 'WEB', clientVersion: '2.20260626.01.00', hl: 'en', gl: 'US' } };
   }
 
-  function getYtInitialData() {
-    for (const s of document.querySelectorAll('script')) {
-      const t = s.textContent;
-      const i = t.indexOf('ytInitialData');
-      if (i === -1) continue;
-      const start = t.indexOf('{', i);
-      if (start === -1) continue;
-      try {
-        let depth = 0, end = start;
-        for (; end < t.length; end++) {
-          if (t[end] === '{') depth++;
-          else if (t[end] === '}') { depth--; if (depth === 0) break; }
-        }
-        return JSON.parse(t.slice(start, end + 1));
-      } catch {}
+  // window.ytInitialData is set once on hard load and NEVER updated by YouTube
+  // on SPA navigation — it is always stale after the first video. The only
+  // reliable source for the current video's data is fetching the page HTML fresh.
+  async function fetchInitialData(vid) {
+    console.log('[YT-CE] Fetching fresh page HTML for vid:', vid);
+    const res = await fetch(`/watch?v=${vid}`, { credentials: 'include' });
+    const html = await res.text();
+    const i = html.indexOf('ytInitialData');
+    if (i === -1) { console.warn('[YT-CE] ytInitialData not found in fetched HTML.'); return {}; }
+    const start = html.indexOf('{', i);
+    if (start === -1) return {};
+    try {
+      let depth = 0, end = start;
+      for (; end < html.length; end++) {
+        if (html[end] === '{') depth++;
+        else if (html[end] === '}') { depth--; if (depth === 0) break; }
+      }
+      const data = JSON.parse(html.slice(start, end + 1));
+      console.log('[YT-CE] Fresh initData parsed. videoId in data:',
+        data?.currentVideoEndpoint?.watchEndpoint?.videoId ?? '(not found)');
+      return data;
+    } catch (e) {
+      console.warn('[YT-CE] Failed to parse ytInitialData from HTML:', e);
+      return {};
     }
-    console.warn('[YT-CE] ytInitialData not found or unparseable.');
-    return {};
   }
 
   function getFirstToken(initData) {
@@ -651,13 +703,16 @@
   // ─────────────────────────────────────────────
   // SPA RESET
   // ─────────────────────────────────────────────
-  new MutationObserver(() => {
+  function onNavigate() {
     const vid = getVid();
+    console.log('[YT-CE] yt-navigate-finish fired → vid:', vid, '| lastVid:', lastVid);
     if (!vid || vid === lastVid) return;
+    console.log('[YT-CE] New video detected, resetting state.');
     lastVid = vid;
-    if (fetching) return;
+    fetching = false;
     comments = [];
     clearSchemaWarning();
+    clearDiag();
     const list  = document.getElementById('yt-ce-list');
     const stats = document.getElementById('yt-ce-stats');
     const foot  = document.getElementById('yt-ce-foot');
@@ -665,6 +720,9 @@
     list.textContent = ''; list.appendChild(emptyMsg('New video — click Fetch.'));
     stats.textContent = '—';
     foot.textContent = ''; foot.appendChild(makeFetchBtn());
-  }).observe(document.documentElement, { childList: true, subtree: false });
+  }
+
+  // yt-navigate-finish fires on every YouTube SPA navigation (reliable)
+  window.addEventListener('yt-navigate-finish', onNavigate);
 
 })();
