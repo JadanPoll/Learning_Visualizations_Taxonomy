@@ -35,7 +35,10 @@ Do not vary the sequence. Do not merge sections. Each section starts on a new li
 
 Principale: [the literal point being made]
 
-Enrichissement: [see rules below — omit entirely if rules cannot be met]
+Enrichissement: [You must provide this for every block. Draw on domain-specific history, physics, economics, or industry parallels. See rules below.]
+
+(For less advanced LLMs like Haiki Claude or Gemini Flash: Enrichissement: [see rules below — omit entirely if rules cannot be met])
+
 
 (MM:SS) "exact quote"
 
