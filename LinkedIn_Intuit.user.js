@@ -72,6 +72,21 @@
     return 'html=' + el.innerHTML.slice(0, 150).replace(/\s+/g, ' ');
   }
 
+  // Confirmed via page_diff.html: search-results pages (e.g. clicking a
+  // hashtag) use a *different* container testid for the same LazyColumn
+  // concept -- data-testid="lazy-column" instead of "mainFeed". The
+  // sentinel/load-more class signature is identical between the two, but
+  // lazy-column's direct children skip the display:contents indirection
+  // entirely (no data-lazy-mount-id wrapper -- posts sit as real boxes
+  // directly), which several selectors below have to account for.
+  const FEED_ROOTS = ['[data-testid="mainFeed"]', '[data-testid="lazy-column"]'];
+  const FEED_SELECTOR = FEED_ROOTS.join(', ');
+  // String-concatenating a suffix onto FEED_SELECTOR directly would be a
+  // bug: '[data-testid="mainFeed"], [data-testid="lazy-column"] > *' only
+  // attaches "> *" to the LAST comma-separated alternative, not both. This
+  // builds the suffix onto each root individually before joining.
+  function feedChild(suffix) { return FEED_ROOTS.map(r => r + suffix).join(', '); }
+
   // ─── Settings ────────────────────────────────────────────────────────────
   // One JSON blob in storage. Every feature is a class on <html>; toggling
   // never touches LinkedIn's own DOM or data, only which CSS rules match.
@@ -159,7 +174,8 @@
       grid-column: 1 / -1 !important;
       flex: 1 1 auto !important;
     }
-    html.ins-f-grid [data-testid="mainFeed"] {
+    html.ins-f-grid [data-testid="mainFeed"],
+    html.ins-f-grid [data-testid="lazy-column"] {
       display: grid !important;
       grid-template-columns: repeat(3, 1fr) !important;
       /* Previously reverted this to default (row) flow because dense
@@ -187,7 +203,8 @@
        own IntersectionObserver never expected. Keep it full-width and
        unstretched so its position/size stays exactly what it would be in
        normal single-column flow. */
-    html.ins-f-grid [data-testid="mainFeed"] > div:empty {
+    html.ins-f-grid [data-testid="mainFeed"] > div:empty,
+    html.ins-f-grid [data-testid="lazy-column"] > div:empty {
       grid-column: 1 / -1 !important;
       align-self: start !important;
     }
@@ -223,7 +240,8 @@
        it can never auto-trigger from passive scrolling; #lim-loadmore below
        briefly un-hides it and scrolls it into view to fire the same
        authentic trigger the real button uses, on demand only. */
-    html.ins-f-noAutoLoad [data-testid="mainFeed"] > div:empty {
+    html.ins-f-noAutoLoad [data-testid="mainFeed"] > div:empty,
+    html.ins-f-noAutoLoad [data-testid="lazy-column"] > div:empty {
       display: none !important;
     }
     /* Untested hypothesis, not confirmed: problem1.html/problem2.html showed
@@ -239,8 +257,8 @@
        confusing the browser's own containment/intersection math. Cheap,
        safe to force either way -- forcing "visible" only ever makes MORE
        content paint, never less. */
-    html.ins-f-grid [data-testid="mainFeed"] [data-ins-postroot],
-    html.ins-f-grid [data-testid="mainFeed"] [data-ins-postroot] * {
+    html.ins-f-grid [data-ins-postroot],
+    html.ins-f-grid [data-ins-postroot] * {
       content-visibility: visible !important;
     }
     html.ins-f-grid [data-ins-postroot] {
@@ -481,11 +499,21 @@
   }
 
   function tagNonPostCells(root) {
-    queryIncludingSelf(root, '[data-testid="mainFeed"] > *').forEach(wrapper => {
-      if (!wrapper.matches('[data-lazy-mount-id], [data-display-contents="true"]')) return; // sentinel, not a content wrapper
+    queryIncludingSelf(root, feedChild(' > *')).forEach(wrapper => {
       if (wrapper.dataset.insCellPending || wrapper.dataset.insResolved) return;
+      const isKnownWrapper = wrapper.matches('[data-lazy-mount-id], [data-display-contents="true"]');
 
       if (wrapper.children.length === 0) {
+        // The sentinel itself (confirmed identical class signature on both
+        // mainFeed and lazy-column) has no wrapper attributes and starts
+        // empty -- it's governed entirely by the noAutoLoad-gated CSS
+        // :empty rule, never by this unconditional hide. Only a genuine
+        // CONTENT wrapper (data-lazy-mount-id/data-display-contents) with
+        // 0 children goes through the "never received content" handling
+        // below; an attribute-less empty div is the sentinel, not a stuck
+        // content slot, and needs to stay reachable so noAutoLoad can
+        // still reveal it on demand.
+        if (!isKnownWrapper) return;
         // Confirmed via grid.html: some lazy-mount wrappers never receive
         // ANY content -- not "hasn't hydrated its post button yet" (that's
         // the case below), literally nothing was ever mounted into this
@@ -515,11 +543,21 @@
         return;
       }
 
-      const cell = unwrapDisplayContents(wrapper);
-      if (cell === wrapper && wrapper.children.length !== 1) {
-        setPendingHidden(wrapper, true); // multiple/weird children shape, not settled yet
+      // A recognized wrapper (data-lazy-mount-id / data-display-contents)
+      // is expected to unwrap through exactly one child to reach the real
+      // box. Confirmed via page_diff.html: the search-results container's
+      // (data-testid="lazy-column") direct children skip that indirection
+      // entirely and ARE the real box already, with however many children
+      // a normal post actually has -- so this "still waiting for its one
+      // child" hydration check must only apply when wrapper is actually a
+      // recognized wrapper type; otherwise any already-loaded, multi-child
+      // search-results post would get wrongly treated as forever hydrating.
+      if (isKnownWrapper && wrapper.children.length !== 1) {
+        setPendingHidden(wrapper, true);
         return;
       }
+
+      const cell = unwrapDisplayContents(wrapper);
       if (cell.dataset.insNonpostChecked || cell.dataset.insCellHiddenChecked) return;
 
       const hasPostButton = cell.querySelector('[aria-label^="Open control menu for post by "]');
@@ -597,30 +635,26 @@
     violate('start-post climb', `no ancestor with a VIDEO-detour link found within ${hops} hops -- startpost hide is not applying`);
   }
 
-  // mainFeed's direct children are claimed to always be one of three known
-  // shapes: a data-lazy-mount-id wrapper, a data-display-contents="true"
-  // wrapper (confirmed via error.txt to be a real, distinct second variant
-  // of the same "display:contents" concept), or the empty sentinel div.
-  // Anything else is a structural surprise nothing in this script accounts
-  // for -- it would render as a plain, unstyled 1-column grid cell with
-  // none of the width-fix/hide logic applied, and nothing would say so
-  // unless this checks for it explicitly. Runs on a delay for the same
-  // reason tagNonPostCells does: give hydration a moment before judging.
+  // Originally re-derived an independent "expected wrapper shape" contract
+  // (data-lazy-mount-id / data-display-contents / empty sentinel) -- but
+  // page_diff.html showed a second, legitimately different valid shape
+  // (search-results' lazy-column children skip the wrapper indirection
+  // entirely), which would have made this fire constant false-positive
+  // violations against a real, working page. Simpler and more durable
+  // contract: did tagNonPostCells' own pipeline actually resolve this
+  // child (data-ins-resolved, or its pending flag still legitimately
+  // mid-flow), regardless of which page-type shape it started as. This is
+  // the thing that actually matters -- whether classification completed --
+  // and it's page-structure-agnostic by construction.
   function checkMainFeedShape(root) {
-    queryIncludingSelf(root, '[data-testid="mainFeed"] > *').forEach(child => {
-      if (child.dataset.insShapeChecked || child.dataset.insShapePending) return;
+    queryIncludingSelf(root, feedChild(' > *')).forEach(child => {
+      if (child.dataset.insShapePending) return;
       child.dataset.insShapePending = '1';
       setTimeout(() => {
         delete child.dataset.insShapePending;
-        child.dataset.insShapeChecked = '1';
-        const isWrapper = child.matches('div[data-lazy-mount-id], div[data-display-contents="true"]');
-        const isSentinel = child.tagName === 'DIV' && child.children.length === 0;
-        if (!isWrapper && !isSentinel) {
-          violate('mainFeed direct child shape', `<${child.tagName.toLowerCase()}> class="${(child.className || '').slice(0, 60)}" children=${child.children.length} ${identify(child)}`);
-        } else if (isWrapper && child.children.length > 1) {
-          violate('wrapper child count', `expected 1 child, found ${child.children.length} (${identify(child)})`);
-        }
-      }, 800);
+        if (child.dataset.insResolved || child.dataset.insCellPending) return;
+        violate('feed direct child never resolved', `<${child.tagName.toLowerCase()}> class="${(child.className || '').slice(0, 60)}" children=${child.children.length} ${identify(child)}`);
+      }, 4000);
     });
   }
 
@@ -716,7 +750,7 @@
   // load -- the same authentic trigger the real "Load more" button uses --
   // then hides them again so it can't keep auto-firing from passive scroll.
   function triggerManualLoad(scrollToSentinel = true) {
-    const sentinels = document.querySelectorAll('[data-testid="mainFeed"] > div:empty');
+    const sentinels = document.querySelectorAll(feedChild(' > div:empty'));
     log('manual load requested, sentinels found:', sentinels.length);
     sentinels.forEach(el => el.style.setProperty('display', 'block', 'important'));
     // Skip when called from the pull-past-edge gesture: that only fires
@@ -764,7 +798,7 @@
   // guessing from a static HTML snapshot after the fact.
   let lastSentinelEmpty = null;
   function logSentinelState() {
-    const s = document.querySelector('[data-testid="mainFeed"] > div._9d763823._94ecd70e._3b42afd3');
+    const s = document.querySelector(feedChild(' > div._9d763823._94ecd70e._3b42afd3'));
     if (!s) return;
     const empty = s.children.length === 0;
     if (empty !== lastSentinelEmpty) {
@@ -875,7 +909,7 @@
   // with no visible sign anything's wrong. This makes that loud instead.
   setTimeout(() => {
     if (!document.getElementById('lim-panel')) err('panel never attached -- buildPanel() may be throwing, check above for stack traces');
-    if (!document.querySelector('[data-testid="mainFeed"]')) warn('[data-testid="mainFeed"] not found -- grid/noAutoLoad/counts etc. have nothing to attach to');
+    if (!document.querySelector(FEED_SELECTOR)) warn('neither mainFeed nor lazy-column found -- grid/noAutoLoad/counts etc. have nothing to attach to (expected on pages with no post feed at all, e.g. messaging)');
     if (!document.getElementById('workspace')) warn('#workspace not found -- overflow-anchor fix is not applied to the real scroll container');
     if (!document.querySelector('[data-ins-postroot]')) warn('no posts tagged yet -- either none loaded, or the "Open control menu for post by" aria-label selector stopped matching');
     if (contractViolations.size) warn(contractViolations.size, 'contract violation(s) so far -- call __limStats() for the full list');
