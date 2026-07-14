@@ -33,7 +33,7 @@ Do not summarize. Do not compress. Do not skip. Do not group by theme.
 For every extraction block, use this exact template in this exact order. 
 Do not vary the sequence. Do not merge sections. Each section starts on a new line. Copy the labels exactly as they appear in the Label Calibration section above:
 
-Principale: [the literal point being made]
+Principale: [the literal point being made. Make sure it is as rich and deeply insightful as possible]
 
 Enrichissement: [You must provide this for every block. Draw on domain-specific history, physics, economics, or industry parallels. See rules below.]
 
