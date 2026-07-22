@@ -1,0 +1,12 @@
+Help me build real intuition for [X]. Do it in this order:
+
+1. The general idea of what it is.
+2. The motivating problem and historical development of the idea.
+3. Give me 3 worked examples from different fields, then explicitly compare them — what's structurally identical underneath the different surface dressing?
+4. For each required condition/hypothesis, give me a near-miss: a case that's identical to a valid one except that single condition is broken, so I see exactly what that condition was buying us.
+5. Before you explain the "reach for it" signal yourself, ask me to guess it first from what I've seen, then correct/refine my guess.
+6. Its place in the family: what it generalizes, what it's a special case of, its most commonly confused sibling.
+7. Give me one new, unlabeled problem and let me try to identify whether this idea applies before you tell me the answer.
+8. One deliberately tricky negative case at the end — looks eligible, isn't.
+
+(concerning Q4 and Q7, give me a few questions of increasing difficulty and lack of intuitiveness/obviousness to force me to intuit on how the theorem is the key to solving.)
