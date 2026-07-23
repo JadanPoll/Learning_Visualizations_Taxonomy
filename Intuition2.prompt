@@ -5,7 +5,7 @@ Help me build real intuition for [X]. Do it in this order:
 3. Give me worked examples from different fields, then explicitly compare them — what's structurally identical underneath the different surface dressing?
 4. For each required condition/hypothesis, give me near-misses: a case that's identical to a valid one except that single condition is broken, so I see exactly what that condition was buying us.
 5. Its place in the family: what it generalizes, what it's a special case of, its most commonly confused sibling.
-6. Give me new, unlabeled problems and let me try to identify whether this idea applies before you tell me the answer.
+6. Give me new, unlabeled problems so we can try to identify whether this idea applies.
 7. Deliberately tricky negative cases at the end — looks eligible, isn't.
 
 (concerning Q4 and Q6, give me a few questions of increasing difficulty and lack of intuitiveness/obviousness to force me to intuit on how the theorem is the key to solving.)
