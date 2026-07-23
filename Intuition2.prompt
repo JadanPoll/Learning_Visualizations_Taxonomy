@@ -2,7 +2,7 @@ Help me build real intuition for [X]. Do it in this order:
 
 1. The general idea of what it is.
 2. The motivating problem and extensive detailed rigorous historical development of the idea.
-3. Give me worked examples from different fields, then explicitly compare them?
+3. Give me worked examples from different fields, then explicitly compare them. Comprehensive list of "axiomatic" or core questions i should be able to solve and how of increasing difficulty.
 4. For each required condition/hypothesis, give me near-misses: a case that's identical to a valid one except that single condition is broken, so I see exactly what that condition was buying us.
 5. Its place in the family: what it generalizes, what it's a special case of, its most commonly confused sibling.
 6. Give me new, unlabeled problems so we can try to identify whether this idea applies.
