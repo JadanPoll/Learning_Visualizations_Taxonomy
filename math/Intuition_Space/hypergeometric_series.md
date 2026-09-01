@@ -66,7 +66,7 @@ It is deeply shocking that the exact same functions that map aerodynamic fluid f
 | Feature | Fluid Dynamics | Quantum Chemistry | Combinatorics (Card Shuffling) |
 |---|---|---|---|
 | Physical Context | Conformal grid mapping | Asymmetric molecular bonds | Probability generating functions |
-| The Variable $x$ | Spatial coordinate in target plane | Hyperbolic spatial position ($\tanh^2(\alpha x)$) | Step or time probability weight |
+| The Variable $x$ | Spatial coordinate in target plane | Hyperbolic spatial position ( $\tanh^2(\alpha x)$ ) | Step or time probability weight |
 | What $a, b, c$ represent | Geometric wall angles | Energy levels and potential depth | Constraints on path lengths/boundaries |
 
 ## Core "Axiomatic" Questions You Must Master
