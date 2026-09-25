@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grokipedia LaTeX Whitespace Fixer
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.3
 // @description  Fixes space-padded $...$ LaTeX on Grokipedia with visual highlights and original-text tooltips
 // @match        *://*.grokipedia.com/*
 // @match        *://grokipedia.com/*
@@ -39,7 +39,7 @@
                 background-color: rgba(16, 185, 129, 0.25);
             }
 
-            /* Amber tint when the script also had to rescue an "inverted" English block */
+            /* Amber tint when the script also had to rescue an "inverted" English or <em> block */
             .tm-math-fixed.tm-math-inverted {
                 background-color: rgba(245, 158, 11, 0.14);
                 border-bottom: 1px dashed rgba(245, 158, 11, 0.75);
@@ -93,7 +93,7 @@
 
             let hadInvertedRescue = false;
 
-            // Step 1: Unwrap "inverted" KaTeX spans where English text got swallowed between `$.` and `($`
+            // Step 1a: Unwrap "inverted" KaTeX spans where English text got swallowed between `$.` and `($`
             block.querySelectorAll('.katex').forEach(katexEl => {
                 if (katexEl.closest('.tm-math-fixed')) return;
 
@@ -107,6 +107,32 @@
                     next && next.nodeType === Node.TEXT_NODE && /^[^$]+\s*\$/.test(next.nodeValue)
                 ) {
                     katexEl.replaceWith(document.createTextNode('$' + annotation.textContent + '$'));
+                    block.normalize();
+                    hadInvertedRescue = true;
+                }
+            });
+
+            // Step 1b: Unwrap <em> tags where Markdown accidentally italicized LaTeX asterisks (e.g. T^* ... T^*)
+            block.querySelectorAll('em').forEach(emEl => {
+                if (emEl.closest('.katex, .tm-math-fixed')) return;
+
+                const prevText = emEl.previousSibling?.nodeType === Node.TEXT_NODE ? emEl.previousSibling.nodeValue : '';
+                const emText = emEl.textContent;
+
+                const range = document.createRange();
+                range.setStart(block, 0);
+                range.setEndBefore(emEl);
+                const dollarsBefore = (range.toString().match(/\$/g) || []).length;
+
+                const isBrokenMathEm =
+                    /[\^_\\]$/.test(prevText) ||
+                    /[\^_\\]$/.test(emText) ||
+                    emText.includes('$') ||
+                    emText.includes('\\') ||
+                    dollarsBefore % 2 === 1;
+
+                if (isBrokenMathEm) {
+                    emEl.replaceWith(document.createTextNode('*' + emText + '*'));
                     block.normalize();
                     hadInvertedRescue = true;
                 }
@@ -137,7 +163,6 @@
                 let match;
 
                 while ((match = BROKEN_MATH_REGEX.exec(text)) !== null) {
-                    // Append preceding plain text
                     if (match.index > lastIndex) {
                         fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
                     }
@@ -149,7 +174,7 @@
                     wrapper.className = 'tm-math-fixed' + (hadInvertedRescue ? ' tm-math-inverted' : '');
                     const label = hadInvertedRescue ? `Rescued: ${rawMatch}` : `Original: ${rawMatch}`;
                     wrapper.setAttribute('data-original', label);
-                    wrapper.setAttribute('title', label); // Native fallback
+                    wrapper.setAttribute('title', label);
 
                     try {
                         katex.render(cleanTex, wrapper, {
@@ -164,7 +189,6 @@
                     lastIndex = BROKEN_MATH_REGEX.lastIndex;
                 }
 
-                // Append remaining plain text
                 if (lastIndex < text.length) {
                     fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
                 }
