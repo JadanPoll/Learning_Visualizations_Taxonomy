@@ -231,3 +231,7 @@
 
 ### [RSM-09.P] Institutional rise, exile, and reproduction — question-landscape calibration
 **[RSM-09.P.01]** **Invoke §§2.09–2.12, 3.03, 5.02–5.04, 8.07.** The naive question *Why do great scientific institutions become excellent?* samples only one region of a larger problem. The meaningful complementary questions are *What maintains scientific capacity? What destroys or disperses it? Where does it migrate? What makes it reproduce in new scientists?* These reveal distinct outcomes at individual, laboratory, field, national, and intergenerational levels. Studies of the 1933 dismissals in German universities and of German Jewish chemist émigrés' influence on U.S. invention may appear inconsistent until their units and outcomes are separated. **Operational move:** correct the parent question, retain their distinct causal claims and source conditions, and identify common requirements for persistence and renewal without flattening history into a universal theory. **Stop:** when the landscape is enough to prioritize meaningful comparisons, rather than generating indefinitely many historical counterfactuals. **Failure signature:** interpreting a country’s relative citation rank, an individual’s migration, and a laboratory’s collapse as the same phenomenon, or equating a productive scientist with a self-reproducing research ecosystem.
+
+
+
+Minor reference note for review purposes: This document was made in collaboration and heavy discussion with https://chatgpt.com/c/6ad594f7-fde8-83e9-a0ea-f268b6e46a1d
