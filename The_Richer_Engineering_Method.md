@@ -3,7 +3,7 @@ What do we actually need?
 Is that the right sort of question? What's the actual big picture? 
 What ideas from first principles could fulfill it? Justify the methodology being used to fulfill it. 
 It should be practical and well reasoned from minimalist principles. (This usually pairs with modeling actual and practical cases rather than obsessing over edge cases.)  
-We are engineers, not mathematicians. We think in terms of $\frac{\text{(benefits of success x success rate)}}{\text{(objective cost of failure) x (nuisance or irritability of failure : the pschological aspect) x actual failue rate)}}$ 
+We are engineers, not mathematicians. We think in terms of $\frac{\text{(benefits of success x success rate)}}{\text{(objective cost of failure) x (nuisance or irritability of failure : the pschological aspect) x actual failue rate)}}$  
 You very often can't get precise numbers for this but you absolutely can use a partially ranked system matrix of the taxonomy of various elements of it.
 Do not select solutions because they are popular or appear in the textbook. Justify in natural reasoning. The practically justify. The actually justify(actually building it out or considering the taxonomy of failure modes). 
 
