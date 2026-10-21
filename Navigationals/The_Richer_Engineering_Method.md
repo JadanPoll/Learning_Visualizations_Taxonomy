@@ -25,3 +25,6 @@ If you do want to use these extended reasonings, much of the "assigning scores a
 
 The above deals with static feature engineering, i have an extension:
 we will call this dynamics feature engineering or feature engineering dynamics, where one can use the intra-consistenct and pattern of what has been identified to dynamically adjust detections and feature relevance
+yes intra-consistency is simply a feature being used to engineer the dynamics, of course, we againn reapply our work on expositing  the gneralized thoughts on feature engineering i just gave to the idea of which features are good for parameterizingt the dynamics of the static stuff.
+
+Dynamics feature engineering should be pulled in only when there are problems that static ones fail to solve but are more obvious how to solve to a semantic-reasoner. The semantic-reasoner(the human usually) then tries to how to encode what they think is going on in their semantic reasoning flow into the static process. An easy one is that semantic reasoners usually have reasonable priors(static heurisitcs) and hard expectations(like questions whose answers they mean to find) that are dynamiclaly modulated based on partial data or experience
