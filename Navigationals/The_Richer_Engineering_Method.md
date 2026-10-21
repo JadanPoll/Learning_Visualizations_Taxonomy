@@ -72,3 +72,6 @@ c. consider if the hypothesis is even reasonable(or minimal and admissible(for e
 
 
 Slightly cleaning up before a future rewrite: The further danger is that dynamically adjusted features may become increasingly consistent with an unreasonable hypothesis. Semantic reasoners do not merely adjust hypotheses or compare explanatory fit; they also evaluate whether the hypotheses themselves are admissible, plausible, and economical relative to competing explanations. This distinction should be retained as a diagnostic consideration when naive dynamics produce coherent but absurd results, without necessarily requiring another standalone architectural mechanism.
+
+
+Evaluate interfaces by the effort required to rediscover and correctly use a capability after its operational details have been forgotten. A capability that exists but cannot readily be found, understood, or invoked has diminished practical value. Good interfaces externalize operational memory while preserving access to underlying mechanisms.
