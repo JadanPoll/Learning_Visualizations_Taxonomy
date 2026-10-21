@@ -1,3 +1,4 @@
+(woefully messy and incomplete with some stuff I have to clean up)
 # The Richer Engineering Method
 What do we actually need? 
 Is that the right sort of question? What's the actual big picture? 
