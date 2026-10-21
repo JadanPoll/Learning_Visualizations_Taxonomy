@@ -1,5 +1,5 @@
 # FKEN — Fractal Knowledge & Ecosystem Navigation
-**Specification 1.1 · Hierarchically indexed**
+**Specification 1.2 · Hierarchically indexed · Accumulative navigation and source optimization**
 
 ## 0. Purpose and governing principles
 
@@ -80,6 +80,8 @@
 **FKEN-05.5 — Geometric meaning.** Increasing tower breadth represents increasing scope of potentially useful familiarity and decreasing requirements for immediate internalization. It does not impose fixed information quantities.
 
 **FKEN-05.6 — Functional distinction.** Tower regions represent different cognitive and navigational functions, not merely three ordered degrees of expertise.
+
+**FKEN-05.7 — Possibility orientation.** A rich gas is useful not only as a collection of references but as exposure from which the investigator may develop a revisable sense of what exists, might exist, and could become relevant. This orientation is not equivalent to mastery or verified possibility.
 
 ### FKEN-06 — Tower growth and certification
 
@@ -183,6 +185,10 @@
 
 **FKEN-11.7 — Persistence boundary.** An activated highway is not automatically a permanent structural edge.
 
+**FKEN-11.8 — Conditional relation.** For interpretation or later reuse, distinguish the connected territories, the nature of their relationship, the conditions that activate it, and its supporting evidence. A graph schema or numerical weight is not required.
+
+**FKEN-11.9 — Activation lifecycle.** On consequential questions, activate relevant relationships, evaluate and optionally record them, compare them with earlier activations, consolidate recurring conditional structure, and reactivate qualified priors on later questions. No step is compulsory for trivial encounters.
+
 ### FKEN-12 — Landscape memory
 
 **FKEN-12.1 — Selective preservation.** Preserve investigation landscapes when their expected future navigational or investigative value justifies the recording cost.
@@ -198,6 +204,12 @@
 **FKEN-12.6 — Reuse.** Previous landscapes may inform later investigations but must not be treated as universally valid decompositions.
 
 **FKEN-12.7 — Economy.** Not every question, connection, or tentative association requires permanent storage.
+
+**FKEN-12.8 — Interpretation-first persistence.** Preserve encounters and investigations in the lightest form adequate for future discovery, attribution, and question-conditioned interpretation. A domain, substantive passage of notes, and source anchor may suffice; persistent graph edges, exhaustive metadata, and a fixed ontology are not required.
+
+**FKEN-12.9 — Accumulative reinterpretation.** Permit an investigator or LLM to reinterpret accumulated records under a new question and selectively preserve newly useful relationships or question-family patterns. Distinguish recorded observations from later inferences.
+
+**FKEN-12.10 — Retrieval precondition.** An LLM can reconstruct a useful landscape only from records it can locate and interpret. A nominally stored encounter with no usable retrieval path or sufficient context is not reliably recoverable.
 
 ---
 
@@ -226,6 +238,12 @@
 **FKEN-14.5 — Navigation priors.** Family-level patterns may guide future landscaping but do not mandate an identical decomposition for every member.
 
 **FKEN-14.6 — Lazy consolidation.** Do not create higher-level families merely for taxonomic completeness. Consolidate when doing so reduces future orientation or investigation cost.
+
+**FKEN-14.7 — Consolidated highways.** When distinct questions repeatedly activate consequentially similar relationships, preserve the shared conditional activation structure as a reusable family-level prior, together with supporting instances, exceptional cases, and material differences.
+
+**FKEN-14.8 — Counterexample-driven revision.** Weaken, partition, supersede, or discard a consolidated family or highway when later questions expose different mechanisms, boundary conditions, or mistaken generalization.
+
+**FKEN-14.9 — Higher-order families.** Families themselves may be compared and grouped when recurring structure genuinely improves orientation. Generality is earned by supported transfer across contexts, not by repeatedly relabeling similar questions.
 
 ### FKEN-15 — Evidence-directed scaffolding
 
@@ -273,6 +291,20 @@
 
 **FKEN-17.6 — Selective capture.** Do not require detailed annotation of every encounter. The cost of preservation must remain subordinate to the value of actual intellectual activity.
 
+**FKEN-17.7 — Coverage certification.** Record which identifiable source regions were encountered at a granularity justified by the source and capture cost (such as pages, sections, messages, or timestamps). Distinguish viewed, skimmed, practiced, and demonstrated states only when evidence permits. Unrecorded does not mean unencountered.
+
+**FKEN-17.8 — Negative space.** Use coverage records to identify known unvisited or insufficiently explored regions of a bounded source. Distinguish these observable gaps from hypothesized gaps in conceptual possibility, which require separate reasoning and may be unknowable from the taxonomy.
+
+**FKEN-17.9 — Recoverable encounter.** When an encounter has plausible future value, preserve sufficient source identity, passage location, and contextual cues for relevant later questions to recover it without requiring human recollection.
+
+**FKEN-17.10 — Question-conditioned resurfacing.** Retrieve past encounters through searchable source content, notes, domainlets, or recorded question relationships as appropriate. Give an interpretable reason for a resurfaced source's relevance and an exact return path where possible.
+
+**FKEN-17.11 — Multipurpose records.** Prefer lightweight source-anchored records that simultaneously support coverage visualization, resumption, review, semantic search, and landscaping over separate compulsory annotations for each purpose.
+
+**FKEN-17.12 — Possibility awareness.** Preserve cues that help recognize that a mechanism, precedent, capability, or even plausible but unverified possibility exists; do not mistake fuzzy awareness for established fact. Such awareness may help formulate unfamiliar questions even before a precise source is recalled.
+
+**FKEN-17.13 — Review.** Permit selective revisiting and reconsolidation under varied prompts and contexts. Review should improve discrimination, retrieval, or applicability rather than require repetitive consumption.
+
 ### FKEN-18 — Operational boundary
 
 **FKEN-18.1 — Scope limitation.** FKEN specifies navigation and organization, not the implementation of every operation performed upon its resources.
@@ -298,6 +330,50 @@
 **FKEN-19.5 — Epistemic caution.** Do not mistake resource density for understanding, apparent novelty for meaningful variance, or visual prominence for evidential strength.
 
 **FKEN-19.6 — Empirical revision.** Where competing designs remain plausible, test them using actual navigation and investigation tasks rather than resolving the uncertainty by architectural preference.
+
+---
+
+# VI. REM projection: optimizing the encounter-to-reuse path
+
+### FKEN-20 — Ruthless resource-path optimization
+
+**FKEN-20.1 — Recover the function.** Before optimizing a resource or interface, identify what the investigator actually wants from it, under which questions, and what useful recognition or action successful interaction should enable. The platform's default workflow is not the objective.
+
+**FKEN-20.2 — Trace the path.** Reconstruct how potentially useful information is encountered, filtered, understood, certified, retained, reviewed, retrieved, and eventually applied. The path may branch and contain feedback loops; do not prescribe one linear user journey.
+
+**FKEN-20.3 — Diagnose limiting failures.** Identify observed losses in meaningful exposure, discrimination, coverage evidence, source continuity, retrieval, and subsequent use. Separate observed bottlenecks from hypothesized ones.
+
+**FKEN-20.4 — Coupling and resonance.** Treat an information system as well coupled when its components support the intended investigation without consequential weak links. Detect detuning where locally excellent tools fail to transfer useful information into future recognition or action. Resonance is a diagnostic metaphor, not a universal measurable law.
+
+**FKEN-20.5 — Minimal interventions.** Compare deletion, filtering, reorganization, automation, substitution, improved source anchoring, selective review, and doing nothing. Choose the smallest intervention justified by consequential failure and recurring cost.
+
+**FKEN-20.6 — Realistic evaluation.** Compare the modified and baseline workflows on representative tasks, measuring relevant future-use outcomes as well as speed, coverage, variance, error, capture friction, and maintenance. Do not confuse proxy improvement with successful investigation.
+
+**FKEN-20.7 — Stop condition.** Stop optimizing when further gains no longer justify their costs or threaten other valuable functions; preserve successful settings and enough explanation to reproduce or revise them.
+
+**FKEN-20.8 — Encounter-to-reuse continuity.** Evaluate sources by whether valuable encounters remain recoverable and usable under later questions, not merely by the quality of initial presentation.
+
+### FKEN-21 — Holistic relevance and complementary conditions
+
+**FKEN-21.1 — Holistic relevance.** A revisable orientation within a domain or subecosystem that helps the investigator recognize consequential distinctions, plausible dependencies, unfamiliar possibilities, informative gaps, and relevant resources, so as to factor new questions into productive investigative directions. It is neither exhaustive understanding nor proof of competence.
+
+**FKEN-21.2 — Density.** Encounter enough substantive, contextually connected material to form recognizable concentrations of mechanisms, questions, and relationships. Throughput alone does not establish useful density.
+
+**FKEN-21.3 — Variance.** Sample meaningfully different mechanisms, exceptions, assumptions, alternatives, and off-center possibilities rather than merely increasing repetition around familiar topics.
+
+**FKEN-21.4 — Certifiability.** Make the scope and nature of encounters observable, allowing the investigator to distinguish covered from known-uncovered source regions and seek informative out-of-distribution material. Certificates support claims about exposure, not untested mastery.
+
+**FKEN-21.5 — Review.** Revisit and reorganize encounters sufficiently to improve discrimination and the robustness of activation under varied future prompts, contexts, and questions. Review may be selective or question-triggered.
+
+**FKEN-21.6 — Possibility awareness.** Cultivate awareness of what is known to exist, may exist, or is worth imagining, even when details remain fuzzy. Couple that awareness to navigable representations so that a question can recover specifics where sources exist.
+
+**FKEN-21.7 — Complementarity, not formula.** Density, variance, certifiability, review, and possibility awareness have distinct, interacting contributions. Their metaphorical product is not an established numerical law; optimizing one may degrade another.
+
+**FKEN-21.8 — Internal–external reinforcement.** Internal conceptual orientation should help activate relevant external records; retrieved records should refine or correct that orientation. Neither mental recall nor archival storage alone ensures future usefulness.
+
+**FKEN-21.9 — Test on unfamiliar questions.** Evaluate holistic relevance by whether the investigator can recognize useful possibilities, propose and revise discriminating decompositions, identify gaps, and recover previously encountered evidence when facing substantively new questions. Compare against simpler retrieval and browsing baselines where feasible.
+
+**FKEN-21.10 — Avoid self-confirmation.** Filtered exposure and repeated consolidation can narrow possibility awareness or reinforce misleading patterns. Preserve avenues for unexpected encounters, counterexamples, and RSM-guided reconsideration.
 
 ---
 
@@ -440,6 +516,48 @@ If the investigation reveals a useful new domain distinction, gas element, or re
 
 ---
 
+## A.11 — Interface speed versus certifiable coverage
+
+**Situation.** One PDF interface permits fast traversal but forgets progress; another records exact page ranges with negligible friction. A third requires manual highlighting on every page.
+
+**Application.** Compare actual sustained coverage, distinct mechanisms encountered, recovered passages, and later usefulness—not pages per hour alone. Source-anchored page coverage can certify exposure and reveal unvisited sections without asserting comprehension. Test whether automatic capture outperforms cumbersome annotation.
+
+**Governing clauses:** FKEN-17.7–17.11; FKEN-20.2–20.8; FKEN-21.2–21.7.
+
+**Invalid inference:** A faster reader is automatically better; a highlighted passage is necessarily understood; absent tracking proves absent exposure.
+
+## A.12 — Recovering a forgotten technical conversation
+
+**Situation.** The investigator once read a Discord conversation about low-noise measurements but no longer recalls the message. A later gravitational-wave-instrumentation question requires relevant examples.
+
+**Application.** A minimal stored record—Electronics domain, a note about amplifier noise and measurement limitations, and a channel/message link—may be retrievable through source text, a domainlet, or an LLM's question-conditioned interpretation. The retrieved discussion can be checked and used to revise the problem landscape.
+
+**Governing clauses:** FKEN-08.1–08.8; FKEN-12.8–12.10; FKEN-17.9–17.12.
+
+**Invalid inference:** Every Discord conversation needs graph edges or a detailed structured certificate; an inferred connection is evidence that the discussion actually establishes it.
+
+## A.13 — Consolidating technical-interface employment questions
+
+**Situation.** Investigations into employment, open-source projects, scientific collaborations, and engineering-tool businesses repeatedly ask where participation exposes the investigator to diverse downstream technical problems.
+
+**Application.** Preserve the common conditional principle—ecosystem dependencies may reveal high-exposure interface positions—as a family-level prior. Keep distinct conditions such as income, autonomy, access to users, and direct technical involvement. Evaluate counterexamples, such as a popular infrastructure tool whose developers rarely interact with downstream specialists.
+
+**Governing clauses:** FKEN-11.8–11.9; FKEN-12.9; FKEN-14.7–14.9.
+
+**Invalid inference:** Every upstream role creates cross-disciplinary expertise or every repeated highway is universally strong.
+
+## A.14 — Density, variance, negative space, and holistic relevance
+
+**Situation.** The investigator encounters many electronics posts about the same fashionable topic but has barely sampled measurement practice, manufacturing failures, or unusual historical designs.
+
+**Application.** Use certifiable encounter coverage and domain organization to distinguish repeated exposure from genuinely explored territory. Seek diverse examples and exceptions; selectively review contrasting cases; preserve sufficient conceptual cues and source anchors to reactivate them under unfamiliar questions. Assess the result by novel-problem orientation and actual source recovery.
+
+**Governing clauses:** FKEN-17.7–17.13; FKEN-21.1–21.10; FKEN-02.4–02.5.
+
+**Invalid inference:** The unsampled conceptual territory is completely known, high throughput alone creates holistic relevance, or an attractive conceptual summary proves transfer.
+
+---
+
 # Appendix B — Application certificates
 
 An AI or human applying FKEN should identify the **specific subclauses actually used**, the evidence supporting the decision, and any consequential uncertainty.
@@ -502,8 +620,8 @@ References to FKEN establish which rule applies; they do not themselves establis
 
 FKEN does not guarantee complete knowledge coverage, optimal learning, correct interdisciplinary inference, or automatic mastery.
 
-It provides a persistent, lazily grown domain geometry; per-domain towers distinguishing tacitness, scaffolding, and gas; gas elements containing local landscaplets; question-conditioned highways for interdisciplinary navigation; and an accumulated question landscape for recovering investigations and identifying valuable scaffolding.
+It provides a persistent, lazily grown domain geometry; per-domain towers distinguishing tacitness, scaffolding, and gas; gas elements containing local landscaplets; question-conditioned highways with selectively preserved conditional histories; and an accumulated question landscape supporting future orientation and scaffolding choices. Lightweight encounter records and REM-guided optimization seek holistic relevance: the ability to recognize possibilities, identify informative gaps, factor unfamiliar questions, and recover evidence without requiring continuous recall.
 
 Its success should be evaluated by whether it materially improves the investigator's ability to **recognize, navigate, retrieve, relate, and mobilize knowledge and expertise** while preserving accumulated intellectual leverage.
 
-All additional machinery remains subject to RSM's evidential discipline and REM's necessity, economy, and implementation criteria.
+All additional machinery remains subject to RSM's evidential discipline and REM's necessity, economy, and implementation criteria. Persistent graph structure, automatic exhaustive annotation, universal relevance scores, and compulsory review schedules are not requirements.
