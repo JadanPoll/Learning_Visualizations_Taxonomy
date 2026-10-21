@@ -10,4 +10,10 @@ Know when you are 80-95-97.5% of the way of actual utility and frictionlessness 
 We made it to the moon not because we had the fastest computers or in spite of mathematician naysayers brilliance but because engineers were clear on what they actually needed, clear on when, clear on where, and clear on why. And most of all clear that now was absolutely the time to make it happen. 
 Notice I didn't say clear on how.
 
-when it comes to potential errors and ineffeciencies or indeterminate states, review through  the lens of symbiotic communication and the pschological pain of perceived ineffeciency and pschological pain of lack of understanding when the ineffeciencies become obvious
+when it comes to potential errors and ineffeciencies or indeterminate states, review through  the lens of symbiotic communication and the pschological pain of perceived ineffeciency and pschological pain of lack of understanding when the ineffeciencies become obvious  
+
+how to think about heuristics in browser fingerprinting sort of way. this is the way to look at it.
+a. think abobut the number of diferent heuristics you c ould grab and are currently grabbing
+b. rank or partial rank them in the "estimated" numbers of resolving bits they provide.
+c. this is how to reason about number of resolving bits -  think about the heuristic and think about its failure taxonomy. if it is likely in 7/8 cases(identifid from the failure  taxonomy of the success criterion for the heuristic to not actually identify the thing we care about it is really only providing 1/8 *  three bits of resolving info. if it is likely in 1/16 cases to misidentify or not resolve what we care about then it is really providing 15/16 * 4(denominator) estimated bits of resolution
+d. of course the more bits you have concantenate together the higher chance and more finely you can resolve something. the question remaining is if its strcutural uniquity is valuable to you.
