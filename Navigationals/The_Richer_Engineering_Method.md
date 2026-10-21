@@ -40,7 +40,7 @@ dynamical features engineering can actuaqlly adapt to and then subsequently incl
 
 someone(chatgpt actually) asked me: what constitutes the domain of validity or trusted reference state(can it be reasoned algorithmically?):
 my response: trust reference state(or increasing trust) is off course solved (directionally) by the central limit theorem. sammple the data and you get an increasingly fair modal distribution. trsut decreases or grows more slowly when there is a lack of sensible variance(that is the data looks like a sharp line and not more curves within reasonable areas that should be under the toy/theoretical sigma example. so sample, distrust lack of varaince(hence hunt for it or perhaps hunt for the hypothesis on the lack of variance or to explain the variance) but trust and let confidence grow with sample size
-
+ 
 on may attempt to point holes in or limit my argument's completeness by saying:
 Low variance is not inherently suspicious. It is suspicious when there is an independently justified expectation of greater variance.
 my response:
