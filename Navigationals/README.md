@@ -1,3 +1,3 @@
-RSM is about Systems, Information and Problem Representation, Orientation, Decomposition, Navigation and Acquisition.  
-FKEN is about Ecosystem and Resource Representation, Upkeep, Economization and Maintenance.  
-REM is about potentially about pragmatism mapping and ruthless pragmatism(currently in the engineering domain, need to generalize later if I have the time)
+RSM is about Systems, information, and problem representation; orientation, decomposition, investigation, and justified acquisition of knowledge.  
+FKEN is about Intellectual ecosystem and resource representation; navigation, accumulation, maintenance, and economical cultivation of reusable intellectual capability.
+REM is about Pragmatic engineering of outcomes: identifying what is actually needed, mapping feasible interventions, and ruthlessly optimizing implementation, coupling of factorized components, and operational utility under real constraints.
