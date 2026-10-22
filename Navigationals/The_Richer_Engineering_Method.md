@@ -88,3 +88,6 @@ one does not need metric tracking for this, one could simply reason heursiticall
 
 
 A philosophy i have for engineering is every experiement or system eventually run itself. that means you increasingly automate the work load and increasingly make itself more effecient. self-improving, self-fat trimming, self-experimenting.
+
+
+Local effeciency is not  compositional effeciency, we naturally think of things as additive but systems have multiplicative costs.
