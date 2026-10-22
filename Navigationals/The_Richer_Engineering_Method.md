@@ -91,3 +91,9 @@ A philosophy i have for engineering is every experiement or system eventually ru
 
 
 Local effeciency is not  compositional effeciency, we naturally think of things as additive but systems have multiplicative costs.
+
+
+
+Abstraction.
+Investigation Budgeting
+Know how to obtain unfamiliar knowledge effeciently
