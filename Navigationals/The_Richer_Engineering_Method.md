@@ -85,3 +85,6 @@ a. in isolation
 b.  holistically in the system given frequeny distribution of use?
 c. what about over time where limited users develop preferential attachment and lopsided memories?
 one does not need metric tracking for this, one could simply reason heursitically about this.
+
+
+A philosophy i have for engineering is every experiement or system eventually run itself. that means you increasingly automate the work load and increasingly make itself more effecient. self-improving, self-fat trimming, self-experimenting.
