@@ -102,6 +102,11 @@ Know how to obtain unfamiliar knowledge effeciently
 This is a personal opinion of mine but any good enough system should eventually asymptotically run itself
 
 
+one thiong i hate is when i push buttons and have no idea what happened,
+ i fucking hate when somethign says failed retry but i have no reason or theres no visible report of the failuree so i cant even copy and paste into an LLM
+. remember if there are failures it should be clear to the human wqhat they are and they should be copyable for an LLM
+ 
+
 How to prevent issues from creeping up when systems get large. Especiialy for forgetful engineers and LLMs
 
 # Recursive Combinatorial Exploration of System Behavior
