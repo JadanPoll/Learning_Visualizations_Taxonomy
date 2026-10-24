@@ -205,3 +205,5 @@ The investigation is incomplete without: **(1)** the justified element/state inv
 
 **Principle:** Engineers identify what can exist and how it may behave. Computation enumerates the admissible combinations. Neither an engineer nor an LLM is permitted to replace that computation with imagined scenarios or confidence based on an unexamined abstraction.
 
+
+Your system should not turn into a hostage situation with the user. The user should not be forced to understand the precise underlying details to be able to use the stuff. At the same time things can't be invisible to the user. If something fails to work it should also be apparent to the user but in a way where they aren't force to damn near be engineers who designed the system in the first place.
