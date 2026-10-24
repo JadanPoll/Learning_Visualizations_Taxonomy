@@ -100,3 +100,14 @@ Know how to obtain unfamiliar knowledge effeciently
 
 
 This is a personal opinion of mine but any good enough system should eventually asymptotically run itself
+
+
+How to prevent issues from creeping up when systems get large. Especiialy for forgetful engineers and LLMs
+1. Represent system elements as abstract states and labels(in english preferably).
+2. Define possible events and transitions.
+3. Run a pyhton script Combinatorially generate reachable states and event sequences.
+4. Include nondeterministic and other epistemic behaviors: delays, interruptions, human actions, missing observations, and unexpected event ordering.
+5. Check which resulting states or transitions violate intended constraints.
+6. Extract counterexample sequences. Fix viiolations
+You do not execute the actual software. You explore a simplified mathematical or computational model of identified elements of the system and elements of behaviour and YOU DO NOT TRUST YOUR OWN REASONING FOR COMBINATIONS, you identify
+elments of the system, including behavorial and epistemic elemnts and run the math combinatorics
