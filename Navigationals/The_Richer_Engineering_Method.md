@@ -97,3 +97,6 @@ Local effeciency is not  compositional effeciency, we naturally think of things 
 Abstraction.
 Investigation Budgeting
 Know how to obtain unfamiliar knowledge effeciently
+
+
+This is a personal opinion of mine but any good enough system should eventually asymptotically run itself
