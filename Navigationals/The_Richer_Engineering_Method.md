@@ -207,3 +207,5 @@ The investigation is incomplete without: **(1)** the justified element/state inv
 
 
 Your system should not turn into a hostage situation with the user. The user should not be forced to understand the precise underlying details to be able to use the stuff. At the same time things can't be invisible to the user. If something fails to work it should also be apparent to the user but in a way where they aren't force to damn near be engineers who designed the system in the first place.
+
+Engineers, systems and advice are often locally brilliant (especially in fragmentation) but globally stupid and entirely miss the big picture. In fact you should assume this by default. The big problem is one often swears by the sophistication of the individual components and use it as a proxy and complete miss what actually matters and the big picture questions. 
