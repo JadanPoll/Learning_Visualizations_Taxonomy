@@ -262,3 +262,5 @@ b. the holistic big picture
 
 This is something even individual humans struggle with: constraining towards the bigger picture, groups of varied human interests even more so(sometimes less so if productive friction) 
 and leaders and coordinatros(sans ego) who must satisfy the system, see and concern themselves with a lot-more variables and objectives and think long-term should be better at constraining towards the bigger picture.
+
+The one unique idea in fact i'd add to this (especially for LLMs) is establishing a "stopping tree" after considering big picture and holistic big picture goals.
