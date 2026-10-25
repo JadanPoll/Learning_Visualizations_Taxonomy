@@ -208,6 +208,9 @@ The investigation is incomplete without: **(1)** the justified element/state inv
 
 Your system should not turn into a hostage situation with the user. The user should not be forced to understand the precise underlying details to be able to use the stuff. At the same time things can't be invisible to the user. If something fails to work it should also be apparent to the user but in a way where they aren't force to damn near be engineers who designed the system in the first place.
 
+
+## Locally brillaint, globally stupid (and multi-objectives)
+
 Engineers, systems and advice are often locally brilliant (especially in fragmentation) but globally stupid and entirely miss the big picture. In fact you should assume this by default. The big problem is one often swears by the sophistication of the individual components and use it as a proxy to swear by and complete miss what actually matters and the big picture questions. 
 
 
@@ -220,6 +223,9 @@ What experiment collapses the search space fastest?
 When should I abandon this approach entirely?
 
 the critical problem is unlike humans it doesnt actually know how to go between the layers and jump around on this. this is not a linear list, this is a ring where acquire information should tell an intleligent system which one to jump baack and forth to, sometimes you go back up, other times you go back down, other times you jump between different ones. in fact, any effecient intelligence ratios  should be able to determine when and how to jump between the various nodes of this in solving the problem. I talk about this in my notes on MP vs PS  architectures from von Neumanns book and why this matters in here(at the end, MP vs PS architectures) and here(species agnostic intelligence):
+crucially no one is saying that PS is not important or a failure of intelligence. we are saying that  people with  "loud voices"(benchmarks, conspicious problems) often mistake and swear by solving ability entirely missing the point of why we care about intelligence in the first place(which i help exposit in the second document). 
+
+
 $$\[
 \text{Problem-solving capability}
 =
@@ -227,7 +233,32 @@ $$\[
 +
 \text{policy for moving among operations} 
 +
-\text{Identifying the actual frequently unstated big picture goals and advancing towards them and ensuring the other two are relevant to them}
+\text{Identifying the actual frequently unstated big picture goals(and the even more significantly harder the holistic big goal. ) and advancing towards them and ensuring the other two are relevant to them. This is particularly relevant for things like stopping points, admittance of failure and understanding or expositing why of failure .}
 .
 \]$$
-crucially no one is saying that PS is not important or a failure of intelligence. we are saying that  people with  "loud voices"(benchmarks, conspicious problems) often mistake and swear by solving ability entirely missing the point of why we care about intelligence in the first place(which i help exposit in the second document). 
+why the third one? consider this example, a human might practice or spend more time on an easy game level not because they can solve it but cause they realize the big picture is to win the game and identify that success in the harder levels requires perfecting their timings and muscle control. the holistic one is often significantly harder, after all maybe they really want to beat the game to impress their friends and so often just beating  a special level their friends could beat would actually suffice
+
+
+Problem-solving capability requires not only useful operations and intelligent movement among them, but continual identification of the actual objective those operations are supposed to serve—including unstated instrumental goals and, when relevant, the harder holistic goal behind the stated task.
+
+\[
+\boxed{
+\text{Effective problem solving}
+\approx
+\text{Goal identification/maintenance}
+\;\circ\;
+\big(
+\text{available operations}
++
+\text{routing among operations}
+\big)
+}
+\]
+where the composition symbol is meant informally: the inferred goal supplies the criterion by which operations and transitions are judged useful.
+
+Because its so easy for even humans to forget the big picture and get pathologically mode-locked into one thing after a while, i would say for our engineering framework one must practice mindfulness of 
+a. the actual unstated big picture
+b. the holistic big picture
+
+This is something even individual humans struggle with: constraining towards the bigger picture, groups of varied human interests even more so(sometimes less so if productive friction) 
+and leaders and coordinatros(sans ego) who must satisfy the system, see and concern themselves with a lot-more variables and objectives and think long-term should be better at constraining towards the bigger picture.
