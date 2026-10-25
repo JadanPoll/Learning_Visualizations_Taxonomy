@@ -1,6 +1,6 @@
 (woefully messy and incomplete with some stuff I have to clean up)
 # The Richer Engineering Method
-## "Cause after all, we are engineers, not mathematicians" - Nathan Amankwah
+### "Cause after all, we are engineers, not mathematicians" - Nathan Amankwah
 What do we actually need? 
 Is that the right sort of question? What's the actual big picture? 
 What ideas from first principles could fulfill it? Justify the methodology being used to fulfill it. 
