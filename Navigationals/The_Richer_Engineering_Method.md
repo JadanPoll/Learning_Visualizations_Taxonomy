@@ -1,5 +1,6 @@
 (woefully messy and incomplete with some stuff I have to clean up)
 # The Richer Engineering Method
+## "Cause after all, we are engineers, not mathematicians" - Nathan Amankwah
 What do we actually need? 
 Is that the right sort of question? What's the actual big picture? 
 What ideas from first principles could fulfill it? Justify the methodology being used to fulfill it. 
@@ -264,3 +265,4 @@ This is something even individual humans struggle with: constraining towards the
 and leaders and coordinatros(sans ego) who must satisfy the system, see and concern themselves with a lot-more variables and objectives and think long-term should be better at constraining towards the bigger picture.
 
 The one unique idea in fact i'd add to this (especially for LLMs) is establishing a "stopping tree" after considering big picture and holistic big picture goals.
+After all, we are engineers, not mathematicians
