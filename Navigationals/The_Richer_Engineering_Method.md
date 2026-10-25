@@ -209,3 +209,25 @@ The investigation is incomplete without: **(1)** the justified element/state inv
 Your system should not turn into a hostage situation with the user. The user should not be forced to understand the precise underlying details to be able to use the stuff. At the same time things can't be invisible to the user. If something fails to work it should also be apparent to the user but in a way where they aren't force to damn near be engineers who designed the system in the first place.
 
 Engineers, systems and advice are often locally brilliant (especially in fragmentation) but globally stupid and entirely miss the big picture. In fact you should assume this by default. The big problem is one often swears by the sophistication of the individual components and use it as a proxy to swear by and complete miss what actually matters and the big picture questions. 
+
+
+i would say the critical problem of todays AI is not that it cant follow this. It can:
+What problem are we actually facing?
+What information source has highest expected value?
+Has somebody already solved this?
+Is the documented abstraction even trustworthy?
+What experiment collapses the search space fastest?
+When should I abandon this approach entirely?
+
+the critical problem is unlike humans it doesnt actually know how to go between the layers and jump around on this. this is not a linear list, this is a ring where acquire information should tell an intleligent system which one to jump baack and forth to, sometimes you go back up, other times you go back down, other times you jump between different ones. in fact, any effecient intelligence ratios  should be able to determine when and how to jump between the various nodes of this in solving the problem. I talk about this in my notes on MP vs PS  architectures from von Neumanns book and why this matters in here(at the end, MP vs PS architectures) and here(species agnostic intelligence):
+$$\[
+\text{Problem-solving capability}
+=
+\text{operations available}
++
+\text{policy for moving among operations} 
++
+\text{Identifying the actual frequently unstated big picture goals and advancing towards them and ensuring the other two are relevant to them}
+.
+\]$$
+crucially no one is saying that PS is not important or a failure of intelligence. we are saying that  people with  "loud voices"(benchmarks, conspicious problems) often mistake and swear by solving ability entirely missing the point of why we care about intelligence in the first place(which i help exposit in the second document). 
