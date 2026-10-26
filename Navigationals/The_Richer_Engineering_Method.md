@@ -209,6 +209,8 @@ The investigation is incomplete without: **(1)** the justified element/state inv
 
 Your system should not turn into a hostage situation with the user. The user should not be forced to understand the precise underlying details to be able to use the stuff. At the same time things can't be invisible to the user. If something fails to work it should also be apparent to the user but in a way where they aren't force to damn near be engineers who designed the system in the first place.
 
+Basically the user should be able to interact with intentions and on the intention level while your system must absorb the implementation details. The user shouldn't be required to be an engineer to use your system. A really good pattern I've seen recently for resolving this is a really friendly centralized "what's happening" pane" for whatever interaction or sequence of interactions the user might be performing and  a troubleshooting details button(toggle like to see actual details like say and error) with a copy details button(for things like pasting into an LLM)
+
 
 ## Locally brillaint, globally stupid (and multi-objectives)
 
@@ -264,5 +266,5 @@ b. the holistic big picture
 This is something even individual humans struggle with: constraining towards the bigger picture, groups of varied human interests even more so(sometimes less so if productive friction) 
 and leaders and coordinatros(sans ego) who must satisfy the system, see and concern themselves with a lot-more variables and objectives and think long-term should be better at constraining towards the bigger picture.
 
-The one unique idea in fact i'd add to this (especially for LLMs) is establishing a "stopping tree" after considering big picture and holistic big picture goals.
+The one unique idea in fact i'd add to this (especially for LLMs) is establishing a "stopping tree" after considering big picture and holistic big picture goals. In fact I would add that "stopping paths" have "types of stops" with the one I'm particularly interested in being the (research/education) stopping point type. This is a stopping point at critical open-ended questions/problems that prompts the user to read various papers or do a bit of reading before proceeding. I'm of the firm belief that the more a human knows or has experience with a particular domain the fundamentally better they will be at using LLMs in that domain. They would have significantly better and more ambitious ideas, be much more effective at orchestrating and directing LLMs and would be fundamentally better when it comes to effeciency of work and effeciency of using LLMs
 After all, we are engineers, not mathematicians
