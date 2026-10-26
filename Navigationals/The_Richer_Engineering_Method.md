@@ -119,7 +119,7 @@ Basically the user should be able to interact with intentions and on the intenti
 
 A useful interface sanity check is to model the user as someone being shown the system for the first time while the engineer is standing next to them. Watch for the points where their eyes hesitate, where they ask what a label means, or where the demonstrator has to point at a control and explain what will happen before the user can act. Treat repeated explanation as interface friction, not merely as a user-education problem.
 
-The ideal is not to add onboarding until the user has memorized the product's internal abstractions. The ideal is that the visible nouns and verbs correspond closely enough to ordinary intentions that the user can predict the next action before it is explained. Prefer "Ask" to a technically precise but socially awkward verb if "Ask" matches the user's intention. Prefer "Community", "Key contents", "Glossary", "Sources", and similarly ordinary concepts when those are what the user believes they are manipulating.
+The ideal is that the visible nouns and verbs correspond closely enough to ordinary intentions that the user can predict the next action before it is explained. Prefer "Ask" to a technically precise but socially awkward verb if "Ask" matches the user's intention. Prefer "Community", "Key contents", "Glossary", "Sources", and similarly ordinary concepts when those are what the user believes they are manipulating.
 
 A feature that is easy after a five-minute explanation may still be badly exposed. The engineer should therefore evaluate the interface under at least three conditions:
 1. **Cold demonstration:** can a first-time observer infer what to click and roughly what will happen?
