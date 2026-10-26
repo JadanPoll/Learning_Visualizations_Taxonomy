@@ -89,7 +89,7 @@ one does not need metric tracking for this, one could simply reason heursiticall
 
 
 A philosophy i have for engineering is every experiement or system eventually run itself. that means you increasingly automate the work load and increasingly make itself more effecient. self-improving, self-fat trimming, self-experimenting.
-The most powerful thing I've seen about LLMs and the reason "agentic fluidity" is so valuable is because of effectively self-play between the data, response and the reasoner.
+The most powerful thing I've seen about LLMs and the reason "agentic fluidity" is so valuable is because of effectively self-play between the data, response and the reasoner and the meta-reasoner/goal-director(the human). In fact, the tighter this loop the more the critical gain.
 
 Local effeciency is not  compositional effeciency, we naturally think of things as additive but systems have multiplicative costs.
 
@@ -267,6 +267,6 @@ This is something even individual humans struggle with: constraining towards the
 and leaders and coordinatros(sans ego) who must satisfy the system, see and concern themselves with a lot-more variables and objectives and think long-term should be better at constraining towards the bigger picture.
 
 The one unique idea in fact i'd add to this (especially for LLMs) is establishing a "stopping tree" after considering big picture and holistic big picture goals. In fact I would add that "stopping paths" have "types of stops" with the one I'm particularly interested in being the (research/education) stopping point type. This is a stopping point at critical open-ended questions/problems that prompts the user to read various papers or do a bit of reading before proceeding. I'm of the firm belief that the more a human knows or has experience with a particular domain the fundamentally better they will be at using LLMs in that domain. They would have significantly better and more ambitious ideas, be much more effective at orchestrating and directing LLMs and would be fundamentally better when it comes to effeciency of work and effeciency of using LLMs. This is especially powerful or most useful when combined with the hoping/traversing policy of the ring I talked about earlier.
-The reason is not that the LLM cannot produce code. It is the humans ability to ask the next ambitious question improves after acquiring domain structure. Yes I just referred to humans in the third person, i think we should be forward thinking and anthropomorphize and genuinely begin to treat LLMs like a nascent co-human species.
+The reason is not that the LLM cannot produce code. It is the humans ability to ask the next ambitious question improves after acquiring domain structure. Yes I just referred to humans in the third person, i think we should be forward thinking and anthropomorphize and genuinely begin to treat LLMs like a nascent co-human species. I use the word co-species instead of frightful asymmetric ideas like a dominant species because of my exposition on the PS(powerfully serial) and MP(massively parallel) architectures, there currently isn't a clearly superior one at least at the workflows i operate with currently but the MP really must be sufficiently capable
 
 After all, we are engineers, not mathematicians
