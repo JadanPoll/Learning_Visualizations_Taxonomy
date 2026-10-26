@@ -1,9 +1,11 @@
 (woefully messy and incomplete with some stuff I have to clean up)
 # The Richer Engineering Method
 ### "Cause after all, we are engineers, not mathematicians" - Nathan Amankwah
-What do we actually need? 
-Is that the right sort of question? What's the actual big picture? 
-What ideas from first principles could fulfill it? Justify the methodology being used to fulfill it. 
+What do we actually need?  
+Is that the right sort of question?  
+What's the actual big picture?  
+What ideas from first principles could fulfill it? Justify the methodology being used to fulfill it.  
+
 It should be practical and well reasoned from minimalist principles. (This usually pairs with modeling actual and practical cases rather than obsessing over edge cases.)  
 We are engineers, not mathematicians. We think in terms of $\frac{\text{(benefits of success x success rate)}}{\text{(objective cost of failure) x (nuisance or irritability of failure : the pschological aspect) x (realistically perceived failure rate)}}$  
 You very often can't get precise numbers for this but you absolutely can use a partially ranked system matrix of the taxonomy of various elements of it. Enumerate a reasonable taxonomy.  
