@@ -115,6 +115,19 @@ Your system should not turn into a hostage situation with the user. The user sho
 
 Basically the user should be able to interact with intentions and on the intention level while your system must absorb the implementation details. The user shouldn't be required to be an engineer to use your system. A really good pattern I've seen recently for resolving this is a really friendly centralized "what's happening" pane" for whatever interaction or sequence of interactions the user might be performing and  a troubleshooting details button(toggle like to see actual details like say and error) with a copy details button(for things like pasting into an LLM)
 
+### Model the user as someone seeing a live demonstration
+
+A useful interface sanity check is to model the user as someone being shown the system for the first time while the engineer is standing next to them. Watch for the points where their eyes hesitate, where they ask what a label means, or where the demonstrator has to point at a control and explain what will happen before the user can act. Treat repeated explanation as interface friction, not merely as a user-education problem.
+
+The ideal is not to add onboarding until the user has memorized the product's internal abstractions. The ideal is that the visible nouns and verbs correspond closely enough to ordinary intentions that the user can predict the next action before it is explained. Prefer "Ask" to a technically precise but socially awkward verb if "Ask" matches the user's intention. Prefer "Community", "Key contents", "Glossary", "Sources", and similarly ordinary concepts when those are what the user believes they are manipulating.
+
+A feature that is easy after a five-minute explanation may still be badly exposed. The engineer should therefore evaluate the interface under at least three conditions:
+1. **Cold demonstration:** can a first-time observer infer what to click and roughly what will happen?
+2. **Forgotten-operation return:** after a week or month, can the user recover the capability without reconstructing product internals?
+3. **Expert lazy use:** once familiar, can the user act at the speed of intention without the interface forcing ceremony or repeated explanation?
+
+When the demonstrator repeatedly finds themselves saying "what this really means is..." or "click this even though it sounds like...", first suspect the interface wording, grouping, or spatial model. Do not solve this reflexively with tours, onboarding overlays, or documentation; those can hide the underlying representational failure and impose permanent maintenance cost.
+
 
 
 # Recursive Combinatorial Exploration of System Behavior
