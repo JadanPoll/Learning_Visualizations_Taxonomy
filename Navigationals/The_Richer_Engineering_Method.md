@@ -14,7 +14,7 @@ Notice I didn't say clear on how.
 
 when it comes to potential errors and ineffeciencies or indeterminate states, review through  the lens of symbiotic communication and the pschological pain of perceived ineffeciency and pschological pain of lack of understanding when the ineffeciencies become obvious  
 
-
+## On Reasoning about Heuristics and Feature Engineering.
 how to think about heuristics (inspired by  browser fingerprinting in a sort of way.) and "feature engineering" this is the way to look at it.
 a. think abobut the number of diferent heuristics you c ould grab and are currently grabbing
 b. rank or partial rank them in the "estimated" numbers of resolving bits they provide.
