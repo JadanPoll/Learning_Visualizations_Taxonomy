@@ -92,7 +92,7 @@ one does not need metric tracking for this, one could simply reason heursiticall
 
 
 A philosophy i have for engineering is every experiement or system eventually run itself. that means you increasingly automate the work load and increasingly make itself more effecient. self-improving, self-fat trimming, self-experimenting.
-The most powerful thing I've seen about LLMs and the reason "agentic fluidity" is so valuable is because of effectively self-play between the data, response and the reasoner and the meta-reasoner/goal-director(the human). In fact, the tighter this loop the more the critical gain. Please trust and believe me when i say the future is going to be about autonomous experimentation, self-play experimentation and obsessing over tightening this loop.
+The most powerful thing I've seen about LLMs and the reason "agentic fluidity" is so valuable is because of effectively self-play between the data, response and the reasoner and the meta-reasoner/goal-director(the human). In fact, the tighter this loop the more the critical gain. Please trust and believe me when i say the future is going to be about autonomous experimentation, self-play experimentation and obsessing over tightening this loop. The enormously clever thing is getting a human in this tight loop, should they be in this tight loop? I believe for a human to be in this increasingly tightening loop they would have to effectively operate at the speed of thought, clone their mental self so the system deeply complements their workings.
 
 Local effeciency is not  compositional effeciency, we naturally think of things as additive but systems have multiplicative costs.
 
