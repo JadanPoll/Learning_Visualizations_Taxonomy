@@ -89,7 +89,7 @@ one does not need metric tracking for this, one could simply reason heursiticall
 
 
 A philosophy i have for engineering is every experiement or system eventually run itself. that means you increasingly automate the work load and increasingly make itself more effecient. self-improving, self-fat trimming, self-experimenting.
-
+The most powerful thing I've seen about LLMs and the reason "agentic fluidity" is so valuable is because of effectively self-play between the data, response and the reasoner.
 
 Local effeciency is not  compositional effeciency, we naturally think of things as additive but systems have multiplicative costs.
 
