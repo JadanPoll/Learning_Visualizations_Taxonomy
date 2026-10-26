@@ -218,7 +218,7 @@ The investigation is incomplete without: **(1)** the justified element/state inv
 
 Engineers, systems and advice are often locally brilliant (especially in fragmentation) but globally stupid and entirely miss the big picture. In fact you should assume this by default. The big problem is one often swears by the sophistication of the individual components and use it as a proxy to swear by and complete miss what actually matters and the big picture questions. 
 
-
+## Problem Solving
 i would say the critical problem of todays AI is not that it cant follow this. It can:
 What problem are we actually facing?
 What information source has highest expected value?
