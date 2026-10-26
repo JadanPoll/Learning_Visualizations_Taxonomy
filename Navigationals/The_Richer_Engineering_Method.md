@@ -106,13 +106,19 @@ This is a personal opinion of mine but any good enough system should eventually 
 one thiong i hate is when i push buttons and have no idea what happened,
  i fucking hate when somethign says failed retry but i have no reason or theres no visible report of the failuree so i cant even copy and paste into an LLM
 . remember if there are failures it should be clear to the human wqhat they are and they should be copyable for an LLM
- 
 
-How to prevent issues from creeping up when systems get large. Especiialy for forgetful engineers and LLMs
+ 
+Your system should not turn into a hostage situation with the user. The user should not be forced to understand the precise underlying details to be able to use the stuff. At the same time things can't be invisible to the user. If something fails to work it should also be apparent to the user but in a way where they aren't force to damn near be engineers who designed the system in the first place.
+
+Basically the user should be able to interact with intentions and on the intention level while your system must absorb the implementation details. The user shouldn't be required to be an engineer to use your system. A really good pattern I've seen recently for resolving this is a really friendly centralized "what's happening" pane" for whatever interaction or sequence of interactions the user might be performing and  a troubleshooting details button(toggle like to see actual details like say and error) with a copy details button(for things like pasting into an LLM)
+
+
 
 # Recursive Combinatorial Exploration of System Behavior
 
 *A computational method for investigating complex systems when engineers, including LLMs, cannot reliably enumerate interacting behaviors mentally.*
+
+### How to prevent issues from creeping up when systems get large. Especiialy for forgetful engineers and LLMs
 
 ## 1. Construct the abstraction
 
@@ -206,10 +212,6 @@ The investigation is incomplete without: **(1)** the justified element/state inv
 
 **Principle:** Engineers identify what can exist and how it may behave. Computation enumerates the admissible combinations. Neither an engineer nor an LLM is permitted to replace that computation with imagined scenarios or confidence based on an unexamined abstraction.
 
-
-Your system should not turn into a hostage situation with the user. The user should not be forced to understand the precise underlying details to be able to use the stuff. At the same time things can't be invisible to the user. If something fails to work it should also be apparent to the user but in a way where they aren't force to damn near be engineers who designed the system in the first place.
-
-Basically the user should be able to interact with intentions and on the intention level while your system must absorb the implementation details. The user shouldn't be required to be an engineer to use your system. A really good pattern I've seen recently for resolving this is a really friendly centralized "what's happening" pane" for whatever interaction or sequence of interactions the user might be performing and  a troubleshooting details button(toggle like to see actual details like say and error) with a copy details button(for things like pasting into an LLM)
 
 
 ## Locally brillaint, globally stupid (and multi-objectives)
