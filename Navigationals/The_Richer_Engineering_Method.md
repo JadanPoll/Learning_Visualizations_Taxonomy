@@ -129,7 +129,11 @@ A feature that is easy after a five-minute explanation may still be badly expose
 When the demonstrator repeatedly finds themselves saying "what this really means is..." or "click this even though it sounds like...", first suspect the interface wording, grouping, or spatial model. Do not solve this reflexively with tours, onboarding overlays, or documentation; those can hide the underlying representational failure and impose permanent maintenance cost.
 
 If im giving a demo, would this be awkward? or a missed opportunity for an "oh wow". you should look at every critical UI element and ask, if i was giving a live demo, is there a missed opportunity for an  "oh wow", a lot of questions and clever features can be audited this way
-For example, in LLM, continuous text generation is an oh wow more so than an invisible wait then a complete all at once. THe user having to wait for an all-at-once completion of course is a hostage situation but of course it can't always be helped.
+For example, in LLM, continuous text generation is an oh wow more so than an invisible wait then a complete all at once. Of course, we are engineers, not designers. , for example we don't actually need to stream text if its not actually practical to do so,  a working on it... will suffice or something to simply show that there isnt a hidden error in the backend or at least not freezing the page while its waiting (which is a hostage situation). This is just an example of an "oh wow" but with well motivated engineering practical reasons.
+
+
+
+THe user having to wait for an all-at-once completion of course is a hostage situation but of course it can't always be helped.
 # Recursive Combinatorial Exploration of System Behavior
 
 *A computational method for investigating complex systems when engineers, including LLMs, cannot reliably enumerate interacting behaviors mentally.*
