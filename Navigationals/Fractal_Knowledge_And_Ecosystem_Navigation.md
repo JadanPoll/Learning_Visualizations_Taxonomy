@@ -1,5 +1,5 @@
 # FKEN — Fractal Knowledge & Ecosystem Navigation
-**Specification 1.2 · Hierarchically indexed · Accumulative navigation and source optimization**
+**Specification 1.3 · Hierarchically indexed · Accumulative navigation and source optimization**
 
 ## 0. Purpose and governing principles
 
@@ -36,6 +36,10 @@
 **FKEN-02.4 — Variance.** Prefer encounters that reveal consequentially different mechanisms, assumptions, constraints, applications, or possibilities over repeated presentations of substantially the same material.
 
 **FKEN-02.5 — Compression.** Collapse redundancy only when consequential differences remain recoverable.
+
+**FKEN-02.6 — Artifact-audience separation.** A rule used to investigate, validate, generate, or maintain information does not automatically belong in the information presented to its reader. Determine the actual audience and recurring use before choosing output fields or prose. Include provenance, qualifications, warnings, certificates, and implementation notes only where they materially affect that audience's interpretation or action, or are explicitly requested. Keep agent/developer instructions in their own operational context.
+
+**FKEN-02.7 — Reader-first economy.** A record or display should be understandable without its author's framework vocabulary when an ordinary reader is the intended user. Test both first encounter and return after the operational details are forgotten; repeated AI-facing scaffolding, blank fields, and self-justifying metadata are costs, not evidence of rigor.
 
 ---
 
@@ -560,11 +564,11 @@ If the investigation reveals a useful new domain distinction, gas element, or re
 
 # Appendix B — Application certificates
 
-An AI or human applying FKEN should identify the **specific subclauses actually used**, the evidence supporting the decision, and any consequential uncertainty.
+Application certificates are **optional audit artifacts**, appropriate for consequential, disputed, or explicitly reviewed methodological decisions. They are not required for normal navigation, personal notes, domain records, project records, user interfaces, or ordinary decisions. Reasoning may be performed without exposing its scaffolding in the finished artifact.
 
-References to FKEN establish which rule applies; they do not themselves establish that the rule's factual conditions are satisfied.
+When a certificate is useful, identify the specific applicable subclauses, supporting observations, important uncertainties, and resulting decision. References to FKEN establish which rule applies; they do not themselves establish that the rule's factual conditions are satisfied. This appendix must not be treated as a default output template.
 
-### B.1 — Minimal certificate
+### B.1 — Minimal certificate (when warranted)
 
 **Question:** What decision or navigation problem is being addressed?
 
@@ -603,6 +607,8 @@ References to FKEN establish which rule applies; they do not themselves establis
 **B.2.4.** When clauses conflict in application, identify the tension and use RSM to compare alternatives. Do not silently choose one.
 
 **B.2.5.** When the specification does not govern a decision, say so. Do not invent a requirement by extrapolating from an example.
+
+**B.2.6.** Do not insert audit certificates, source-status disclaimers, schema explanations, process rules, or internal agent reasoning into a human-facing artifact merely because those considerations governed its creation. Keep a separate certificate when auditability is actually needed. Preserve direct, actionable source information and necessary uncertainty where they affect a user's decision.
 
 ### B.3 — Identifier stability
 
