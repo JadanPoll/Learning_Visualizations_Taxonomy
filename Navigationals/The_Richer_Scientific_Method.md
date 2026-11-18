@@ -2,17 +2,17 @@
 ### An operational architecture for reasoning, investigation, and navigation
 
 
-## Reference and activation convention
+## How to use and reference RSM
 
-**Clause addressing.** Every substantive provision has a permanent **RSM** identifier. `RSM-04` denotes a section; `RSM-04.03` its clause; `RSM-09.C.01` a calibration case passage. These IDs identify **ideas and operational commitments** to abide by. **Do not renumber an existing ID when editing**; append new IDs and mark deprecated text explicitly. The printed numeric section title is secondary to its stable RSM ID.
+Each substantive idea in this document has a stable **RSM identifier**. For example, \`RSM-04\` refers to a section, \`RSM-04.03\` to a particular clause, and \`RSM-09.C.01\` to a calibration example. These identifiers let us return to an idea, challenge it, or build upon it even after the wording changes. **Don't renumber existing identifiers**; add new ones when new ideas are needed, and mark genuinely superseded meanings explicitly.
 
-**While investigating:** Cite the **smallest relevant RSM clause(s)** at the point where they materially guide a choice, rather than merely listing section numbers at the end. Example: `Why this representation: [RSM-03.02]`; `Backward constraint applied: [RSM-04.01]`; `Qualified result: [RSM-01.04, RSM-04.04]`. A report may group operational citations in a compact **method trace** so references don't interrupt every sentence. Cite external papers and primary evidence separately;
+When a particular RSM idea materially guides an investigation, **reference the specific clause and explain why it matters**. For example: \`Why this representation: [RSM-03.02]\` or \`Backward reasoning applied: [RSM-04.02]\`. We shouldn't throw clause numbers at the reader merely to make an explanation sound more rigorous. The references to scientific papers, experiments, and other first-hand evidence should be kept separately so somebody can check the actual sources.
 
-**For navigation and criticism:** Requests such as `expand RSM-03.03`, `test RSM-04.03 against a counterexample`, or `show every claim dependent on RSM-05.02` should resolve to the indicated passage and its operational implications. Record both **the clause used** and **why it was used**; don't make citations decorative. When a clause's method is inapplicable, say so instead of forcing it. Calibration case IDs show the motivation or failure signature of a method; they are *examples*, not universal laws.
+We should also be able to ask things like "expand RSM-03.03," "what would challenge RSM-04.03?" or "which conclusions depend on RSM-05.02?" and trace the relevant reasoning rather than receiving an isolated quotation.
 
-**Method trace convention (minimal):** `Decision or inference → [RSM clause IDs] → reason relevant → evidence/certificate → limitations.` Within research trees, link each branch's **why this branch?** to one or more clause IDs, source evidence, and a possible consequence of resolving the branch. Track which clauses were productive, unnecessary, or misleading **in a specific investigation** before suggesting revisions to this framework. 
+A compact way to preserve this is a **method trace**: \`decision or inference → relevant RSM clause → why it was useful → evidence or certificate → assumptions and limitations\`. Within an investigation tree, preserve why a branch was opened, what answering it could change, and which ideas helped or didn't help.
 
-**Use this as an operating discipline.** The point of each operation below is to correct a failure we encountered while reasoning about real or stipulated systems; do not execute a step unless the question makes it relevant.
+Most importantly, **use RSM as a way of investigating, not a ritual**. We don't need to perform every operation in every problem. The methods should earn their place by helping us reason clearly, explore the relevant landscape, and make progress.
 
 ## Purpose
 
@@ -1274,8 +1274,14 @@ The underlying standard across all these tests is simple: **does the investigato
 | `RSM-05` | Trees, evidence graph, citations, dependency navigation |
 | `RSM-06` | Cross-branch insight and investigator continuity |
 | `RSM-07` | Architectural parsimony and failure conditions |
-| `RSM-08` | Portable investigator protocol and method trace |
-| `RSM-09.A`–`RSM-09.K` | Eleven calibration investigations and why each principle exists |
-| `RSM-10` | Behavioral acceptance tests |
+| `RSM-08` | Reusable investigator protocol, method trace, and interactive LLM collaboration |
+| `RSM-09.A`–`RSM-09.P` | Sixteen calibration investigations and why each principle exists |
+| `RSM-10` | Behavioral acceptance tests, including interactive investigation |
 
 **Maintenance rule:** IDs are permanent semantic references. If a passage is significantly rewritten, record its version/date in a changelog; if its meaning changes incompatibly, issue a new ID and mark the old one superseded. This protects the user's ability to point to a specific earlier idea across chats, research notes, and models.
+
+### Revision history
+
+- **2026-11-18:** Consolidated collaborative rewrites of the Purpose and RSM-01–10; preserved original substantive identifiers, introduced RSM-08.10 and RSM-10.17 for interactive investigation, and reorganized calibration cases A–P. Earlier text remains available through Git history.
+
+Minor reference note for review purposes: This document was made in collaboration and heavy discussion with https://chatgpt.com/c/6ad594f7-fde8-83e9-a0ea-f268b6e46a1d
