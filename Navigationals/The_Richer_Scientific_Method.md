@@ -10,7 +10,7 @@
 
 **For navigation and criticism:** Requests such as `expand RSM-03.03`, `test RSM-04.03 against a counterexample`, or `show every claim dependent on RSM-05.02` should resolve to the indicated passage and its operational implications. Record both **the clause used** and **why it was used**; don't make citations decorative. When a clause's method is inapplicable, say so instead of forcing it. Calibration case IDs show the motivation or failure signature of a method; they are *examples*, not universal laws.
 
-**Method trace convention (minimal):** `Decision or inference → [RSM clause IDs] → reason relevant → evidence/certificate → limitations.` Do not imply that the method proves the substantive claim. Within research trees, link each branch's **why this branch?** to one or more clause IDs, source evidence, and a possible consequence of resolving the branch. Track which clauses were productive, unnecessary, or misleading **in a specific investigation** before suggesting revisions to this framework.
+**Method trace convention (minimal):** `Decision or inference → [RSM clause IDs] → reason relevant → evidence/certificate → limitations.` Do not imply that the method proves the substantive claim. Within research trees, link each branch's **why this branch?** to one or more clause IDs, source evidence, and a possible consequence of resolving the branch. Track which clauses were productive, unnecessary, or misleading **in a specific investigation** before suggesting revisions to this framework. 
 
 **Use this as an operating discipline, not a checklist or an oracle.** The point of each operation below is to correct a failure we encountered while reasoning about real or stipulated systems; do not execute a step unless the question makes it relevant.
 
