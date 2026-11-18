@@ -1,6 +1,19 @@
-(woefully messy and incomplete with some stuff I have to clean up)
 # The Richer Engineering Method
+
 ### "Cause after all, we are engineers, not mathematicians" - Nathan Amankwah
+
+## Reference and navigation convention
+
+Each substantial topic has a stable `REM-XX` identifier, and its constituent ideas have `REM-XX.XX` identifiers. These addresses are for revisiting, criticizing, applying, and revising specific ideas without confusing them with neighboring ones. **Keep existing identifiers stable** as the wording evolves; add new IDs when necessary, and explicitly mark a superseded meaning rather than silently reassigning its address.
+
+**Structural organization only (first pass).** The original prose, examples, calculations, and open questions below have been preserved for our subsequent wording review. Some passages remain rough or overlapping; the aim of this pass is to give them coherent homes rather than preemptively resolve their ideas.
+
+**Navigation:** [REM-01] Purpose and whole-system reasoning · [REM-02] Goal-directed problem solving · [REM-03] Practical testing · [REM-04] Interfaces and human agency · [REM-05] Self-improving engineering workflows · [REM-06] Heuristics and feature engineering · [REM-07] Combinatorial system exploration.
+
+## [REM-01] Purpose, practical utility, and whole-system reasoning
+
+### [REM-01.01] What do we actually need?
+
 What do we actually need?  
 Is that the right sort of question?  
 What's the actual big picture?  
@@ -11,13 +24,174 @@ We are engineers, not mathematicians. We think in terms of $\frac{\text{(benefit
 You very often can't get precise numbers for this but you absolutely can use a partially ranked system matrix of the taxonomy of various elements of it. Enumerate a reasonable taxonomy.  
 Do not select solutions because they are popular or appear in the textbook. Justify in natural reasoning. Then practically justify. Then actually justify by building out the “coal mine canary” minimum viable thing to get actual data on the taxonomy of failure modes.  
 
+
+### [REM-01.02] Stopping points, systems friction, and coupling
+
 Know when you are 80-95-97.5% of the way of actual utility in deciding stopping points. Stopping points is alluded to briefly in the RSM methodology. Here I would clarify friction not as cognitive or interactive friction but systems friction, where things and differing components don't couple as effeciently as they could, of course maximum coupling effeciency is resonance which is multiplicative(multiplicative cause essentially there are no bottlenecks or weak links given the load). This of course is an asymptotic goal. Detuned resonance is usually acceptable and additive on average.  
+
+### [REM-01.03] The Moon and the difference between why and how
+
 We made it to the moon not because we had the fastest computers or in spite of mathematician naysayers brilliance but because engineers were clear on what they actually needed, clear on when, clear on where, and clear on why. And most of all clear that now was absolutely the time to make it happen. 
 Notice I didn't say clear on how.
 
 when it comes to potential errors and ineffeciencies or indeterminate states, review through  the lens of symbiotic communication and the pschological pain of perceived ineffeciency and pschological pain of lack of understanding when the ineffeciencies become obvious  
 
-## On Reasoning about Heuristics and Feature Engineering.
+### [REM-01.04] Local efficiency is not compositional efficiency
+
+Local effeciency is not  compositional effeciency, we naturally think of things as additive but systems have multiplicative costs.
+
+### [REM-01.05] Locally brilliant, globally stupid
+
+
+Engineers, systems and advice are often locally brilliant (especially in fragmentation) but globally stupid and entirely miss the big picture. In fact you should assume this by default. The big problem is one often swears by the sophistication of the individual components and use it as a proxy to swear by and complete miss what actually matters and the big picture questions. 
+
+## [REM-02] Problem solving as goal-directed navigation
+
+### [REM-02.01] Moving among operations rather than following a linear list
+
+i would say the critical problem of todays AI is not that it cant follow this. It can:
+What problem are we actually facing?
+What information source has highest expected value?
+Has somebody already solved this?
+Is the documented abstraction even trustworthy?
+What experiment collapses the search space fastest?
+When should I abandon this approach entirely?
+
+the critical problem is unlike humans it doesnt actually know how to go between the layers and jump around on this. this is not a linear list, this is a ring where acquire information should tell an intleligent system which one to jump baack and forth to, sometimes you go back up, other times you go back down, other times you jump between different ones. in fact, any effecient intelligence ratios  should be able to determine when and how to jump between the various nodes of this in solving the problem. I talk about this in my notes on MP vs PS  architectures from von Neumanns book and why this matters in here(at the end, MP vs PS architectures) and here(species agnostic intelligence):
+
+### [REM-02.02] Problem-solving operations, movement policies, and real goals
+
+crucially no one is saying that PS is not important or a failure of intelligence. we are saying that  people with  "loud voices"(benchmarks, conspicious problems) often mistake and swear by solving ability entirely missing the point of why we care about intelligence in the first place(which i help exposit in the second document). 
+
+
+$$\[
+\text{Problem-solving capability}
+=
+\text{operations available}
++
+\text{policy for moving among operations} 
++
+\text{Identifying the actual frequently unstated big picture goals(and the even more significantly harder the holistic big goal. ) and advancing towards them and ensuring the other two are relevant to them. This is particularly relevant for things like stopping points, admittance of failure and understanding or expositing why of failure .}
+.
+\]$$
+why the third one? consider this example, a human might practice or spend more time on an easy game level not because they can solve it but cause they realize the big picture is to win the game and identify that success in the harder levels requires perfecting their timings and muscle control. the holistic one is often significantly harder, after all maybe they really want to beat the game to impress their friends and so often just beating  a special level their friends could beat would actually suffice
+
+
+Problem-solving capability requires not only useful operations and intelligent movement among them, but continual identification of the actual objective those operations are supposed to serve—including unstated instrumental goals and, when relevant, the harder holistic goal behind the stated task.
+
+\[
+\boxed{
+\text{Effective problem solving}
+\approx
+\text{Goal identification/maintenance}
+\;\circ\;
+\big(
+\text{available operations}
++
+\text{routing among operations}
+\big)
+}
+\]
+where the composition symbol is meant informally: the inferred goal supplies the criterion by which operations and transitions are judged useful.
+
+
+### [REM-02.03] The unstated bigger picture and stopping trees
+
+Because its so easy for even humans to forget the big picture and get pathologically mode-locked into one thing after a while, i would say for our engineering framework one must practice mindfulness of 
+a. the actual unstated big picture
+b. the holistic big picture
+
+This is something even individual humans struggle with: constraining towards the bigger picture, groups of varied human interests even more so(sometimes less so if productive friction) 
+and leaders and coordinatros(sans ego) who must satisfy the system, see and concern themselves with a lot-more variables and objectives and think long-term should be better at constraining towards the bigger picture.
+
+The one unique idea in fact i'd add to this (especially for LLMs) is establishing a "stopping tree" after considering big picture and holistic big picture goals. In fact I would add that "stopping paths" have "types of stops" with the one I'm particularly interested in being the (research/education) stopping point type. This is a stopping point at critical open-ended questions/problems that prompts the user to read various papers or do a bit of reading before proceeding. I'm of the firm belief that the more a human knows or has experience with a particular domain the fundamentally better they will be at using LLMs in that domain. They would have significantly better and more ambitious ideas, be much more effective at orchestrating and directing LLMs and would be fundamentally better when it comes to effeciency of work and effeciency of using LLMs. This is especially powerful or most useful when combined with the hoping/traversing policy of the ring I talked about earlier.
+The reason is not that the LLM cannot produce code. It is the humans ability to ask the next ambitious question improves after acquiring domain structure. Yes I just referred to humans in the third person, i think we should be forward thinking and anthropomorphize and genuinely begin to treat LLMs like a nascent co-human species. I use the word co-species instead of frightful asymmetric ideas like a dominant species because of my exposition on the PS(powerfully serial) and MP(massively parallel) architectures, there currently isn't a clearly superior one at least at the workflows i operate with currently but the MP really must be sufficiently capable
+
+After all, we are engineers, not mathematicians
+
+### [REM-02.04] Preserving existing work and interpreting user requests
+
+also as an engineer you shouldnt just destroy or ignore the existing work. there is a reason the existin work did certain things the way it did, pay attention to it to identify the unstated big picture and holistic picture it was attempting to solve even if the actually implementation might be unsavory. Engineers build on foundations, not tear it down every single time they have an opinion
+
+same goes with user requests, there is usually a big-picture insight or pain point we are trying to resolve. the least you can is ask clarifying questions and not make the mistake of misinterpreting or over-interpreting the request especially since they have a more nuanced pain point in their mind but can only be so economical with words. a user's example often points to a class of solutions, not a particular member of that class. They might use a specific word but we and users often dont mean literally that word(this warning is especially for AI where for some odd reason they get destructively-tunnel visioned, never do the smart thing and ask for clarification, and fail to realize when humans use words they preferentailly attach to say refering to "LLM instead of AI" when the human really means AI in general, humans are often referring to "the general idea of", or "the landscape of", or "the holistic idea of" or the "class with the example being" in the words they use, not literally the word.
+
+### [REM-02.05] Recognize solved problems and partial implementations
+
+recognize, recognize, recognize when you are dealing with a solved problem or something with likely many partial existing works on github and stop wasting time redesigning ideas from scratch
+
+### [REM-02.06] Unexpanded themes: abstraction, budgeting, and learning
+
+Abstraction.
+Investigation Budgeting
+Know how to obtain unfamiliar knowledge effeciently
+
+
+## [REM-03] Practical testing and engineering evidence
+
+### [REM-03.01] Test representative user flows and consequential uncertainties
+
+We are engineers not mathematicians, test cases should be really cheap and test actual user flows. Not clean and synthetic idealistic worlds. In fact you should focus not on writing test cases but how to parameterize, automate and write fuzzing test cases, not hand-crafted solutions(especially warning for LLMs which for some reason love to waste time test-cases things that would obviously work and for some reason obsess with testing clean idealized behaviour and have extremely extremely poor insight into actual flow. They will invariably literally almost never test a minimal actual realistic case outside of what one can tell would obviously work from the code. Now that is a senseless way to write test cases isnt it? LLMs waste time asking all the wrong vacuous questions, testing all the wrong vacuous things, basically their test cases are usually essentially rhetorical and credit-wasting in this regard. There is the other absurd level where they would waste credits testing absurd stuff like packet drops or an "unrealistic crash scenario" (no one is saying those cant happen or shouldnt be accounted for, all we are saying is that there are most certainly more relevant stuff to test and if you have to worry about that and cant give a best guess what happens based on the code then the code architecture is just bad, the code should allow one to reasonably infer what happens to save compute on unnecessary test cases. We are intelligence and designers of reasonably inferrable expectations not trial-and-error brutes),textbook stuff that can happen but given the point of the project the user just cares about what often happens realistically, not what realistically might happen but is inconsequential cause not every project is a billion dollar project. Before doing a test, state why its necessary, reasons why its realistic, reasons why its unrealistic and if the test is actually justified by the big-picture of the project. Don't just import textbook ideas without connecting to relevant of what the actually constraints are. We are engineers not academics or theoreticians.)
+
+## [REM-04] Interfaces, long-term use, and symbiotic communication
+
+### [REM-04.01] Rediscoverability and the utility of features over time
+
+ Will i remember what this does a week from now, a motnh from now, in its current representaiton. how will the distribution profile of what i do change after a week, after a month assuming users become more directly effecient but also simultaneously more lazy(think about how a lot of language evolved from practicallity(commerce and trade), so quick sketches and marking etc and "laziness of writing" (the smoothing out and increasing hurried cursiveness ) of things like hieroglyphics to something like demotic which the traders used.
+Evaluate interfaces by the effort required to rediscover and correctly use a capability after its operational details have been forgotten. A capability that exist but cannot readily be found, understood, or invoked has diminished practical value. Good interfaces externalize operational memory while preserving access to underlying mechanisms.
+One should generally think about UI the way they think about the evolution of language, as long as the communication can remain obvious and looks distinct enough to slight blurring of ones eyes, it gets "lazier" over time.
+One could consider computing and commands including even RISCV vs CISC as an example of this, there are a lot of keyboard shortcuts but they follow power-laws of use which call into question if so many are even needed. most people know only a few and use even much less than what they know. the rest are so frequently unsued due to thinks like GUI options or iterative options(multi-step simpler options) that there are many capabilites people simply don't know exist.
+ Complex things really do sound like nice, inviting and brilliant ideas(CISC) but can sometimes form powerlaws in their practical utilites and justifications. There is a landscape of really a highly frequently used and a graveyard of unused. of course, much of this is given humans with limited attention and reasoning frames. LLMs for example, have much more cognitive scratchpads to look and choose the precise thing for the precise purpose because what looks like complexity or untenable ot maintain in humans is more flat to LLMs with their value metrics moree so being precise- the precise tool for the precise job(if we focus on reasoning capabilites abstract away complexities and biases like training distribution)
+basically does complexity or a feature earn its existence?
+a. in isolation
+b.  holistically in the system given frequeny distribution of use?
+c. what about over time where limited users develop preferential attachment and lopsided memories?
+one does not need metric tracking for this, one could simply reason heursitically about this.
+
+### [REM-04.02] Visible failures, copyable diagnostics, and avoiding hostage situations
+
+one thiong i hate is when i push buttons and have no idea what happened,
+ i fucking hate when somethign says failed retry but i have no reason or theres no visible report of the failuree so i cant even copy and paste into an LLM
+. remember if there are failures it should be clear to the human wqhat they are and they should be copyable for an LLM
+
+ 
+Your system should not turn into a hostage situation with the user. The user should not be forced to understand the precise underlying details to be able to use the stuff. At the same time things can't be invisible to the user. If something fails to work it should also be apparent to the user but in a way where they aren't force to damn near be engineers who designed the system in the first place.
+
+Basically the user should be able to interact with intentions and on the intention level while your system must absorb the implementation details. The user shouldn't be required to be an engineer to use your system. A really good pattern I've seen recently for resolving this is a really friendly centralized "what's happening" pane" for whatever interaction or sequence of interactions the user might be performing and  a troubleshooting details button(toggle like to see actual details like say and error) with a copy details button(for things like pasting into an LLM)
+
+### [REM-04.03] Model the user as someone seeing a live demonstration
+
+A useful interface sanity check is to model the user as someone being shown the system for the first time while the engineer is standing next to them. Watch for the points where their eyes hesitate, where they ask what a label means, or where the demonstrator has to point at a control and explain what will happen before the user can act. Treat repeated explanation as interface friction, not merely as a user-education problem.
+
+The ideal is that the visible nouns and verbs correspond closely enough to ordinary intentions that the user can predict the next action before it is explained. Prefer "Ask" to a technically precise but socially awkward verb if "Ask" matches the user's intention. Prefer "Community", "Key contents", "Glossary", "Sources", and similarly ordinary concepts when those are what the user believes they are manipulating.
+
+A feature that is easy after a five-minute explanation may still be badly exposed. The engineer should therefore evaluate the interface under at least three conditions:
+1. **Cold demonstration:** can a first-time observer infer what to click and roughly what will happen?
+2. **Forgotten-operation return:** after a week or month, can the user recover the capability without reconstructing product internals?
+3. **Expert lazy use:** once familiar, can the user act at the speed of intention without the interface forcing ceremony or repeated explanation?
+
+When the demonstrator repeatedly finds themselves saying "what this really means is..." or "click this even though it sounds like...", first suspect the interface wording, grouping, or spatial model. Do not solve this reflexively with tours, onboarding overlays, or documentation; those can hide the underlying representational failure and impose permanent maintenance cost.
+
+If im giving a demo, would this be awkward? or a missed opportunity for an "oh wow". you should look at every critical UI element and ask, if i was giving a live demo, is there a missed opportunity for an  "oh wow", a lot of questions and clever features can be audited this way
+For example, in LLM, continuous text generation is an oh wow more so than an invisible wait then a complete all at once. Of course, we are engineers, not designers. , for example we don't actually need to stream text if its not actually practical to do so,  a working on it... will suffice or something to simply show that there isnt a hidden error in the backend or at least not freezing the page while its waiting (which is a hostage situation). This is just an example of an "oh wow" but with well motivated engineering practical reasons.
+Minor clarification: when i say oh wow it should be "oh wow" when giving a live demo whose "wow" factor has practical reasons and doesnt overly constrain the engineering of the design itself.
+
+
+THe user having to wait for an all-at-once completion of course is a hostage situation but of course it can't always be helped.
+
+## [REM-05] Self-improving systems and tightening the investigation loop
+
+### [REM-05.01] Progressively automate experiments and improve the system
+
+A philosophy i have for engineering is every experiement or system eventually run itself. that means you increasingly automate the work load and increasingly make itself more effecient. self-improving, self-fat trimming, self-experimenting.
+The most powerful thing I've seen about LLMs and the reason "agentic fluidity" is so valuable is because of effectively self-play between the data, response and the reasoner and the meta-reasoner/goal-director(the human). In fact, the tighter this loop the more the critical gain. Please trust and believe me when i say the future is going to be about autonomous experimentation, self-play experimentation and obsessing over tightening this loop. The enormously clever thing is getting a human in this tight loop, should they be in this tight loop? I believe for a human to be in this increasingly tightening loop they would have to effectively operate at the speed of thought, clone their mental self so the system deeply complements their workings.
+
+
+This is a personal opinion of mine but any good enough system should eventually asymptotically run itself
+
+## [REM-06] Heuristics and feature engineering
+
+### [REM-06.01] Static features: resolving power, cost, and failure taxonomies
+
 how to think about heuristics (inspired by  browser fingerprinting in a sort of way.) and "feature engineering" this is the way to look at it.
 a. think abobut the number of diferent heuristics you c ould grab and are currently grabbing
 b. rank or partial rank them in the "estimated" numbers of resolving bits they provide.
@@ -27,6 +201,8 @@ Of course, slightly more complicated, one could instead consider the utility of 
 as well as crossing or better partial ranking(when considering the representation space of the failure mode taxonomy) the confusion matrix and relevant cost of True Positive, True Negative, False Positive, False Negative(tentative name: the pragmatism of a feature). This fraction gives a good proxy for how to care about cost when it comes to this
  $\frac{\text{(benefits of success x success rate)}}{\text{(objective cost of failure) x (nuisance or irritability of failure : the pschological aspect) x (realistically perceived failure rate)}}$  . something that might be rare might be unusually pschologiclaly painful when it occurs so you should be careful when using that feature.
 If you do want to use these extended reasonings, much of the "assigning scores and ranks" can be drastically simplified by simply considering the marginal additivity. what do i marginally gain if a care about this next feature or this extended consideration  of it. After all we are engineers, not mathematicians. happy feature engineering
+
+### [REM-06.02] Dynamic features: adapting hypotheses from partial observations
 
 The above deals with static feature engineering, i have an extension:
 we will call this dynamics feature engineering or feature engineering dynamics, where one can use the intra-consistenct and pattern of what has been identified to dynamically adjust detections and feature relevance
@@ -42,6 +218,8 @@ The deeper distinction is between possessing a capability and economically compi
 
 In short semantic reasoners a. test and adjust hypothesis b. evaluate which hypothesis most explain the data. this is more  important than it initially seems and veils a dangerous warning, of given this "hypothesis" does it explain more of the data. the "hypothesis" can grab data but does it do a better job than static or return garbage(allow noise to be admissible due to dynamic adaptation).
 dynamical features engineering can actuaqlly adapt to and then subsequently include noise, for example someone can just smoothly vary features to get the dynamical to adapt to and admit anything as a sucess if you dont check it actually does a better job of explaining and performs better (and hopefully in higher quality than the raw initial static). Or the more subtle worse, cause it to reject things it previously accepted and should have accepted. We might want it to adaptively reject things, say because it's holding on to intra-consistency, but someone can smoothly vary features to it reject the vary things it should be accepting. of course, this is simply a natural issue. most things really can smoothly vary over time, its part of a lot of the powerful cognition semantic reasoners do but its also part of why semantic reasoners and humans can fall for traps, illusions and simply be conditioned to fail to see things. Basically the feature of adaptability is useful for a lot of natural problems but can also be maliciously(perhaps unintentionally) exploited by detuning the recognize and subsequently hiding stuff in sharp unnatrual statisitcal gradients where someone wants to "hide an exemplar object" by first detuning the adapter and then all of a sudden showing it the exempler object when its detuned enough(in this case the adapter is trickd cause its following the rule it must smoothly adapt to stuff.) or someone wants a "definitely wrong example" to be admitted as right by smoothly adapt the adapter till it admits their payload object.  This of course can be ameliorated by using a sufficient "initial golden data distribution" and introducing things like exponential or "degrees of statistical sigma(decreasing exponentials)" movement conditions centered around initialized data distribution. given a sufficient and sensible initial data initlization from the static heuristics, as displacement increases, the adaptation rate should itself decrease(or you can use an asymmetric "renormalizing" clause), as displacement monotonically increases, adaptation rate should decrease but if displacement increases but has slight reversals in direction, adaptation should be much more "accepting" if there is a clear renormalization going on(that is adaptation rate increases much more readily if a far displacement suddenly starts going left rather than it simply keeing right and asymmetrically so. of course, the really minor problem is that someone who knows this policy can "optimally" just "wobble" the movmenet but a net increasing displacement. This is to better deail with environments of sparse and uncertain initialization data using concepts of affinity to familiarity and increasing aversion to continued stress/change with "no breaks or rest times(meaning it doesnt necessarily have to woblle, it could just goo right and stop for a while"  such that the adapter does remain malleable over longer term periods
+
+### [REM-06.03] Domains of validity, trusted reference states, and meta-reasoning
 
 someone(chatgpt actually) asked me: what constitutes the domain of validity or trusted reference state(can it be reasoned algorithmically?):
 my response: trust reference state(or increasing trust) is off course solved (directionally) by the central limit theorem. sammple the data and you get an increasingly fair modal distribution. trsut decreases or grows more slowly when there is a lack of sensible variance(that is the data looks like a sharp line and not more curves within reasonable areas that should be under the toy/theoretical sigma example. so sample, distrust lack of varaince(hence hunt for it or perhaps hunt for the hypothesis on the lack of variance or to explain the variance) but trust and let confidence grow with sample size
@@ -77,70 +255,13 @@ c. consider if the hypothesis is even reasonable(or minimal and admissible(for e
 
 Slightly cleaning up before a future rewrite: The further danger is that dynamically adjusted features may become increasingly consistent with an unreasonable hypothesis. Semantic reasoners do not merely adjust hypotheses or compare explanatory fit; they also evaluate whether the hypotheses themselves are admissible, plausible, and economical relative to competing explanations. This distinction should be retained as a diagnostic consideration when naive dynamics produce coherent but absurd results, without necessarily requiring another standalone architectural mechanism.
 
-
-# On UI and Interfaces.
- Will i remember what this does a week from now, a motnh from now, in its current representaiton. how will the distribution profile of what i do change after a week, after a month assuming users become more directly effecient but also simultaneously more lazy(think about how a lot of language evolved from practicallity(commerce and trade), so quick sketches and marking etc and "laziness of writing" (the smoothing out and increasing hurried cursiveness ) of things like hieroglyphics to something like demotic which the traders used.
-Evaluate interfaces by the effort required to rediscover and correctly use a capability after its operational details have been forgotten. A capability that exist but cannot readily be found, understood, or invoked has diminished practical value. Good interfaces externalize operational memory while preserving access to underlying mechanisms.
-One should generally think about UI the way they think about the evolution of language, as long as the communication can remain obvious and looks distinct enough to slight blurring of ones eyes, it gets "lazier" over time.
-One could consider computing and commands including even RISCV vs CISC as an example of this, there are a lot of keyboard shortcuts but they follow power-laws of use which call into question if so many are even needed. most people know only a few and use even much less than what they know. the rest are so frequently unsued due to thinks like GUI options or iterative options(multi-step simpler options) that there are many capabilites people simply don't know exist.
- Complex things really do sound like nice, inviting and brilliant ideas(CISC) but can sometimes form powerlaws in their practical utilites and justifications. There is a landscape of really a highly frequently used and a graveyard of unused. of course, much of this is given humans with limited attention and reasoning frames. LLMs for example, have much more cognitive scratchpads to look and choose the precise thing for the precise purpose because what looks like complexity or untenable ot maintain in humans is more flat to LLMs with their value metrics moree so being precise- the precise tool for the precise job(if we focus on reasoning capabilites abstract away complexities and biases like training distribution)
-basically does complexity or a feature earn its existence?
-a. in isolation
-b.  holistically in the system given frequeny distribution of use?
-c. what about over time where limited users develop preferential attachment and lopsided memories?
-one does not need metric tracking for this, one could simply reason heursitically about this.
-
-
-A philosophy i have for engineering is every experiement or system eventually run itself. that means you increasingly automate the work load and increasingly make itself more effecient. self-improving, self-fat trimming, self-experimenting.
-The most powerful thing I've seen about LLMs and the reason "agentic fluidity" is so valuable is because of effectively self-play between the data, response and the reasoner and the meta-reasoner/goal-director(the human). In fact, the tighter this loop the more the critical gain. Please trust and believe me when i say the future is going to be about autonomous experimentation, self-play experimentation and obsessing over tightening this loop. The enormously clever thing is getting a human in this tight loop, should they be in this tight loop? I believe for a human to be in this increasingly tightening loop they would have to effectively operate at the speed of thought, clone their mental self so the system deeply complements their workings.
-
-Local effeciency is not  compositional effeciency, we naturally think of things as additive but systems have multiplicative costs.
-
-
-
-Abstraction.
-Investigation Budgeting
-Know how to obtain unfamiliar knowledge effeciently
-
-
-This is a personal opinion of mine but any good enough system should eventually asymptotically run itself
-
-
-one thiong i hate is when i push buttons and have no idea what happened,
- i fucking hate when somethign says failed retry but i have no reason or theres no visible report of the failuree so i cant even copy and paste into an LLM
-. remember if there are failures it should be clear to the human wqhat they are and they should be copyable for an LLM
-
- 
-Your system should not turn into a hostage situation with the user. The user should not be forced to understand the precise underlying details to be able to use the stuff. At the same time things can't be invisible to the user. If something fails to work it should also be apparent to the user but in a way where they aren't force to damn near be engineers who designed the system in the first place.
-
-Basically the user should be able to interact with intentions and on the intention level while your system must absorb the implementation details. The user shouldn't be required to be an engineer to use your system. A really good pattern I've seen recently for resolving this is a really friendly centralized "what's happening" pane" for whatever interaction or sequence of interactions the user might be performing and  a troubleshooting details button(toggle like to see actual details like say and error) with a copy details button(for things like pasting into an LLM)
-
-### Model the user as someone seeing a live demonstration
-
-A useful interface sanity check is to model the user as someone being shown the system for the first time while the engineer is standing next to them. Watch for the points where their eyes hesitate, where they ask what a label means, or where the demonstrator has to point at a control and explain what will happen before the user can act. Treat repeated explanation as interface friction, not merely as a user-education problem.
-
-The ideal is that the visible nouns and verbs correspond closely enough to ordinary intentions that the user can predict the next action before it is explained. Prefer "Ask" to a technically precise but socially awkward verb if "Ask" matches the user's intention. Prefer "Community", "Key contents", "Glossary", "Sources", and similarly ordinary concepts when those are what the user believes they are manipulating.
-
-A feature that is easy after a five-minute explanation may still be badly exposed. The engineer should therefore evaluate the interface under at least three conditions:
-1. **Cold demonstration:** can a first-time observer infer what to click and roughly what will happen?
-2. **Forgotten-operation return:** after a week or month, can the user recover the capability without reconstructing product internals?
-3. **Expert lazy use:** once familiar, can the user act at the speed of intention without the interface forcing ceremony or repeated explanation?
-
-When the demonstrator repeatedly finds themselves saying "what this really means is..." or "click this even though it sounds like...", first suspect the interface wording, grouping, or spatial model. Do not solve this reflexively with tours, onboarding overlays, or documentation; those can hide the underlying representational failure and impose permanent maintenance cost.
-
-If im giving a demo, would this be awkward? or a missed opportunity for an "oh wow". you should look at every critical UI element and ask, if i was giving a live demo, is there a missed opportunity for an  "oh wow", a lot of questions and clever features can be audited this way
-For example, in LLM, continuous text generation is an oh wow more so than an invisible wait then a complete all at once. Of course, we are engineers, not designers. , for example we don't actually need to stream text if its not actually practical to do so,  a working on it... will suffice or something to simply show that there isnt a hidden error in the backend or at least not freezing the page while its waiting (which is a hostage situation). This is just an example of an "oh wow" but with well motivated engineering practical reasons.
-Minor clarification: when i say oh wow it should be "oh wow" when giving a live demo whose "wow" factor has practical reasons and doesnt overly constrain the engineering of the design itself.
-
-
-THe user having to wait for an all-at-once completion of course is a hostage situation but of course it can't always be helped.
-# Recursive Combinatorial Exploration of System Behavior
+## [REM-07] Recursive combinatorial exploration of system behavior
 
 *A computational method for investigating complex systems when engineers, including LLMs, cannot reliably enumerate interacting behaviors mentally.*
 
 ### How to prevent issues from creeping up when systems get large. Especiialy for forgetful engineers and LLMs
 
-## 1. Construct the abstraction
+### [REM-07.01] Construct the abstraction
 
 At depth $d$, represent the identified system elements by a labeled graph
 
@@ -152,7 +273,7 @@ $E_d$ describes **relations among elements**, not yet transitions between global
 
 For every $V_d$, record **why these elements and states were chosen**, what distinctions are omitted, and which questions the abstraction is intended to answer.
 
-## 2. Audit every ordered pair
+### [REM-07.02] Audit every ordered pair
 
 Construct the complete $m\times m$ relation matrix $M_d$ over $V_d\times V_d$, including self-pairs. For each $(n_i,n_j)$, record one of:
 
@@ -165,7 +286,7 @@ Multiple relations may connect the same pair. A sequence $A\to B\to C$ is a **pa
 
 Every classification must be reviewable: someone should be able to ask *why is this pair labeled this way?*
 
-## 3. Refine recursively, with an explicit stopping rule
+### [REM-07.03] Refine recursively, with an explicit stopping rule
 
 Any element may itself contain a graph:
 
@@ -180,7 +301,7 @@ For **each** element, record either:
 
 A stopping decision is relative to the investigated property; it does not assert that the element is fundamentally indivisible.
 
-## 4. Specify events, knowledge, and admissible transitions
+### [REM-07.04] Specify events, knowledge, and admissible transitions
 
 Let $A_d$ be the labeled events. Define a possibly nondeterministic transition relation
 
@@ -194,7 +315,7 @@ Distinguish the **actual state** from each actor's observations, memory, and bel
 
 Unresolved relations should be explored as alternative possibilities where tractable, or explicitly bounded and excluded from the scope of any conclusion.
 
-## 5. Execute the combinatorial exploration
+### [REM-07.05] Execute the combinatorial exploration
 
 From initial states $R_0\subseteq S_d$, compute
 
@@ -207,7 +328,7 @@ $$
 
 This program manipulates **abstract labels and transition rules**. It does **not** execute the software, call its APIs, or require physical tests. Human intuition specifies the model; it does not substitute for computing the combinations.
 
-## 6. Investigate consequential violations
+### [REM-07.06] Investigate consequential violations
 
 Specify independently justified constraints, including state invariants $P(s)$ and transition obligations $Q(s,a,s')$. Specify the consequential failure set $F\subseteq S_d$ when appropriate: e.g. *unauthorized root access*, not merely *some bug exists*.
 
@@ -222,86 +343,18 @@ A defect's existence, its reachability, and its ability to cause a consequential
 
 Do **not** classify permissible surprises—old artifacts, delayed observations, interrupted operations—as violations merely because they are unusual. A failed constraint must be traceable to an actual system obligation.
 
-## 7. Review, correct, and rerun
+### [REM-07.07] Review, correct, and rerun
 
 For each counterexample, determine whether it represents (i) a feasible implementation defect, (ii) a mistaken requirement, or (iii) an artifact of an inadequate abstraction. Correct the implementation or specification and rerun the search. Absence of a counterexample proves nothing beyond the stated model and exploration bounds.
 
-### Required artifacts
+### [REM-07.08] Required artifacts
 
 The investigation is incomplete without: **(1)** the justified element/state inventory at each explored depth; **(2)** the complete labeled $m\times m$ relation audit; **(3)** refinement or stopping decisions; **(4)** the executable transition model and coverage report; and **(5)** shortest admissible counterexample traces supporting each failure claim.
 
 **Principle:** Engineers identify what can exist and how it may behave. Computation enumerates the admissible combinations. Neither an engineer nor an LLM is permitted to replace that computation with imagined scenarios or confidence based on an unexamined abstraction.
 
+## Original drafting note
 
+(woefully messy and incomplete with some stuff I have to clean up)
 
-## Locally brillaint, globally stupid (and multi-objectives)
-
-Engineers, systems and advice are often locally brilliant (especially in fragmentation) but globally stupid and entirely miss the big picture. In fact you should assume this by default. The big problem is one often swears by the sophistication of the individual components and use it as a proxy to swear by and complete miss what actually matters and the big picture questions. 
-
-## Problem Solving
-i would say the critical problem of todays AI is not that it cant follow this. It can:
-What problem are we actually facing?
-What information source has highest expected value?
-Has somebody already solved this?
-Is the documented abstraction even trustworthy?
-What experiment collapses the search space fastest?
-When should I abandon this approach entirely?
-
-the critical problem is unlike humans it doesnt actually know how to go between the layers and jump around on this. this is not a linear list, this is a ring where acquire information should tell an intleligent system which one to jump baack and forth to, sometimes you go back up, other times you go back down, other times you jump between different ones. in fact, any effecient intelligence ratios  should be able to determine when and how to jump between the various nodes of this in solving the problem. I talk about this in my notes on MP vs PS  architectures from von Neumanns book and why this matters in here(at the end, MP vs PS architectures) and here(species agnostic intelligence):
-crucially no one is saying that PS is not important or a failure of intelligence. we are saying that  people with  "loud voices"(benchmarks, conspicious problems) often mistake and swear by solving ability entirely missing the point of why we care about intelligence in the first place(which i help exposit in the second document). 
-
-
-$$\[
-\text{Problem-solving capability}
-=
-\text{operations available}
-+
-\text{policy for moving among operations} 
-+
-\text{Identifying the actual frequently unstated big picture goals(and the even more significantly harder the holistic big goal. ) and advancing towards them and ensuring the other two are relevant to them. This is particularly relevant for things like stopping points, admittance of failure and understanding or expositing why of failure .}
-.
-\]$$
-why the third one? consider this example, a human might practice or spend more time on an easy game level not because they can solve it but cause they realize the big picture is to win the game and identify that success in the harder levels requires perfecting their timings and muscle control. the holistic one is often significantly harder, after all maybe they really want to beat the game to impress their friends and so often just beating  a special level their friends could beat would actually suffice
-
-
-Problem-solving capability requires not only useful operations and intelligent movement among them, but continual identification of the actual objective those operations are supposed to serve—including unstated instrumental goals and, when relevant, the harder holistic goal behind the stated task.
-
-\[
-\boxed{
-\text{Effective problem solving}
-\approx
-\text{Goal identification/maintenance}
-\;\circ\;
-\big(
-\text{available operations}
-+
-\text{routing among operations}
-\big)
-}
-\]
-where the composition symbol is meant informally: the inferred goal supplies the criterion by which operations and transitions are judged useful.
-
-Because its so easy for even humans to forget the big picture and get pathologically mode-locked into one thing after a while, i would say for our engineering framework one must practice mindfulness of 
-a. the actual unstated big picture
-b. the holistic big picture
-
-This is something even individual humans struggle with: constraining towards the bigger picture, groups of varied human interests even more so(sometimes less so if productive friction) 
-and leaders and coordinatros(sans ego) who must satisfy the system, see and concern themselves with a lot-more variables and objectives and think long-term should be better at constraining towards the bigger picture.
-
-The one unique idea in fact i'd add to this (especially for LLMs) is establishing a "stopping tree" after considering big picture and holistic big picture goals. In fact I would add that "stopping paths" have "types of stops" with the one I'm particularly interested in being the (research/education) stopping point type. This is a stopping point at critical open-ended questions/problems that prompts the user to read various papers or do a bit of reading before proceeding. I'm of the firm belief that the more a human knows or has experience with a particular domain the fundamentally better they will be at using LLMs in that domain. They would have significantly better and more ambitious ideas, be much more effective at orchestrating and directing LLMs and would be fundamentally better when it comes to effeciency of work and effeciency of using LLMs. This is especially powerful or most useful when combined with the hoping/traversing policy of the ring I talked about earlier.
-The reason is not that the LLM cannot produce code. It is the humans ability to ask the next ambitious question improves after acquiring domain structure. Yes I just referred to humans in the third person, i think we should be forward thinking and anthropomorphize and genuinely begin to treat LLMs like a nascent co-human species. I use the word co-species instead of frightful asymmetric ideas like a dominant species because of my exposition on the PS(powerfully serial) and MP(massively parallel) architectures, there currently isn't a clearly superior one at least at the workflows i operate with currently but the MP really must be sufficiently capable
-
-After all, we are engineers, not mathematicians
-
-
-
-also as an engineer you shouldnt just destroy or ignore the existing work. there is a reason the existin work did certain things the way it did, pay attention to it to identify the unstated big picture and holistic picture it was attempting to solve even if the actually implementation might be unsavory. Engineers build on foundations, not tear it down every single time they have an opinion
-
-same goes with user requests, there is usually a big-picture insight or pain point we are trying to resolve. the least you can is ask clarifying questions and not make the mistake of misinterpreting or over-interpreting the request especially since they have a more nuanced pain point in their mind but can only be so economical with words. a user's example often points to a class of solutions, not a particular member of that class. They might use a specific word but we and users often dont mean literally that word(this warning is especially for AI where for some odd reason they get destructively-tunnel visioned, never do the smart thing and ask for clarification, and fail to realize when humans use words they preferentailly attach to say refering to "LLM instead of AI" when the human really means AI in general, humans are often referring to "the general idea of", or "the landscape of", or "the holistic idea of" or the "class with the example being" in the words they use, not literally the word.
-
-recognize, recognize, recognize when you are dealing with a solved problem or something with likely many partial existing works on github and stop wasting time redesigning ideas from scratch
-
-
-
-## Testcases
-We are engineers not mathematicians, test cases should be really cheap and test actual user flows. Not clean and synthetic idealistic worlds. In fact you should focus not on writing test cases but how to parameterize, automate and write fuzzing test cases, not hand-crafted solutions(especially warning for LLMs which for some reason love to waste time test-cases things that would obviously work and for some reason obsess with testing clean idealized behaviour and have extremely extremely poor insight into actual flow. They will invariably literally almost never test a minimal actual realistic case outside of what one can tell would obviously work from the code. Now that is a senseless way to write test cases isnt it? LLMs waste time asking all the wrong vacuous questions, testing all the wrong vacuous things, basically their test cases are usually essentially rhetorical and credit-wasting in this regard. There is the other absurd level where they would waste credits testing absurd stuff like packet drops or an "unrealistic crash scenario" (no one is saying those cant happen or shouldnt be accounted for, all we are saying is that there are most certainly more relevant stuff to test and if you have to worry about that and cant give a best guess what happens based on the code then the code architecture is just bad, the code should allow one to reasonably infer what happens to save compute on unnecessary test cases. We are intelligence and designers of reasonably inferrable expectations not trial-and-error brutes),textbook stuff that can happen but given the point of the project the user just cares about what often happens realistically, not what realistically might happen but is inconsequential cause not every project is a billion dollar project. Before doing a test, state why its necessary, reasons why its realistic, reasons why its unrealistic and if the test is actually justified by the big-picture of the project. Don't just import textbook ideas without connecting to relevant of what the actually constraints are. We are engineers not academics or theoreticians.)
+<!-- Structure-only reorganization; initial wording remains available in preceding Git history. -->
