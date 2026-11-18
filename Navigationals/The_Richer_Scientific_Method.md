@@ -4,7 +4,7 @@
 
 ## Reference and activation convention
 
-**Clause addressing.** Every substantive provision has a permanent **RSM** identifier. `RSM-04` denotes a section; `RSM-04.03` its clause; `RSM-09.C.01` a calibration case passage. These IDs identify **ideas and operational commitments**, not paper citations or evidentiary strengths. **Do not renumber an existing ID when editing**; append new IDs and mark deprecated text explicitly. The printed numeric section title is secondary to its stable RSM ID.
+**Clause addressing.** Every substantive provision has a permanent **RSM** identifier. `RSM-04` denotes a section; `RSM-04.03` its clause; `RSM-09.C.01` a calibration case passage. These IDs identify **ideas and operational commitments** to abide by. **Do not renumber an existing ID when editing**; append new IDs and mark deprecated text explicitly. The printed numeric section title is secondary to its stable RSM ID.
 
 **While investigating:** Cite the **smallest relevant RSM clause(s)** at the point where they materially guide a choice, rather than merely listing section numbers at the end. Example: `Why this representation: [RSM-03.02]`; `Backward constraint applied: [RSM-04.01]`; `Qualified result: [RSM-01.04, RSM-04.04]`. A report may group operational citations in a compact **method trace** so references don't interrupt every sentence. Cite external papers and primary evidence separately; an RSM citation is **not** external scientific support.
 
