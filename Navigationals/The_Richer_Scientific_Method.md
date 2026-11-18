@@ -108,29 +108,152 @@ Ultimately, the investigator should be able to reason about not just **what to i
 
 ## [RSM-02] Before solving: interrogate the question
 
-**[RSM-02.01]** An investigation must **earn its relevance**. Before extensive computation or reading:
+One of the most important things we should do before attempting to solve a problem is ask ourselves: **Are we even asking the right sort of question?**
 
-1. **[RSM-02.02]** **Recover the real intent.** Are we even asking the right sort of question? What distinction, ability, decision, explanation, or felt obstruction is actually sought? Does the stated question attack it, or merely an imprecise or underspecified, underclarified proxy?
-2. **[RSM-02.03]** **Audit presuppositions.** Does the wording assume a nonexistent mechanism, a defective baseline, an obligatory solution, or a misleading comparison? What alternative questions preserve the motivation without those assumptions? Basically if we are not asking the right sort of question, what is the landscape or set of questions that asymptotically address the area of what we care about. Like the landscape of questions that forms a convex hull on the initial question.
-3. **[RSM-02.04]** **Exploit prior experience.** Which successful and failed methods, analogies, historical theories, and already known constraints should affect the question? Is searching for *another trick* inferior to asking *what all earlier tricks had in common*? Basically, if there info somewhere out there that can help us ask the more relevant or precise set of questions than the initial one.
-4. **[RSM-02.05]** **Inspect answer consequences.** For plausible rival answers, what becomes possible, impossible, distinguishable, actionable, or newly questionable? A question has investigative value when its answers might materially alter the relevant landscape; intrinsic curiosity may itself be a valid goal.
-5. **[RSM-02.06]** **Choose resolution, not ceremony.** Start with the narrowest question that reveals useful structure, or a broader one if the narrow formulation prejudges the mechanism. Reframe at any stage. Do not invent tests or claim a model defect merely to justify more research.
+Often, a question is simply our first attempt at expressing some underlying curiosity, problem, or ambition. We might have an intuitive sense of what we're trying to understand or accomplish without yet knowing how to formulate the question properly.
 
-**[RSM-02.07]** The question is not merely a target predicate handed to a solver. It is revisable as a result of evidence, failed predictions, exposed presuppositions, and the investigator’s evolving sense of the underlying problem. **The same question can be illuminating under one representation and deeply misleading under another.** Basically the question itself should evolve as more info gets discovered, investigated or revealed.
+This is why we shouldn't immediately commit ourselves to answering the initial question \(Q\). Instead, we should investigate the broader landscape of questions it belongs to, including its parent purpose \(P(Q)\), alternative formulations, and the other questions that might help us better understand what we actually care about.
 
-**[RSM-02.08]** Question selection is **itself information acquisition**: analogous to choosing observations for localization, choose questions/probes to learn useful regions, boundaries, and causal consequences of the possibility landscape per unit cost. There is no mandatory numeric question-score.
+### [RSM-02.01–02.03] Recover the real intent and examine our assumptions
+<!-- RSM-02.01 RSM-02.02 RSM-02.03 -->
 
-**[RSM-02.09]** **Recover the bigger problem before repairing its wording.** A user's stated question is evidence of an intellectual intention, **not necessarily its best mathematical or empirical formulation**. Before accepting or rejecting its premise, reconstruct the surrounding *family of questions*: (a) what is the underlying curiosity or obstacle; (b) what distinct questions have become conflated; (c) which alternative formulations preserve that curiosity while making different explanatory possibilities accessible; and (d) which **small, justified question set** most economically distinguishes the consequential alternatives? Do not merely substitute a narrower, technically tractable proxy that loses the original motivation. Explain how each chosen question earns its place by identifying what its possible answers would change. Use the set to guide the investigation, and revisit it as the landscape develops. **Failure signature:** confidently answering a literal but misleading question, or replacing it with a tidy academic problem that no longer investigates what the person wanted to understand.
-Basically, when applying this rule, you should provide a clarifying set of questions to the user’s question to better understand what they are really trying to ask but themselves not really realize. The clarifying set could also help the user better communicate the landscape set of questions they actually care about.
+We should start by asking what motivated the question in the first place. What are we actually trying to understand, explain, discover, or accomplish? Is the question itself what we care about, or is it simply one possible route toward a bigger goal?
 
-**[RSM-02.10]** **Reformulate by alternating upward purpose and backward necessity (Apollo calibration).** For a naive, misleading, or prematurely implementation-specific question, first ask what outcome the question was meant to secure; then work backward to the smallest set of actual obligations, evidence and time/resource constraints that outcome imposes. Explicitly separate **necessary requirements** from assumptions imported by a proposed implementation. Iterate upward and downward until successive reformulations no longer materially change the available routes or discriminating evidence; then investigate rather than endlessly rewrite. Keep the original question as provenance. **A better question earns its status by exposing consequential alternatives or removing needless constraints, not by sounding grander.** Do not claim the method historically invented a solution when reconstructing a known case retrospectively. **Failure signature:** treating an onboard-computer speed limitation as the mission objective, or endlessly reformulating without producing an actionable investigation.
+For example, suppose someone asks, "How can we make this computer faster?"
 
+Before searching for faster processors or optimization techniques, we might ask what they're actually trying to accomplish. Perhaps they want to run a particular simulation, reduce the time needed for a calculation, or make an application more responsive.
 
-**[RSM-02.11]** **Navigate recursively between the task, its parent purpose, and the parent's purpose.** At any scale—experiment, component, project, program, or the choice of which inquiry to pursue—ask both **downward the tree**: *What does this objective actually require?* and **upward the tree**: *Why do we want this objective; is it just a proxy or practice vehicle for a more general capability?* Repeat upward only while the answer could change the target, that is, go up the tree when a small difference in the answer or resolution of what is understood could materially affect the kind of conclusions or results even reachable in the big picture, and descend the tree only to the resolution needed to have any sort of confidence in the current choice. Keep and maintain multiple legitimate and even possible competing purposes (e.g. owning an RC car versus learning to build RC devices in general) distinct rather than silently replacing one. This is because we care about landscapes and sets to actually understand the relevant surface area of what we are addressing rather than just the solution itself. When an instrumental goal changes, reuse certified subwork but reconsider the architecture and learning path. **Stop the upward navigation when a sufficiently well-grounded purpose is reached; stop downward refinement when interfaces and obligations suffice for the parent decision and further depth won’t obviously materially affect the outcomes in the upper parents.** Apply the same comparison to meta-choices between investigations: expected useful information and transferable learning versus time, risk, and redundant coverage, without manufacturing numerical scores. **Failure signature:**  endlessly questioning purposes instead of making progress.
+These are different problems, and they open up different landscapes of possible solutions. A faster computer might be one answer, but so might a different algorithm, a better representation of the problem, parallel computation, or eliminating unnecessary work entirely.
 
+We should also examine the assumptions embedded in our questions. Does the question already assume a particular mechanism, explanation, or solution? Are we treating something as a necessary constraint when it's merely a consequence of how we've currently represented the problem?
 
-**[RSM-02.12]** **Explore the landscape of questions, not only answers.** A candidate question is a provisional representation of a parent purpose, not a privileged root. Before substantial commitment, sample a *small consequential neighborhood*: its inverse or failure case; creation versus persistence versus dissolution; complementary questions at other scales; boundary cases; alternatives that could serve the same purpose; and questions that test the premises of the parent purpose itself. Prefer contrasts that reveal distinct causal variables or change which investigations deserve resources, rather than enumerating rhetorical opposites. Keep the parent’s motive and question alternatives distinct, with explicit **why this alternative? / what answer would change?** links. Return to the parent when new contrasts cease to change the actionable landscape. Basically you must be able to explain briefly why any given question is even relevant or the right sort of question by looking at the landscape it lies in.
+Part of the power of the investigation tree is that we can even ask an apparently "dumb" question, such as **"Can I make an RC plane out of cardboard?"**, yet arrive at a very rich answer and understand the trajectory of reasoning that led us there. This allows us to quickly expose or root out the assumptions embedded in the original question and discover the richer landscape of questions it belongs to.
 
+The point isn't to endlessly criticize every question. It's to reason more clearly and objectively about what actually matters, which questions are relevant, and whether our current formulation is unnecessarily restricting the possibilities we could investigate.
+
+### [RSM-02.04] Learn from what others have already figured out
+
+Before investing substantial effort in an investigation, we should consider what we can learn from previous investigations, existing scientific literature, historical examples, and the experiences of people who have encountered similar problems.
+
+Often, the most useful information isn't another direct answer to our question, but some underlying principle, analogy, or previously discovered obstruction that changes how we understand the problem itself.
+
+For example, if several different approaches to a problem have failed, we should ask what those failures have in common. Are they revealing a shared constraint? Are we repeatedly making the same assumption? Could there be a more general representation that explains why these approaches encounter similar difficulties?
+
+We should use prior knowledge not just to find solutions, but to discover better questions and more useful ways of organizing the investigation.
+
+### [RSM-02.05–02.06] Understand what answering the question would actually change
+<!-- RSM-02.05 RSM-02.06 -->
+
+Another useful way to evaluate a question is to consider its possible answers before committing substantial resources to investigating it.
+
+Suppose the answer turns out to be A rather than B. What would that actually change? Would we understand the system differently? Would it reveal a new possibility, rule out an approach, expose an important constraint, or help us make a consequential decision?
+
+If the plausible answers wouldn't materially change anything relevant to the larger investigation, perhaps we're focusing on the wrong question or investigating it at an unnecessarily fine level of detail.
+
+This doesn't mean every investigation needs an immediate practical application. Curiosity and the desire to understand something can themselves be perfectly legitimate purposes.
+
+The idea is to understand **why a question is worth asking in the context of the broader investigation**, rather than manufacturing questions, experiments, or increasingly elaborate analyses simply for the sake of having something to investigate.
+
+We should also be willing to revise our questions as we learn. Sometimes a narrow question is exactly what we need to make progress. Other times, we need to move upward toward the bigger picture or explore alternative questions before deciding which branch deserves our attention.
+
+### [RSM-02.07] Questions should evolve as our understanding evolves
+
+A question isn't something we formulate once and then blindly pursue until we arrive at an answer. The question itself should evolve as we learn more about the problem.
+
+As we investigate, we might discover new mechanisms, encounter unexpected obstructions, find better representations, or realize that some of our original assumptions were mistaken. Any of these discoveries could materially change which questions are worth asking next.
+
+In other words, **the trajectory of an investigation should influence the questions we ask, rather than having our initial questions dictate the entire trajectory**.
+
+### [RSM-02.08] Choosing questions is itself a form of investigation
+
+We shouldn't think of question selection as something that happens only before the real investigation begins. Figuring out what to ask next is itself part of learning about the problem.
+
+For any candidate question, we can consider what its possible answers would reveal, what assumptions they could challenge, what new branches they might open up, and whether answering it would help us understand the bigger picture.
+
+Take our earlier question: **"Can I make an RC plane out of cardboard?"**
+
+Before even investigating it, we can explicitly write down a few potential answers and think about what we would do next depending on which answer turns out to be true.
+
+| Potential answer | What would we investigate next? |
+|---|---|
+| **A. No.** | Why not? And why not exactly? What physical, structural, or aerodynamic constraints prevent it? |
+| **B. No, unless we do A, B, C.** | What modifications or additional conditions would make it possible? More importantly, do these modifications actually preserve the *spirit* of our original question, or have we effectively changed what we're trying to accomplish? |
+| **C. Yes.** | Can we find research papers, YouTube videos, or actual working examples of someone doing this exact thing? What can we learn from their experience? |
+| **D. Yes, but it's limited to X, Y, Z.** | What exactly are those limits? Why do they exist? Could we explore or extend them, and what happens as we approach those boundaries? |
+
+Notice how each possible answer leads to a different trajectory of investigation. Even before knowing which answer is correct, we've already begun exposing the assumptions, constraints, and broader landscape of questions surrounding our original curiosity.
+
+In fact, **it's good practice to explicitly write down potential answers and what we would do next based on those answers before beginning an investigation**. I haven't seen this done very often as an explicit practice in scientific literature, but it can be a useful way to reason more clearly about why we're asking a question in the first place.
+
+This also helps us recognize when a particular answer wouldn't actually satisfy what we originally cared about. For instance, if building a cardboard RC plane requires replacing most of the cardboard with conventional structural materials, we might technically have achieved flight without preserving the spirit of the original question.
+
+The point isn't to predict every possible answer or construct an exhaustive decision tree. It's to consider a useful range of plausible answers, including surprising or conditional ones, and understand what each would change about our understanding or next steps.
+
+Doing this helps us ask better questions, better understand the big picture, and explore the landscape of questions we actually care about.
+
+This is somewhat like choosing where to explore on an unfamiliar map. We don't necessarily need to examine every location. We want to investigate the regions, boundaries, and connections that could most meaningfully improve our understanding of the landscape.
+
+### [RSM-02.09] Recover the bigger problem, not just a better-sounding question
+
+When someone asks a question, we shouldn't assume they've already identified the most useful way of expressing what they actually care about.
+
+Rather than simply rewriting their question into something more technically precise, we should try to understand the underlying curiosity, problem, or ambition that motivated it.
+
+From there, we can explore the broader set of questions that might address that purpose. Some might be more fundamental, others more practical, and others might expose entirely different possibilities or explanations.
+
+For example, if someone asks how to build a faster RC car, perhaps they're interested in improving its top speed. But they might actually care about learning how to design high-performance RC vehicles, understanding the physical limits of their design, or developing general skills in mechanical and electrical engineering.
+
+These different parent purposes would lead to different investigation trees, even though they began with the same question.
+
+The goal is not to arbitrarily replace someone's question with one we consider more sophisticated. It's to help them understand the landscape well enough to reason clearly and more objectively about which questions are actually relevant.
+
+### [RSM-02.10] Navigate upward toward purpose and backward toward requirements
+
+One useful way of navigating an investigation tree is to alternate between asking **why we want something** and **what would actually be required to accomplish it**.
+
+Suppose we're trying to build a particular system and encounter a technical limitation. Rather than immediately attempting to overcome that limitation, we can move upward in the tree and ask what the system was originally supposed to accomplish.
+
+We can then work backward from that bigger goal to identify its actual requirements, constraints, and possible approaches.
+
+This helps us distinguish between constraints that are genuinely necessary and constraints that only exist because of the particular implementation we've chosen.
+
+The Apollo program offers a useful historical example to investigate here. Rather than treating the limitations of an onboard computer as the fundamental problem, we can ask what navigation, guidance, and control capabilities the mission actually required, and then investigate the different ways those capabilities could be realized under the available hardware and operational constraints.
+
+The broader idea is that **a limitation in one proposed solution isn't necessarily a limitation of the underlying goal**.
+
+### [RSM-02.11] Navigate recursively between the question, its parents, and its children
+
+An investigation tree isn't something we can only move downward through.
+
+Any question or problem might have a parent representing its bigger purpose, and that parent might itself belong to an even more holistic investigation. Similarly, any node might be decomposed into constituent questions, subproblems, mechanisms, or constraints.
+
+We should be able to move between these levels depending on what we're trying to understand.
+
+For example, suppose we're learning how to build an RC car. We might descend into questions about motors, batteries, gearing, steering, control systems, and mechanical design.
+
+But we might also move upward and ask why we're building an RC car in the first place. Are we trying to own a working vehicle? Learn how to build RC devices generally? Develop a better understanding of robotics? Or use the project as a way to build practical engineering competence?
+
+Each answer could change which constituent problems deserve our attention and how deeply we should investigate them.
+
+We should also recognize that a question can serve several legitimate parent purposes. We don't necessarily have to collapse these into one.
+
+The important thing is to maintain a clear understanding of how the constituent problems relate to the bigger picture, and whether investigating a particular branch is actually helping us accomplish or understand what we care about.
+
+We should stop moving upward when we've reached a sufficiently clear understanding of our purpose, and stop decomposing downward when further detail is unlikely to materially change the conclusions or decisions we need to make at the parent level.
+
+### [RSM-02.12] Explore the landscape of questions, not just the landscape of answers
+
+An initial question is only one possible entry point into a much richer landscape.
+
+We can explore nearby questions, competing formulations, inverse questions, boundary cases, questions at different scales, and alternative approaches to the same parent purpose.
+
+For instance, if we ask, "How do we make an RC plane fly?", we might also ask what prevents it from flying, what makes it stable or unstable, which components are actually necessary, how different designs achieve flight, or whether the assumptions behind our proposed design are even justified.
+
+These aren't simply additional questions to answer for the sake of completeness. Each can expose different mechanisms, constraints, or possibilities that change how we understand the original problem.
+
+Ideally, we want to develop a sufficiently rich landscape of questions that we can understand not just how one particular solution works, but **what broader family of possibilities it belongs to and why different approaches succeed or fail**.
+
+We don't need to enumerate every conceivable question. We should explore enough of the landscape to identify the relevant distinctions, understand the meaningful alternatives, and decide where further investigation would actually contribute something.
 
 ## [RSM-03] Representation: find the right problem, not just a faster solver
 
