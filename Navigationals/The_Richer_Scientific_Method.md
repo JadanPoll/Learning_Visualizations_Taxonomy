@@ -23,13 +23,13 @@
 - **[RSM-01.03]** **Question (Q):** What the investigator actually wants to understand or change: target predicates or possibilities, horizon, permitted operations, acceptability/safety constraints, multivariate preferences where applicable, relevant distinctions, and tolerable uncertainty or cost. *Do not presuppose that the status quo is defective, or that a single optimum exists.*
 - **[RSM-01.04]** **Certificate (C):** A reusable, qualified result: claim, evidence, assumptions, model/version, dependence on prior beliefs, method or derivation, scope, alternatives, sensitivity, falsifiers, unresolved branches, approximation and uncertainty, and implications for the question. A conjecture can be certified **as conjectural**, with good reasoning given for “why the conjecture”.
 
-**[RSM-01.05]** **Investigator:** a human, LLM, or group applying appropriate tools to `(M, B, Q) → C` and revising these objects in a loop. Forward simulation, proof, historical comparison, experiment, Bayesian inference, optimization, games, etc. are possible *methods*, not additional mandatory engines.
+**[RSM-01.05]** **Investigator:** a human, LLM, or group applying appropriate tools to `(M, B, Q) → C` and revising these objects in a loop. Forward simulation, proof, historical comparison, experiment, Bayesian inference, optimization, games, etc. are possible *methods*, not necessarily additional mandatory engines.
 
 ## [RSM-02] Before solving: interrogate the question
 
 **[RSM-02.01]** An investigation must **earn its relevance**. Before extensive computation or reading:
 
-1. **[RSM-02.02]** **Recover the real intent.** What distinction, ability, decision, explanation, or felt obstruction is actually sought? Does the stated question attack it, or merely a convenient proxy?
+1. **[RSM-02.02]** **Recover the real intent.** Are we even asking the right sort of question? What distinction, ability, decision, explanation, or felt obstruction is actually sought? Does the stated question attack it, or merely an imprecise or underspecified, underclarified proxy?
 2. **[RSM-02.03]** **Audit presuppositions.** Does the wording assume a nonexistent mechanism, a defective baseline, an obligatory solution, or a misleading comparison? What alternative questions preserve the motivation without those assumptions?
 3. **[RSM-02.04]** **Exploit prior experience.** Which successful and failed methods, analogies, historical theories, and already known constraints should affect the question? Is searching for *another trick* inferior to asking *what all earlier tricks had in common*?
 4. **[RSM-02.05]** **Inspect answer consequences.** For plausible rival answers, what becomes possible, impossible, distinguishable, actionable, or newly questionable? A question has investigative value when its answers might materially alter the relevant landscape; intrinsic curiosity may itself be a valid goal.
