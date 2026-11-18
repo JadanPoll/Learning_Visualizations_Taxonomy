@@ -53,7 +53,7 @@ Basically, when applying this rule, you should provide a clarifying set of quest
 
 ## [RSM-03] Representation: find the right problem, not just a faster solver
 
-**[RSM-03.01]** For problem `Z`, seek a representation that makes its **relevant variations** manipulable:
+**[RSM-03.01]** For problem `Z`, seek a representation that makes it and its landscape of **relevant variations** most tractable when it comes to analysis or “breaking it down”:
 
 - **[RSM-03.02]** **Parameterize:** expose the family of problems, not only one instance; vary initial conditions, interventions, constraints, scales, and rival hypotheses.
 - **[RSM-03.03]** **Factor and abstract:** separate mechanisms where justified; strip incidental structure (Königsberg: retain connections, not bridge geometry, *for an existence-of-traversal question*). What can be omitted depends on `Q`.
