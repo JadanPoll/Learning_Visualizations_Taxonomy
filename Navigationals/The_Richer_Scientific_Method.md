@@ -236,3 +236,5 @@ Basically, when applying this rule, you should provide a clarifying set of quest
 
 
 Minor reference note for review purposes: This document was made in collaboration and heavy discussion with https://chatgpt.com/c/6ad594f7-fde8-83e9-a0ea-f268b6e46a1d
+
+<!-- Diagnostics: connector payload test on disposable branch only. -->
