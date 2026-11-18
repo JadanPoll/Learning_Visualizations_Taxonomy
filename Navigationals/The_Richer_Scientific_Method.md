@@ -30,12 +30,81 @@ This is particularly important when working with large language models, where we
 
 ## [RSM-01] The kernel: four epistemic objects, one investigator
 
-- **[RSM-01.01]** **Model (M):** The current representation(s) of the problem: state, mechanisms, dynamics, observations, parameters, actors and incentives where relevant, constraints, admissible interventions or transformation grammar, and *rival theories*. May be partial, heterogeneous, and domain-specific.
-- **[RSM-01.02]** **Belief (B):** What is known, hypothesized, or uncertain about states, parameters, mechanisms, feasible actions, and models; priors, observations, historical context, and their provenance. A posterior distribution, admissible set, or explicitly fixed assumption are all legitimate.
-- **[RSM-01.03]** **Question (Q):** What the investigator actually wants to understand or change: target predicates or possibilities, horizon, permitted operations, acceptability/safety constraints, multivariate preferences where applicable, relevant distinctions, and tolerable uncertainty or cost. *Do not presuppose that the status quo is defective, or that a single optimum exists.*
-- **[RSM-01.04]** **Certificate (C):** A reusable, qualified result: claim, evidence, assumptions, model/version, dependence on prior beliefs, method or derivation, scope, alternatives, sensitivity, falsifiers, unresolved branches, approximation and uncertainty, and implications for the question. A conjecture can be certified **as conjectural**, with good reasoning given for “why the conjecture”.
+To address this, we start by breaking down any process or investigation into four main objects: **Model (M), Belief (B), Question (Q), and Certificate (C)**.
 
-**[RSM-01.05]** **Investigator:** a human, LLM, or group applying appropriate tools to `(M, B, Q) → C` and revising these objects in a loop. Forward simulation, proof, historical comparison, experiment, Bayesian inference, optimization, games, etc. are possible *methods*, not necessarily additional mandatory engines.
+These aren't meant to be four rigid steps that every investigation must follow. They're a way of keeping track of different parts of our reasoning so that we don't confuse our assumptions with observations, our questions with the underlying problems, or our conclusions with the evidence supporting them.
+
+### [RSM-01.01] Model (M)
+
+A model is our current representation of the problem or system we're investigating. It might describe the system's state, its decomposed parts, the relations amongst those parts, its constraints, and its dynamics.
+
+The central metaphor and representation we use in RSM is that of an **investigation tree**. We can start with a problem or question at the root and progressively decompose it into its constituent parts, subproblems, questions, mechanisms, and relationships. Each branch can itself become an investigation with its own models, questions, and further branches. This gives us a way of navigating between the big picture and the individual parts of a problem, at whatever level of detail is relevant.
+
+The root itself can also have parents. Its parent might represent the bigger picture or overarching purpose that the current investigation belongs to. More generally, the entire investigation tree could itself become part of another tree, allowing us to navigate toward an even more holistic picture of the problem and its surrounding landscape.
+
+Importantly, the tree isn't necessarily the actual causal structure of the system. Relations can exist between branches, and different ways of decomposing the same problem may reveal different things. The tree is a way of organizing our reasoning and navigating the investigation.
+
+A model doesn't have to be a mathematical equation or a fully developed theory. It could be a diagram, a simulation, a causal explanation, a collection of observations organized into a useful structure, or several competing representations of the same problem.
+
+The model itself is also something we can investigate and revise. A problem that appears difficult under one representation might become much easier under another. We shouldn't assume our first way of looking at a problem is necessarily the most useful one.
+
+### [RSM-01.02] Belief (B)
+
+Beliefs represent our knowns, hypotheses/ansatz/intuitions/safe and well-reasoned assumptions, napkin-math-like assumptions, unknowns, and unknown unknowns.
+
+We should distinguish between things we've directly observed, things we've inferred from evidence, hypotheses we're considering, and assumptions we've temporarily adopted to make progress. We should also understand, reference, and certify where those beliefs came from, what evidence supports them, and what could cause us to revise them—that is, be capable or aware of sanity checks that could be done to understand within what reasonable scenarios our beliefs hold and when they might no longer hold.
+
+Within our investigation tree, different branches might involve different assumptions, competing explanations, or varying degrees of uncertainty. For example, we might understand how one component of a system behaves while remaining uncertain about how it interacts with another. We can continue investigating the parts we understand without pretending that the rest of the system is equally well understood.
+
+Beliefs aren't necessarily numerical probabilities. Sometimes uncertainty can be described mathematically, while in other situations it's more practical to explicitly state what we know, what we don't know, and which possibilities remain open.
+
+### [RSM-01.03] Question (Q)
+
+A question describes a curiosity, a doubt, a need to understand, explain, discover, or change something.
+
+As discussed in the Purpose, often we don't actually care about the question in itself, but the broader landscape of questions it belongs to, where our initial question is simply an element in that set.
+
+Within our investigation tree, a question can be decomposed into subquestions, related to other questions, or traced upward to its parent purpose \(P(Q)\). We can ask whether the question itself is even the right sort of question to investigate, what other questions might be more relevant, and what the possible answers to those questions would change about our understanding of the bigger picture.
+
+Questions themselves should also evolve throughout an investigation. As we discover new information, examine competing explanations, or encounter unexpected obstructions, we might discover that our original question was too narrow, relied on an incorrect assumption, or overlooked something more fundamental.
+
+The best questions are often the first-principles or childlike ones, such as **"How do you make an RC car?"** These seemingly simple questions often form the richest investigation trees because they open up entire landscapes of possibilities, mechanisms, constituent problems, and alternative approaches that more narrowly formulated questions might overlook.
+
+### [RSM-01.04] Certificate (C)
+
+A certificate represents what we've actually established or learned from an investigation, including the reasoning, evidence, and trajectory that led us there.
+
+It's basically like the references you see indexed and put at the end of a research paper. If anyone doubts a line of your inference, has misgivings about your interpretation of something, or is genuinely curious about what you synthesized a particular line of reasoning from, they could literally just check the first-hand resource themselves.
+
+As discussed in the Purpose, the goal isn't just to arrive at an answer but to understand the answer itself, the trajectory to that answer, and what subconditions, assumptions, or constraints could materially change it.
+
+We should be able to **reference and certify our conclusions**. That is, understand what we're claiming, why we believe it, what evidence or prior results support it, what models and assumptions it depends on, and within what reasonable scenarios it remains valid. We should also be capable or aware of sanity checks, counterexamples, or experiments that could challenge those conclusions.
+
+Within our investigation tree, certificates allow us to preserve what we've learned from individual branches and use those results in the larger investigation. Once we've investigated a subproblem sufficiently for the purposes of its parent, we can collapse that branch into a useful summary of its findings, assumptions, and limitations, rather than repeatedly investigating the same things from scratch.
+
+Importantly, a certificate doesn't necessarily mean we've proven something true. We might have established a mathematical result, gathered empirical evidence, developed a well-reasoned hypothesis, or identified an obstruction that prevents us from proceeding further. The certificate should reflect what we actually know and what remains uncertain.
+
+This gives us a consistent and inspectable way of building upon previous investigations, whether we're working alone, collaborating with other people, or using LLMs to investigate different branches of a problem.
+
+### [RSM-01.05] Investigator
+
+The investigator is whoever is conducting the investigation, whether that's a human, an LLM, or several people and models working together.
+
+We can think of an investigation as a process in which the investigator works with the current Model, Beliefs, and Question to produce a Certificate:
+
+\[
+(M,B,Q)\longrightarrow C
+\]
+
+But this isn't a one-way process where we simply input a question and receive an answer. **The investigation is itself a continuous process of learning, questioning, experimenting, and revising our understanding.** What we discover might change our beliefs, reveal limitations in our model, or even cause us to reconsider whether we were asking the right sort of question in the first place.
+
+Within our investigation tree, we can navigate upward toward the bigger picture, downward into constituent problems, or across branches to investigate relationships, competing explanations, and alternative approaches. Each branch can become its own investigation, with its own questions, models, beliefs, and certificates. What we learn in one branch might materially change what we should investigate in another.
+
+Depending on the problem, we might use experiments, mathematical proofs, simulations, historical comparisons, computational searches, or other methods. The point isn't to prescribe one universal sequence of operations, but to give us a consistent methodology for selecting and applying whichever methods are actually relevant to the investigation.
+
+This also allows different investigators to work on different parts of a problem while preserving a shared understanding of the bigger picture. For example, one investigator might research existing scientific literature, another might develop a simulation, and another might investigate competing explanations. Their findings can then be brought back into the larger investigation to expand on, contribute to, resolve, or debate the need for any node in the investigation tree, with their reasoning, assumptions, evidence, and limitations preserved.
+
+Ultimately, the investigator should be able to reason about not just **what to investigate next**, but **why that investigation is relevant, what its possible outcomes could change, and whether it is worth pursuing relative to the bigger picture**.
 
 ## [RSM-02] Before solving: interrogate the question
 
