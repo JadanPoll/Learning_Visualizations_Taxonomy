@@ -257,18 +257,172 @@ We don't need to enumerate every conceivable question. We should explore enough 
 
 ## [RSM-03] Representation: find the right problem, not just a faster solver
 
-**[RSM-03.01]** For problem `Z`, seek a representation that makes it and its landscape of **relevant variations** most tractable when it comes to analysis or “breaking it down”:
+One of the most powerful things we can do when investigating a problem is change how we represent it.
 
-- **[RSM-03.02]** **Parameterize:** expose the family of problems, not only one instance; vary initial conditions, interventions, constraints, scales, and rival hypotheses.
-- **[RSM-03.03]** **Factor and abstract:** separate mechanisms where justified; strip incidental structure (Königsberg: retain connections, not bridge geometry, *for an existence-of-traversal question*). What can be omitted depends on `Q`.
-- **[RSM-03.04]** **Lift / introduce ghost variables:** invent auxiliary coordinates, latent states, intermediate stages, effective mechanisms, or new objects that simplify constraints; solve or explore in this enlarged space, then **back-constrain/reconstruct** what must hold in the original problem (as in cubic substitutions). More variables can mean less conceptual work.
-- **[RSM-03.05]** **Coarse-grain and renormalize:** group mechanisms or causal pathways if their distinctions do not materially change the question's consequences. Preserve probability mass, rare/high-impact routes, and uncertainty; do not merge merely because instances look similar.
-- **[RSM-03.06]** **Keep competing descriptions:** a wrong or incomplete mechanism may yield valid conditional or effective results. Preserve useful relationships while revising explanations (Carnot despite caloric; phenomenology before microphysics).
-- **[RSM-03.07]** **Refine adaptively and investigate obstructions as wholes:** split a variable, time scale, branch, mechanism, or level of explanation **only when a theory or observed obstruction justifies why the distinction could matter**. When a consequential obstruction is isolated, temporarily treat that branch as a complete problem: characterize its ordinary regime, exceptional regime, trigger/boundary, cascade or dependency reach, and what its resolution would change in the parent question. Then compare parameterizations, coarser effective descriptions, increased local resolution, auxiliary/ghost variables, alternative encodings, and backward constraints. **Every refinement must carry a stopping condition tied to the parent question. More detail is not inherently more explanatory**; use the least expensive representation preserving the relevant failure mode and its consequences. A *reasoning hierarchy* need not be the true causal graph; feedback, cross-links, and global constraints remain visible. **Failure signature:** refining many irrelevant leaves while the branch’s global obstruction remains undescribed, or treating a rare catastrophic case as merely an outlier of average behavior.
+Often, a problem appears difficult not necessarily because the underlying problem is inherently difficult, but because of the particular way we've chosen to formulate or represent it.
 
-**[RSM-03.08]** The criterion is **adequacy relative to Q**, not maximum detail, minimum variables, universal elegance, or an exhaustive ontology. Avoid compressing away tensions and analogies that could expose a new structure.
+Within our investigation tree, we should therefore be able to do more than simply decompose a problem into increasingly smaller parts. We should be able to reorganize the tree itself, introduce new ways of describing the problem, explore competing representations, and investigate how these changes affect what becomes possible to understand or solve.
 
-**[RSM-03.09]** **Search for a tractable analogue of an identified obstruction.** Once a branch has isolated a difficult property (e.g., rare local disturbances requiring costly global revision), deliberately look for **other mathematical, historical, and engineering systems with the same structural difficulty**. Choose analogues for (a) a precise correspondence between relevant variables/constraints; (b) simplicity sufficient to calculate, vary, or falsify something; (c) established theory and informative successes/failures; and (d) the ability to generate new questions about the original problem. Keep a **translation certificate**: what corresponds, what does not, which conclusions transfer only conditionally, and what observable in the original would test the transfer. An analogue is a candidate model, **not evidence of equivalence**; preserve several competing analogues rather than selecting the most vivid story. **Failure signature:** treating a metaphor as mechanism, or investigating only the successful regime of a method while ignoring where its cost or validity abruptly deteriorates.
+### [RSM-03.01–03.03] Parameterize, decompose, and abstract
+<!-- RSM-03.01 RSM-03.02 RSM-03.03 -->
+
+When representing a problem, we should first try to understand the broader family of problems it belongs to, rather than treating the particular instance we're investigating as something completely isolated.
+
+For example, if we're investigating how to build an RC plane out of cardboard, we could consider a family of possible designs with different masses, wingspans, structural arrangements, materials, propulsion systems, and flight conditions.
+
+Instead of only asking whether one particular cardboard plane can fly, we can investigate how changing these parameters affects what is possible.
+
+This is **parameterization**: identifying the variables and conditions that define a broader landscape of related problems.
+
+We can then **decompose** the problem into constituent parts and their relationships. For our RC plane, we might investigate aerodynamic lift, structural integrity, propulsion, stability, control, and energy requirements.
+
+However, decomposition alone isn't enough. We also need to understand which distinctions actually matter for the question we're trying to answer.
+
+This is where **abstraction** becomes useful. We can temporarily ignore details that don't materially affect what we're investigating while preserving the relevant structure and relationships.
+
+A famous example is the Seven Bridges of Königsberg problem. Rather than investigating the exact geometry of the bridges and surrounding land, Euler represented the problem in terms of connected regions and bridges. This allowed him to reason about whether a route crossing every bridge exactly once was possible without having to calculate the geometry of every possible route.
+
+**The right representation can make a difficult problem much easier to understand by exposing the structure that actually matters.**
+
+Within our investigation tree, this means we should continually ask whether the current decomposition, parameters, and relationships are the most useful ones for investigating the question.
+
+### [RSM-03.04] Sometimes adding more variables makes a problem easier
+
+It might seem intuitive that simplifying a problem always means reducing the number of variables or constituent parts we need to consider.
+
+But sometimes the opposite is true.
+
+We can introduce additional variables, intermediate representations, hypothetical mechanisms, or new ways of describing the system that make its underlying structure easier to reason about.
+
+For example, in mathematics, introducing a substitution can transform a complicated equation into something much easier to solve, even though we've temporarily introduced another variable.
+
+Similarly, in structural engineering and compliant mechanisms, we might initially approximate certain components as rods, beams, springs, or simple joints to quickly explore candidate designs and find potentially stable or mechanically useful configurations.
+
+Rather than immediately performing an expensive finite element analysis (FEA) on every conceivable design, we can start with a simpler representation to understand which structural arrangements look promising. Once we've identified useful candidates, we can investigate them at a higher resolution, using FEA to examine stresses, deformations, buckling, local flexibility, and other behaviors that our initial model might have overlooked.
+
+We might then optimize the candidate structures further, for example through structural etching or material removal to reduce mass and improve lateral flexibility, or through topology optimization and adaptive mesh refinement to concentrate computational effort on the regions where greater resolution actually matters.
+
+This is especially useful in compliant mechanisms, where we might deliberately want certain regions to flex while maintaining stiffness elsewhere. The design problem isn't necessarily to maximize stiffness everywhere, but to discover an appropriate distribution of stiffness, flexibility, material, and geometry.
+
+We can therefore alternate between cheaper, approximate models that help us explore a much larger landscape of candidate designs and more detailed models that help us evaluate, refine, and optimize the most promising ones.
+
+An analogy I like to borrow from physics is the use of **renormalization, coarse-graining, first-order approximations, and effective parameters or variables**.
+
+Rather than explicitly representing every microscopic interaction, we can sometimes use a smaller set of effective quantities to reason about a system at the scale we're actually interested in. This makes otherwise difficult calculations or investigations more tractable, while preserving the possibility of returning to the underlying mechanisms when greater resolution becomes necessary.
+
+For example, in nuclear physics, concepts such as interaction cross sections, neutron transport, and effective interaction probabilities allow us to reason about complex physical processes without having to individually follow every possible microscopic interaction. The usefulness of these approximations depends on the physical regime and the questions we're trying to answer.
+
+The Manhattan Project's gaseous diffusion work offers another example of using effective physical quantities. Rather than individually tracking the trajectories of enormous numbers of gas molecules, engineers could reason about uranium isotope separation using molecular masses, diffusion behavior, and separation factors.
+
+Feynman diagrams provide a different but complementary example. They give us a way to organize and calculate contributions to interactions in quantum field theory through a diagrammatic representation of perturbative expansions. Rather than treating the entire calculation as one enormous expression, we can organize the relevant contributions by their structure and order of approximation.
+
+These aren't all the same mathematical technique, but they illustrate a broader idea: **we can introduce useful intermediate representations, effective parameters, and different levels of resolution to make an otherwise difficult investigation more tractable.**
+
+Importantly, we should understand what each approximation preserves, what it leaves out, and within what reasonable scenarios its conclusions remain valid. We should also be capable or aware of sanity checks that could tell us when the approximation has stopped being useful.
+
+The goal isn't necessarily to model everything at the highest possible resolution. It's to find representations that let us explore the relevant landscape efficiently, identify promising candidates or explanations, and increase resolution where doing so could materially change our conclusions.
+
+### [RSM-03.05] Coarse-graining: knowing what details we can ignore
+
+When investigating a problem, we don't necessarily need to understand every constituent part at the highest possible resolution.
+
+Often, we can group several mechanisms, variables, or components into a simpler effective representation, provided the distinctions we're ignoring don't materially change the conclusions we care about.
+
+For example, when investigating the overall flight performance of an RC plane, we might initially represent the motor, propeller, and associated electronics as a propulsion system, characterized by effective parameters such as thrust, power consumption, mass, and efficiency.
+
+This lets us investigate the bigger picture without immediately having to understand every electromagnetic interaction inside the motor or the detailed aerodynamics of the propeller.
+
+If we later discover that something about the propulsion system materially affects our conclusions, we can revisit that node in our investigation tree and investigate its constituent mechanisms at a finer resolution.
+
+This is the general idea behind **coarse-graining**: combining lower-level details into an effective description that preserves the behavior or relationships relevant to the question.
+
+However, we should be careful not to average away important distinctions. A system might behave predictably under ordinary conditions but exhibit entirely different behavior near a threshold, under an exceptional condition, or when several otherwise small effects interact.
+
+The point isn't simply to eliminate details, but to understand **which details can be safely represented together and which distinctions could materially change our understanding of the parent problem**.
+
+### [RSM-03.06] Preserve competing representations and explanations
+
+We shouldn't assume that every problem has one uniquely useful representation, or that we must settle on a single explanation before we can make progress.
+
+Different models might describe the same system at different levels of abstraction, emphasize different mechanisms, or make different assumptions about how the system behaves.
+
+For example, we might describe the motion of an RC plane using simplified equations of flight dynamics, a computational fluid dynamics simulation, or an experimental model derived from measurements of an actual aircraft.
+
+These representations don't necessarily compete in every respect. Each might be useful for answering different questions, and their predictions might agree within certain regimes while diverging in others.
+
+Even models that later turn out to be incorrect can sometimes preserve useful relationships or lead to worthwhile discoveries.
+
+A historical example is Carnot's work on heat engines. Although his reasoning was developed within the now-rejected caloric theory of heat, aspects of his analysis helped establish important relationships concerning the limits and efficiency of heat engines.
+
+**A model can be useful without necessarily being a complete or correct explanation of the underlying mechanisms.**
+
+Within our investigation tree, we should therefore preserve competing models and explanations, understand what each one reveals or overlooks, and investigate where their predictions or implications materially differ.
+
+### [RSM-03.07] Investigate obstructions as problems in their own right
+
+When an investigation encounters an obstruction, we shouldn't necessarily respond by performing more calculations, decomposing everything into smaller pieces, or blindly searching for another technique.
+
+We should first try to understand the obstruction itself.
+
+What exactly is preventing us from making progress? Under what circumstances does the obstruction appear? What mechanisms or constraints are responsible? Is it a fundamental physical limitation, a limitation of our current model, or simply a consequence of the particular approach we've chosen?
+
+For example, suppose our cardboard RC plane repeatedly fails because its wings deform under aerodynamic loading.
+
+We could immediately try adding more cardboard or reinforcing the wings, but that might not be the most informative way to proceed.
+
+Instead, we could investigate the wing deformation as its own problem. How does the deformation depend on wingspan, loading, material properties, geometry, and reinforcement? At what point does the wing become unstable? Are we encountering gradual bending, buckling, torsional instability, or some combination of these?
+
+This creates a new branch of our investigation tree, where we can explore the obstruction's constituent mechanisms, relevant parameters, competing explanations, and possible approaches.
+
+We might discover that changing the internal geometry of the wing is more effective than simply adding material, or that a different structural arrangement avoids the problematic loading regime entirely.
+
+We should also investigate what resolving the obstruction would actually change about the parent problem. If we can make the wing sufficiently stiff, does that meaningfully advance our goal of building a working cardboard RC plane, or would some other constraint immediately become dominant?
+
+The objective is to understand the obstruction well enough to decide which approaches deserve further investigation, rather than endlessly refining one local solution.
+
+### [RSM-03.08] How much detail is actually enough?
+
+A recurring question throughout RSM is how far we should investigate any particular branch before returning to the bigger picture.
+
+We could theoretically keep decomposing a problem into smaller and smaller constituent mechanisms, introducing more precise models, running increasingly expensive simulations, and investigating increasingly obscure edge cases.
+
+But more detail doesn't necessarily mean better understanding.
+
+What matters is whether the additional resolution could materially change our conclusions, expose a relevant possibility, challenge an important assumption, or affect what we should investigate next.
+
+For example, if we're trying to determine whether a cardboard RC plane can achieve stable flight, we might not need to model the microscopic fiber structure of the cardboard if ordinary material-property measurements and structural calculations already give us sufficient confidence in the relevant flight regime.
+
+On the other hand, if repeated structural failures suggest that fiber orientation, moisture, or local buckling is important, those previously ignored details may become worth investigating.
+
+We should therefore adapt the resolution of our investigation to the actual problem, refining the branches where additional information matters and collapsing those where we already understand enough to make progress.
+
+The goal isn't to build the largest or most detailed investigation tree possible. It's to build one that helps us understand the relevant landscape and make meaningful progress toward the bigger picture.
+
+### [RSM-03.09] Look for analogous problems and representations elsewhere
+
+One of the most useful things we can do after identifying an obstruction is search for other problems that exhibit similar underlying difficulties.
+
+For example, suppose we're investigating how to make a lightweight cardboard wing sufficiently stiff without introducing excessive mass.
+
+We might find useful ideas in structural engineering, sandwich composites, corrugated structures, compliant mechanisms, topology optimization, or even biological structures such as bird wings and insect exoskeletons.
+
+The point isn't merely to find something that looks similar. We want to understand whether these systems share relevant mechanisms, constraints, or relationships that could help us investigate our original problem.
+
+We should ask what exactly corresponds between the systems, which assumptions are different, and whether the analogy leads to useful calculations, experiments, or candidate designs.
+
+Within our investigation tree, these analogous problems can become connected branches, giving us alternative representations and methods for investigating the same obstruction.
+
+**Careful though!** Two systems might appear similar while behaving very differently under the conditions we actually care about.
+
+We should be able to reference and certify why the analogy is relevant, what evidence supports it, and within what reasonable scenarios we expect its conclusions to transfer.
+
+Find analogies to parts of your problem and use them. **Analogies expand the landscape of possible explanations, representations, and approaches**, especially when our current way of thinking about a problem has stopped producing useful progress.
+
+Analogies allow us to draw from rich ideas in other domains and help us resolve what actually matters in our problem, what is shared between different systems, and what is actually unique to our specific problem.
+
+For example, a bird's wing has a flexible skeletal structure, muscles, and feathers that can dynamically adjust its shape and respond to changing flight conditions. It is part of an active biological system, whereas a cardboard wing is generally a passive structure without those same mechanisms for actively correcting its behavior.
+
+Understanding this distinction helps us identify which ideas might transfer, such as lightweight structural arrangements or controlled flexibility, and which would require additional mechanisms to reproduce. It also opens up new questions: Could we introduce passive flexibility that produces some of the same beneficial effects? Could a compliant mechanism approximate certain aspects of the bird's wing without requiring an equally complex active control system?
 
 ## [RSM-04] Investigate the possibility landscape
 
