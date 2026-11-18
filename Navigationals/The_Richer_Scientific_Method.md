@@ -564,14 +564,72 @@ The goal is to leave the investigation with a richer understanding of the proble
 
 ## [RSM-05] The research-navigation structure
 
-**[RSM-05.01]** Scale from one calculation to centuries of literature using two complementary views:
+An investigation can start with a seemingly simple question and quickly expand into an enormous landscape of constituent problems, competing explanations, research papers, experiments, and possible approaches.
 
-1. **[RSM-05.02]** **Adaptive question/theory tree:** a collapsible, fractal-like hierarchy of questions, subproblems, provisional models, abstractions, branches, historical stages, and conditional findings. Each refinement has a *why this branch?* justification. A consequential branch is a legitimate, temporarily self-contained investigation with its own questions, competing models, refinement choices, and certificate, while retaining links to the parent’s purpose and global dependencies. Different investigators can work independently on the *same obstruction* under competing representations; merge findings as qualified alternatives, not an artificially unanimous answer. Investigations may be suspended, delegated, resumed, and merged without recomputing their history. **When closing a branch, keep a collapsed conditional interface**—valid inputs, outputs and regimes, scope and uncertainty, downstream dependencies, and exact conditions that would require reopening—so its parent can use the result immediately.
-2. **[RSM-05.03]** **Cross-linked claim/evidence graph:** edges such as **depends on**, **supports**, **tested by**, **challenges/competes with**, **implies**, **contradicts**, **abstracts**, **refines**, **equivalent under assumptions**, **shares invariant with**, and **supersedes**. A source may support multiple claims, and a claim may traverse several tree branches. These are link types, **not new kernel objects**.
+We need a practical way of organizing all of this so that we can navigate between the big picture and the details, revisit earlier reasoning, identify connections between different parts of the investigation, and avoid repeatedly rediscovering things we've already learned.
 
-**[RSM-05.04]** **For each consequential node retain, compactly:** question/claim; why it matters; status (observation, deduction, conditional simulation, hypothesis, historical theory, refuted, unresolved); assumptions and scope; source and date/cutoff; predecessors and rivals; supporting and contrary evidence; material uncertainties; next discriminating probe and what its answers would change; downstream dependents.
+### [RSM-05.01–05.02] The investigation tree
+<!-- RSM-05.01 RSM-05.02 -->
 
-**[RSM-05.05]** Useful navigation operations: filter by question, relevance, claim type, provenance, confidence, historical cutoff, dependency, contradiction or untested assumption; show what conclusions fail if a premise fails; surface shared premises across theories; show minimal reading paths to a subproblem; identify promising experiments *only where they separate live alternatives*; visualize local clusters and unusual cross-branch connections. Do not confuse an elegant synthesis with source-verified history. Protect historical reconstructions from hindsight leakage.
+The central representation we use is the **investigation tree**.
+
+We can start with a question, problem, or broader purpose at the root and progressively expand it into constituent questions, mechanisms, models, assumptions, and possible approaches.
+
+Each node can itself become an investigation, with its own questions, competing explanations, evidence, and certificates.
+
+Importantly, we should be able to navigate in both directions. We can descend into a constituent problem when we need greater resolution, or move upward toward its parent when we want to reconsider the bigger picture.
+
+The root itself might also have parents, and an entire investigation tree could become a constituent part of another tree. This lets us organize investigations at different scales, from understanding one physical mechanism to navigating entire fields of scientific knowledge.
+
+We should also be able to collapse branches once we've investigated them sufficiently for the purposes of their parents. Rather than repeatedly reading through every experiment, calculation, and source, we can preserve a certificate summarizing what we've established, what assumptions it depends on, and what could justify reopening the branch.
+
+This becomes especially useful when several investigators are working on different parts of the same problem. They can expand, challenge, resolve, or debate the need for individual nodes while maintaining a shared understanding of how their work contributes to the bigger picture.
+
+### [RSM-05.03] Connect the tree through relationships
+
+Although we use a tree as our central metaphor, the actual relationships between questions, models, evidence, and conclusions don't necessarily follow a strict hierarchy.
+
+A scientific paper might provide evidence relevant to several branches. Two seemingly unrelated problems might share the same mathematical structure. A new experimental result might challenge an assumption used throughout the investigation.
+
+We should therefore be able to connect nodes through relationships such as **depends on, supports, contradicts, competes with, implies, abstracts, refines, or shares an underlying mechanism with**.
+
+For example, suppose our cardboard RC plane investigation has separate branches for structural rigidity, material selection, aerodynamics, and repairability.
+
+A discovery about how corrugated structures distribute loads might be relevant to several of these branches simultaneously. We shouldn't have to duplicate the entire investigation each time. We can preserve the underlying finding and connect it to the questions and conclusions it actually affects.
+
+This also makes it easier to understand the consequences of changing an assumption. If we discover that a material property we relied upon was incorrect, we should be able to trace which calculations, candidate designs, and conclusions might need to be reconsidered.
+
+### [RSM-05.04] Preserve enough information to revisit and challenge our reasoning
+
+For any consequential node in our investigation tree, we should preserve enough information that another investigator—or ourselves a month later—can understand what we were investigating and why.
+
+That includes the question itself, its parent purpose, relevant assumptions, competing explanations, supporting evidence, references, conclusions, and unresolved uncertainties.
+
+We should also preserve why the branch was introduced in the first place. What did we hope to learn? What possible answers were we considering? What would resolving the question change about the bigger picture?
+
+This connects directly to our earlier discussion of certificates. We want someone to be able to inspect a particular line of reasoning, question an interpretation, or trace a conclusion back to its first-hand sources without reconstructing the entire investigation.
+
+Not every node requires an enormous report. The amount of detail we preserve should depend on the importance of the conclusion, the uncertainty involved, and how likely we are to need that reasoning again.
+
+### [RSM-05.05] Navigate the investigation as a connected body of knowledge
+
+As an investigation grows, we should be able to navigate it according to what we're actually trying to understand.
+
+For example, we might want to find all the branches that depend on a particular assumption, compare competing explanations of the same phenomenon, identify unresolved questions, revisit historical approaches, or discover connections between problems that initially appeared unrelated.
+
+We might also want to see which areas of the investigation are well understood, which remain speculative, and where additional experiments or research could materially change our conclusions.
+
+The investigation tree should make it easier to ask questions such as:
+
+- What do we currently know about this part of the problem, and how do we know it?
+- Which assumptions or conclusions would be affected if this new evidence turns out to be correct?
+- What alternative explanations or approaches have we considered?
+- What is the smallest set of sources or prior investigations I should examine to understand this branch?
+- Which unresolved questions are actually relevant to the parent purpose?
+
+The goal isn't simply to accumulate information into an increasingly large tree. It's to make that information useful for reasoning, discovering connections, challenging assumptions, and deciding what to investigate next.
+
+Ultimately, the investigation tree should allow us to move between **the holistic picture, constituent problems, evidence, and conclusions** without losing the trajectory of how our understanding developed.
 
 ## [RSM-06] Insight, invention, and collaboration
 
