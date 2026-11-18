@@ -6,8 +6,6 @@
 
 Each substantial topic has a stable `REM-XX` identifier, and its constituent ideas have `REM-XX.XX` identifiers. These addresses are for revisiting, criticizing, applying, and revising specific ideas without confusing them with neighboring ones. **Keep existing identifiers stable** as the wording evolves; add new IDs when necessary, and explicitly mark a superseded meaning rather than silently reassigning its address.
 
-**Structural organization only (first pass).** The original prose, examples, calculations, and open questions below have been preserved for our subsequent wording review. Some passages remain rough or overlapping; the aim of this pass is to give them coherent homes rather than preemptively resolve their ideas.
-
 **Navigation:** [REM-01] Purpose and whole-system reasoning · [REM-02] Goal-directed problem solving · [REM-03] Practical testing · [REM-04] Interfaces and human agency · [REM-05] Self-improving engineering workflows · [REM-06] Heuristics and feature engineering · [REM-07] Combinatorial system exploration.
 
 ## [REM-01] Purpose, practical utility, and whole-system reasoning
@@ -33,8 +31,6 @@ Know when you are 80-95-97.5% of the way of actual utility in deciding stopping 
 
 We made it to the moon not because we had the fastest computers or in spite of mathematician naysayers brilliance but because engineers were clear on what they actually needed, clear on when, clear on where, and clear on why. And most of all clear that now was absolutely the time to make it happen. 
 Notice I didn't say clear on how.
-
-when it comes to potential errors and ineffeciencies or indeterminate states, review through  the lens of symbiotic communication and the pschological pain of perceived ineffeciency and pschological pain of lack of understanding when the ineffeciencies become obvious  
 
 ### [REM-01.04] Local efficiency is not compositional efficiency
 
@@ -149,6 +145,8 @@ one does not need metric tracking for this, one could simply reason heursiticall
 
 ### [REM-04.02] Visible failures, copyable diagnostics, and avoiding hostage situations
 
+when it comes to potential errors and ineffeciencies or indeterminate states, review through  the lens of symbiotic communication and the pschological pain of perceived ineffeciency and pschological pain of lack of understanding when the ineffeciencies become obvious  
+
 one thiong i hate is when i push buttons and have no idea what happened,
  i fucking hate when somethign says failed retry but i have no reason or theres no visible report of the failuree so i cant even copy and paste into an LLM
 . remember if there are failures it should be clear to the human wqhat they are and they should be copyable for an LLM
@@ -259,7 +257,7 @@ Slightly cleaning up before a future rewrite: The further danger is that dynamic
 
 *A computational method for investigating complex systems when engineers, including LLMs, cannot reliably enumerate interacting behaviors mentally.*
 
-### How to prevent issues from creeping up when systems get large. Especiialy for forgetful engineers and LLMs
+**How to prevent issues from creeping up when systems get large. Especiialy for forgetful engineers and LLMs**
 
 ### [REM-07.01] Construct the abstraction
 
@@ -353,8 +351,6 @@ The investigation is incomplete without: **(1)** the justified element/state inv
 
 **Principle:** Engineers identify what can exist and how it may behave. Computation enumerates the admissible combinations. Neither an engineer nor an LLM is permitted to replace that computation with imagined scenarios or confidence based on an unexamined abstraction.
 
-## Original drafting note
-
-(woefully messy and incomplete with some stuff I have to clean up)
+<!-- Original author drafting note, preserved from the initial file: (woefully messy and incomplete with some stuff I have to clean up) -->
 
 <!-- Structure-only reorganization; initial wording remains available in preceding Git history. -->
