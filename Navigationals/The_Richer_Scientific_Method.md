@@ -795,26 +795,123 @@ The general practice is to continually examine our reasoning, assumptions, repre
 
 **RSM itself should remain open to investigation, criticism, and revision. The goal isn't to develop an increasingly elaborate methodology, but one that helps us reason more clearly, investigate more effectively, and build upon what we've learned.**
 
-## [RSM-08] Reusable investigator protocol (paste into another LLM)
+## [RSM-08] Reusable investigator protocol
 
-> **[RSM-08.01]** Act as an investigator using **The Richer Scientific Method**. Begin by recovering the user's actual intent and testing whether their question is justified, properly framed, and worth investigating. Use known literature, historical experience, counterexamples, and previous successes/failures before creating new tests. Maintain Model, Belief, Question, and Certificate explicitly but compactly. Find question-adequate representations: parameterize, factor, abstract, introduce auxiliary variables, preserve alternatives, and refine only when consequential. Investigate both **what is possible** (including admissible rule changes and backward constraints) and **what follows from each possibility** (forward consequences, sensitivities, stability, incentives, uncertainty). Choose experiments and self-play for expected consequential information, not activity. Distinguish evidence from model-conditional results and mathematical deductions from hypotheses. Produce a navigable question tree plus cross-linked literature/claim lineage when scale warrants; **stop at parent-sufficient resolution, collapse subbranches into usable conditional certificates, and return upward instead of indefinitely optimizing a leaf**; show assumptions, competitors, supports, tests, dependencies, historical provenance, and the smallest worthwhile next investigation. Preserve unresolved mechanisms through qualified effective theories; allow insights crossing the whole tree. Be skeptical of adding architectural components. **Do the attainable investigation now, use tools and test hypotheses, report substantive findings concisely, and do not claim discoveries or validation that have not occurred.**
+How do we actually put everything we've discussed into practice?
 
-**[RSM-08.09]** **Historical anti-hindsight fork test.** When investigating how a known discovery or architecture arose, freeze the information available at the chosen historical cutoff *before* using the eventual result. At each consequential decision, articulate at least two plausible contemporary alternatives (including **"why not A/B/C?"**, **"suppose X/Y/Z instead"**, and the option to postpone or change the question where relevant). For each, compare the evidence and constraints then available, what it could explain, its costs or obstructions, and what observation would distinguish it from rivals. Keep three things explicitly separate: **what was historically chosen**, **what could reasonably have been chosen**, and **what hindsight now reveals**. Use the known historical solution as a later audit, never as a hidden premise or a claim of independent rediscovery. **When auditing RSM itself, pre-record each fork’s candidate questions, period-available reasons, expected informational value and the path RSM would prioritize before revealing later outcomes; assess decision quality relative to the contemporary evidence and cost, separately from whether history vindicated the choice.** Explicitly flag any retrospective reconstruction by a historically informed investigator as *not blind*. Focus only on forks whose alternatives might change the parent understanding; collapse the rest. **Failure signature:** a frictionless sequence of allegedly inevitable questions that follows the famous path solely because we know the ending.
+RSM isn't intended to be a rigid checklist that we mechanically execute every time we encounter a problem. Different investigations require different methods, levels of detail, and degrees of certainty.
 
-**[RSM-08.08]** **Before a major branch:** Briefly test both the parent purpose and one consequential inverse/complementary question ([RSM-02.11–02.12]); explain why the selected question is worth pursuing over nearby alternatives. Do not recurse if the target and its boundaries are already clear.
+Instead, we want a consistent way of approaching investigations that preserves our reasoning, keeps the bigger picture in view, and helps us decide what to do next.
+
+### [RSM-08.01] A practical contract for conducting investigations
+
+When beginning an investigation, first try to understand what we're actually trying to accomplish. What motivated the question? Are we even asking the right sort of question? What is the parent purpose, and what broader landscape of questions might be relevant?
+
+We should consider alternative formulations and, where useful, explicitly write down possible answers and what we would investigate next depending on those answers.
+
+Build an initial investigation tree that captures the relevant questions, models, assumptions, constraints, and constituent problems. This tree is provisional. We should be willing to expand, collapse, reorganize, or question the need for any of its nodes as we learn.
+
+Use existing knowledge before inventing new methods. Look for scientific literature, working implementations, historical examples, useful analogies, and previous successes or failures that could help us understand the problem or ask better questions.
+
+Choose representations appropriate to what we're investigating. We might decompose the system, parameterize its constituent parts, introduce intermediate variables, use effective models, or investigate competing explanations. Start with a useful level of resolution and increase it when additional detail could materially change our understanding.
+
+Explore both **what might make something possible** and **what would happen if we actually pursued it**. Reason backward from desired or undesirable outcomes to their necessary conditions, and forward from candidate approaches to their consequences.
+
+Use experiments, simulations, proofs, calculations, and self-play to investigate the relevant possibilities. Don't simply run tests for the sake of running them. Ask what each possible outcome would teach us, which assumptions it could challenge, and how it might affect the bigger picture.
+
+Throughout the investigation, distinguish our knowns, intuitions, hypotheses, well-reasoned assumptions, napkin-math-like assumptions, unknowns, and unknown unknowns. Be capable or aware of sanity checks that could help us understand within what reasonable scenarios our conclusions hold and when they might no longer hold.
+
+**Reference and certify our findings.** Preserve the evidence, assumptions, alternative explanations, and trajectory of reasoning behind consequential conclusions. If someone has misgivings about our interpretation of a source or questions a particular line of inference, they should be able to trace it back to the first-hand resource and inspect it themselves.
+
+Don't remain trapped in one branch of the investigation tree. Return to the parent purpose when we've learned enough for its needs, when the current approach stops producing useful progress, or when new information suggests that we should reconsider the bigger picture.
+
+When things go wrong, investigate the obstruction itself. Is it a limitation of our model, an incorrect assumption, a missing capability, a genuine physical constraint, or simply a failure to apply an existing method appropriately?
+
+Finally, preserve the investigation in a way that we or another investigator can understand, challenge, continue, and build upon. This includes what we've established, what remains uncertain, which branches are unresolved, and what possible next investigations would actually contribute.
+
+### Using RSM with LLMs and collaborating investigators
+
+The same principles apply when using one or several LLMs to investigate a problem.
+
+An LLM shouldn't simply produce an answer and leave us to reconstruct how it arrived there. It should help us understand the relevant question landscape, investigate consequential alternatives, expose assumptions, and preserve references and certificates for its findings.
+
+Different investigators can work on different branches, investigate competing models, or contribute specialized knowledge. Their findings should be brought back into the larger investigation without erasing disagreements, uncertainties, or the reasoning that produced them.
+
+We should also be able to challenge the investigation itself. Why was this question introduced? Why did we choose this representation? What would happen if a particular assumption were false? Does this branch still deserve investigation, or has something we've learned made it irrelevant?
+
+The investigator should help us make these decisions, not simply continue expanding the tree indefinitely.
+
+The purpose of the protocol is to make investigations **consistent, inspectable, revisable, and useful over time**, while preserving the freedom to explore unconventional questions, representations, and possibilities.
+
+### [RSM-08.10] Interactive and collaborative investigation
+
+One of the most useful things an LLM can do is help the human better understand what they're actually trying to ask, investigate, or accomplish, especially when they themselves aren't entirely sure yet.
+
+Rather than simply accepting an underspecified question and making arbitrary assumptions, the LLM should be capable of presenting the human with a small set of meaningful alternatives, preferably through interactive multiple-choice or multiple-response questions (MRQs), so that they can collaboratively explore the broader question landscape.
+
+For example, suppose someone says, **"I want to build an RC vehicle out of cardboard."**
+
+The LLM might ask whether they're interested in building a car, plane, boat, or something else entirely. But importantly, it should also offer **"Choose for me"** or **"I'm not sure, let's explore"** as options.
+
+A small interactive choice could look like this:
+
+> **Let's figure out what you want to build. Which directions sound interesting?** (Select any.)
+>
+> - [ ] RC car
+> - [ ] RC plane
+> - [ ] RC boat
+> - [ ] Something else
+> - [ ] **Choose for me / explore the landscape**
+>
+> **What's the bigger picture?**
+>
+> - I mainly want something that works.
+> - I want to learn engineering through building.
+> - I'm just curious about what's possible.
+> - I'm not sure yet.
+
+Often, the human is genuinely curious but doesn't yet have a particularly well-developed understanding of what they want to investigate beyond their initial question. We shouldn't force them to make decisions they don't yet have the knowledge or intuition to make.
+
+Instead, the LLM can help them explore the landscape, explain what makes different directions interesting, suggest promising starting points, and develop a clearer understanding of their own curiosity as the investigation progresses.
+
+This applies just as much to competing hypotheses, alternative representations, experimental approaches, or the bigger picture itself.
+
+For example, an LLM might discover several plausible explanations for an observed phenomenon. Rather than silently choosing one, it could present the competing hypotheses, briefly explain what each would imply, and ask which the human finds interesting or would like to investigate further. It should also be able to recommend which investigation might be most informative, or simply proceed when the distinction doesn't require human input.
+
+We can even collaboratively generate the investigation tree before beginning substantial research, as discussed in RSM-02.08. By explicitly considering possible answers, alternative questions, and what we would investigate next depending on those answers, the LLM can help the human better orient themselves within the question landscape.
+
+Importantly, **interaction shouldn't become an excuse to constantly interrupt the investigation with unnecessary questions**. The LLM should distinguish between choices where the human's purpose, curiosity, or preferences actually matter and questions it could reasonably answer through its own investigation.
+
+Sometimes the best thing to do is ask. Sometimes it's to present a few possibilities and recommend one. Other times, it's to simply investigate and return with something interesting that expands the human's understanding.
+
+The goal is to make the investigation a genuinely collaborative process in which the human can explore, challenge, redirect, and contribute to the investigation tree without having to specify everything in advance.
+
+**Language matters here too.** LLMs should communicate in the same kind of clear, curious, and human-sensible language we've been using throughout RSM. They shouldn't overwhelm people with jargon, unnecessarily formal terminology, or elaborate explanations that obscure what we're actually trying to understand.
+
+Technical terminology is useful when it helps us reason more precisely, but it should be introduced in a way that builds intuition rather than assuming the human already knows the entire field.
+
+Ultimately, the LLM should help the human become a better investigator themselves, not merely a passive recipient of answers. It should help them discover questions they hadn't considered, understand the consequences of different possibilities, and develop a richer intuition for the problem and its broader landscape.
+
+### Additional reusable protocols
+
+The following specialized protocols are retained under their original identifiers so existing citations continue to point to the same commitments.
 
 **[RSM-08.02]** **Minimal deliverable for any investigation:** (1) clarified question and why it matters; (2) model/belief assumptions and alternative representations; (3) conditional possibility landscape; (4) important claim/dependency tree and source lineage; (5) certificates distinguishing established, conditional, speculative, and unresolved; (6) next action *only if justified by a consequential uncertainty*.
+
+**[RSM-08.03]** **Reporting requirement:** Include a compact method trace with the exact clauses actually exercised, one concrete consequence per clause, and important clauses intentionally not used. Clause mentions are navigation metadata, not substitutes for analysis, evidence, or certificates.
+
+**[RSM-08.04]** **When a consequential obstruction is found**, ask whether a simpler, historically mature problem instantiates its essential difficulty; if worthwhile, run at least one candidate analogy through `RSM-03.09` and compare it with the existing model using `RSM-06.04`. Do not force an analogy when it yields no new distinction. Explicitly distinguish **what the tree exposed** from **what an investigator invented or recognized**.
+
+**[RSM-08.05]** For a rare but expensive update, compare **reactive**, **anticipated/preconfigured**, and **representation-changing** strategies under one workload and capability target. Include trigger frequency, event severity, forecast availability and accuracy, preparation budget, deadline, and fallback correctness. Measure total cost and tail latency separately; do not recommend anticipation merely because the event is expensive.
+
+**[RSM-08.06]** When proposing an offline/online split, identify the safety boundary: what must be correct now, what may be provisionally cached, and what requires global reconciliation. Stress-test sudden high-consequence changes and bursts of deferred work. Report backlog and off-peak capacity as well as apparent active-time savings.
 
 
 **[RSM-08.07]** **Branch completion protocol:** For every major explored subproblem, ask *Can the parent investigation proceed without resolving its remaining internal details?* If yes: (i) state its effective input–output/conditional behavior and meaningful regimes, (ii) certificate assumptions and remaining uncertainties, (iii) state a concrete reopening trigger, and (iv) return to the original question. Compare further refinement against the value of exploring other parent branches. Do not mistake research thoroughness for increasing detail or keep appending studies without a parent-level consequence.
 
-**[RSM-08.03]** **Reporting requirement:** Include a compact method trace with the exact clauses actually exercised, one concrete consequence per clause, and important clauses intentionally not used. Clause mentions are navigation metadata, not substitutes for analysis, evidence, or certificates.
+**[RSM-08.08]** **Before a major branch:** Briefly test both the parent purpose and one consequential inverse/complementary question ([RSM-02.11–02.12]); explain why the selected question is worth pursuing over nearby alternatives. Do not recurse if the target and its boundaries are already clear.
 
-**[RSM-08.06]** When proposing an offline/online split, identify the safety boundary: what must be correct now, what may be provisionally cached, and what requires global reconciliation. Stress-test sudden high-consequence changes and bursts of deferred work. Report backlog and off-peak capacity as well as apparent active-time savings.
-
-**[RSM-08.05]** For a rare but expensive update, compare **reactive**, **anticipated/preconfigured**, and **representation-changing** strategies under one workload and capability target. Include trigger frequency, event severity, forecast availability and accuracy, preparation budget, deadline, and fallback correctness. Measure total cost and tail latency separately; do not recommend anticipation merely because the event is expensive.
-
-**[RSM-08.04]** **When a consequential obstruction is found**, ask whether a simpler, historically mature problem instantiates its essential difficulty; if worthwhile, run at least one candidate analogy through `RSM-03.09` and compare it with the existing model using `RSM-06.04`. Do not force an analogy when it yields no new distinction. Explicitly distinguish **what the tree exposed** from **what an investigator invented or recognized**.
+**[RSM-08.09]** **Historical anti-hindsight fork test.** When investigating how a known discovery or architecture arose, freeze the information available at the chosen historical cutoff *before* using the eventual result. At each consequential decision, articulate at least two plausible contemporary alternatives (including **"why not A/B/C?"**, **"suppose X/Y/Z instead"**, and the option to postpone or change the question where relevant). For each, compare the evidence and constraints then available, what it could explain, its costs or obstructions, and what observation would distinguish it from rivals. Keep three things explicitly separate: **what was historically chosen**, **what could reasonably have been chosen**, and **what hindsight now reveals**. Use the known historical solution as a later audit, never as a hidden premise or a claim of independent rediscovery. **When auditing RSM itself, pre-record each fork’s candidate questions, period-available reasons, expected informational value and the path RSM would prioritize before revealing later outcomes; assess decision quality relative to the contemporary evidence and cost, separately from whether history vindicated the choice.** Explicitly flag any retrospective reconstruction by a historically informed investigator as *not blind*. Focus only on forks whose alternatives might change the parent understanding; collapse the rest. **Failure signature:** a frictionless sequence of allegedly inevitable questions that follows the famous path solely because we know the ending.
 
 ## [RSM-09] Calibration atlas: how this architecture was earned
 
