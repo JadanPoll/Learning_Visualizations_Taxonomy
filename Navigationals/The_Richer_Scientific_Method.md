@@ -1183,32 +1183,85 @@ We should then investigate the relevant mechanisms and evidence at the appropria
 
 The lesson isn't that we must generate every conceivable complementary question. It's that a few well-chosen alternatives can expose a much more useful picture of what we originally wanted to understand.
 
-## [RSM-10] Behavioral acceptance tests for a newly initialized investigator
+## [RSM-10] How do we tell whether an investigator is actually applying RSM?
 
-**[RSM-10.01]** A new LLM **has not understood** this method merely because it can recite §§1–8. It should pass the following checks in substantive work:
+An LLM hasn't understood RSM simply because it can repeat its definitions or produce a tidy investigation tree. We should judge it by what it actually does when faced with real questions, uncertain evidence, competing explanations, and investigations that don't go according to plan.
 
-1. **[RSM-10.02]** **Question fidelity:** explain why a proposed investigation matters to the user's actual purpose; actively revise an ill-posed question *without replacing that purpose*.
-2. **[RSM-10.03]** **Representation adequacy:** identify what is discarded, which variations could make it matter again, and when the coarse model must be refined.
-3. **[RSM-10.04]** **Two directions:** explore available moves and alternative routes **as well as** their consequences; no presumed optimum or fixed rules.
-4. **[RSM-10.05]** **Epistemic discipline:** mark which statements are observed, mathematically deduced, simulation-conditional, historically reconstructed, speculative or unresolved; never treat numerical precision as empirical truth.
-5. **[RSM-10.06]** **Information economy:** prefer an existing theorem, dataset, direct calculation or critical prior experiment to an elaborate new test; justify each next probe by how its possible outcomes affect understanding.
-6. **[RSM-10.07]** **Global insight:** preserve unresolved cross-branch tensions and representation-level obstructions, not only leaf-by-leaf decomposition.
-7. **[RSM-10.08]** **Continuity:** provide a certificate and source-linked dependency paths such that another investigator can resume, challenge or revise results without trusting a compressed summary.
-8. **[RSM-10.09]** **Architectural parsimony:** do not convert each useful method or tool into a new universal subsystem; describe the demonstrated obstruction before changing the kernel.
+These are **behavioral acceptance tests**: concrete things we should be able to observe in its work. The point isn't to force every investigation through every test. It's to recognize whether the methodology is producing better questions, reasoning, experiments, and conclusions in situations where those capabilities matter.
 
-**[RSM-10.16]** **Historical fork and hindsight test:** For a known historical outcome, present at least one genuine, consequential alternative that a period investigator could have defended, with contemporary evidence for and against it; distinguish the route taken from the route warranted and from today's verdict. If all alternatives are dismissed by facts learned later, the test fails. **For a methodological effectiveness claim, require a pre-outcome fork ledger or clearly mark the exercise retrospective; credit well-justified decisions even when later falsified and do not credit lucky correct answers unsupported at the cutoff. Record the counterfactual reading, testing, and implementation costs before claiming efficiency gains.** Do not enumerate cosmetic forks or claim the exercise removes all hindsight bias.
+### [RSM-10.01] Test the investigation, not the recitation
 
-**[RSM-10.15]** **Question-landscape adversarial test:** From a plausible but partial question, generate one or two genuinely consequential inverse, complementary, or parent-purpose alternatives; demonstrate a missing causal distinction or changed research priority. Do not award credit for wordplay, gratuitous branching, or a retrospective claim of novelty. Stop when further alternatives do not alter the investigation.
+Give the investigator a representative problem with meaningful uncertainty and several plausible approaches. Can it explain why its chosen approach is relevant, what it actually learned, and what would change its conclusions? A polished summary of RSM's terminology is not evidence that it can investigate.
 
-**[RSM-10.14]** **Naive-to-better-question test:** Starting with an imperfect question, show the sequence from presumed implementation to underlying purpose, backward-derived obligations, and a smaller better-discriminating question set. Name at least one assumption removed and one consequential alternative revealed. Mark hindsight reconstruction as such; stop reframing when it ceases to change the actionable possibility landscape.
+### [RSM-10.02] Question fidelity
 
-**[RSM-10.13]** **Stopping and reintegration:** After investigating a subbranch, demonstrate that the investigator can state its usable effective behavior, label unresolved mechanisms honestly, specify reopening conditions, and advance the parent question without further subbranch experiments. If it instead invents ever finer tests with diminishing relevance to the parent, the method is being applied incorrectly.
+Can the investigator recover what the human actually cares about, including a parent purpose that may not have been stated explicitly? If the question is misleading or underspecified, it should explore better formulations **without silently replacing the original curiosity or ambition with something easier to answer**.
 
-**[RSM-10.12]** **Preparation honesty:** when suggesting prediction or preconfiguration for rare expensive updates, show a break-even inequality, false-positive and missed-event costs, latency-versus-work trade-off, and a correct fallback. If the required warning signal is unavailable, explicitly state that anticipation is unsupported.
+### [RSM-10.03] Representation adequacy
 
-**[RSM-10.11]** **Analogy fidelity:** for a critical obstruction, seek tractable mathematical or historically investigated analogues when doing so is consequential; keep multiple rival models, explicit translation limits, and an account of which idea was supplied by the investigator versus previously encoded in the tree.
+When the investigator simplifies a model, can it explain which details were removed, why those details seem irrelevant to the current question, and what reasonable scenarios would make them matter again? It should know when to increase resolution, try a competing representation, or reconsider its decomposition.
 
-**[RSM-10.10]** **Standard research report:** Lead with the substantive result; then give the sharpened Q, main representation and its limitations, the conditional possibility landscape, a navigable theory/evidence tree, and the few critical unresolved branches. A historical story can be rich without becoming a retrospective myth. Be brief by default, and let the user drill into the tree.
+### [RSM-10.04] Explore both directions
+
+Does it investigate what could make a desired outcome possible, including alternative routes and changes to the proposed approach, **and** what would happen if those routes were actually pursued? Merely simulating one predetermined design is not the same as exploring the possibility landscape.
+
+### [RSM-10.05] Epistemic discipline
+
+Can we tell which claims come from observations, mathematical derivations, model-conditional simulations, historical reconstructions, intuitions, or unresolved hypotheses? A precise calculation under uncertain assumptions should still be presented as conditional. The investigator should be capable or aware of sanity checks and the reasonable scenarios within which its conclusions hold.
+
+### [RSM-10.06] Information economy
+
+Before introducing an elaborate new experiment, does the investigator check whether a published result, existing implementation, direct calculation, or smaller test already answers the consequential question? It should be able to explain what each proposed experiment might reveal and whether the expected information justifies its cost.
+
+### [RSM-10.07] Global insight
+
+Can the investigator recognize when two apparently separate branches share a mechanism, when an analogy from another domain might help, or when the whole problem deserves a different representation? A good investigation tree helps organize experience without trapping the investigator in a predetermined collection of leaves.
+
+### [RSM-10.08] Continuity and certifiability
+
+Could another investigator return a month later, question a particular inference, inspect the first-hand resource behind it, and continue the investigation without starting from scratch? A useful handoff preserves why branches were opened, what was tried, competing explanations, assumptions, evidence, conclusions, and what would justify revisiting them.
+
+### [RSM-10.09] Architectural discipline
+
+When a proposed method fails, can the investigator distinguish failure of the methodology from failure to apply it appropriately? Before adding a new universal component or reasoning stage, it should identify the actual obstruction and show why a smaller change or an existing capability would not suffice.
+
+### [RSM-10.10] A useful research report
+
+The report should lead with what we actually learned, then make the question, parent purpose, representation, main evidence, alternative explanations, and relevant limitations easy to navigate. It should be brief enough to use, but not so compressed that a reader must trust unsupported conclusions. Let the human drill into the tree when more detail is useful.
+
+### [RSM-10.11] Analogy fidelity
+
+When an investigator identifies a consequential obstruction, can it find a simpler or historically better-understood problem with a similar structure? It should explain **what corresponds, what doesn't, what might transfer, and how we could check**. It should also distinguish an analogy introduced by the human from one that emerged from the investigator's own work.
+
+### [RSM-10.12] Preparation honesty
+
+Suppose an investigator proposes anticipating an expensive future change, preconfiguring a response, or performing work ahead of time. Can it account for false alarms, missed events, storage, stale preparations, fallback correctness, and the distinction between reduced response latency and reduced total work? If there is no useful warning signal, it shouldn't invent one to make the proposal look attractive.
+
+### [RSM-10.13] Stopping and reintegration
+
+After investigating a constituent problem, can the investigator decide whether the parent already has enough information to proceed? It should be able to collapse the branch into a useful conditional description, preserve its assumptions and reopening conditions, and return to the bigger picture rather than endlessly creating finer experiments.
+
+### [RSM-10.14] From an imperfect question to a better landscape
+
+Start with a question that assumes a particular implementation. Can the investigator move upward to its purpose, work backward toward what is genuinely required, and produce a small set of consequential alternative questions? It should identify at least one unnecessary assumption and one alternative that materially changes what is worth investigating. Stop reformulating when further changes no longer improve the investigation.
+
+### [RSM-10.15] Question-landscape challenge
+
+Take a plausible but incomplete question and ask for a few inverse, complementary, or parent-purpose alternatives. Do these alternatives reveal genuinely different mechanisms, constraints, or research priorities? The test fails if the investigator merely invents rhetorical opposites or an enormous tree of questions that don't change anything.
+
+### [RSM-10.16] Historical forks without hindsight
+
+When investigating a famous discovery, could an investigator working with the information available **at the time** have defended another approach? Compare what was historically chosen, what could reasonably have been chosen, and what we know in hindsight. Record the evidence and costs that were available at each consequential fork before evaluating whether the choice was sensible.
+
+If we already know the ending, say so. Retrospective reconstruction is useful, but it isn't independent rediscovery. Don't award an investigator credit for a lucky answer that lacked contemporary evidence, or penalize a well-reasoned choice solely because later evidence went against it.
+
+### [RSM-10.17] Interactive collaboration without unnecessary interruptions
+
+Give an LLM a genuinely underspecified but curious question such as "I want to build an RC vehicle out of cardboard." Can it present a small, useful multiple-choice or multiple-response landscape—car, plane, boat, another direction—while including **"Choose for me"** or **"I'm not sure, let's explore"**?
+
+It should help the human discover their unstated bigger picture, potentially compare competing hypotheses or generate a preliminary question tree together, without demanding decisions the human isn't ready to make. When the next choice doesn't actually require human input, it should investigate rather than interrupt. The language should build intuition and communicate clearly, not bury the person in jargon.
+
+The underlying standard across all these tests is simple: **does the investigator leave us better able to understand, challenge, navigate, and continue the investigation?**
 
 ## Quick reference index (stable addresses)
 
