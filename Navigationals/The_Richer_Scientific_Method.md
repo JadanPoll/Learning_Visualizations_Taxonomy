@@ -633,13 +633,101 @@ Ultimately, the investigation tree should allow us to move between **the holisti
 
 ## [RSM-06] Insight, invention, and collaboration
 
-**[RSM-06.01]** The architecture cultivates **contact with the whole problem**: local competence, relational understanding, and repeated variation may yield a sense of a latent object not yet representable. Galois's recognition of root-permutation structure was not an obvious consequence of decomposing equations into independent subproblems. Likewise entropy arose from discerning a global invariant among diverse transformations.
+One of the most interesting things about investigating a problem is that, as we become more familiar with its constituent parts, mechanisms, constraints, and relationships, we can begin to develop intuitions about the problem as a whole.
 
-**[RSM-06.02]** **Trees organize experience but do not guarantee invention.** Search for cross-branch symmetries, invariants, analogies, failed approaches, global obstructions, and possibilities requiring a new *representation of the entire problem*. Permit radical restructuring of the tree if a new concept appears. Do not demand that all insight be traceable to a local leaf, or dismiss unformalized but fruitful mathematical intuitions; instead distinguish tentative ansatz from certificate of proof.
+Sometimes we start recognizing patterns or possibilities that weren't apparent when we first began. We might notice that several apparently unrelated problems share an underlying structure, that an obstruction we've encountered resembles something from another field, or that an entirely different representation could make the problem much easier to understand.
 
-**[RSM-06.03]** For handoffs, preserve not just conclusions but **the route to them**: premises, alternatives considered, why distinctions were introduced, provenance, unresolved conditions, and consequences if a finding is supported/refuted. Multiple theories can coexist; pursue consequences shared across them without forcing premature consensus. A concise navigable certificate can connect work across people, LLMs, and time.
+This is part of what makes scientific investigation more than simply following a predetermined sequence of questions and answering them one by one.
 
-**[RSM-06.04]** **Analogy search is collaborative hypothesis generation, not a single-model verdict.** A research tree makes the obstruction legible; distinct investigators may recognize different historical or mathematical instantiations of it. Record each candidate under the same question node with explicit **models/competes with/abstracts** links, explaining what it reveals, what it hides, and what discriminating experiments or calculations it suggests. A model that is especially easy to manipulate can be valuable even if it is not the true mechanism; its inferential limits remain in the certificate. Do not mistake the tree’s ability to situate an ingenious analogy for having generated that analogy in advance.
+### [RSM-06.01] Develop intuition through contact with the whole problem
+
+There is a difference between understanding the individual constituent parts of a problem and developing a broader intuition for how the entire system behaves.
+
+For example, someone learning to build RC planes might separately study aerodynamics, propulsion, structural engineering, electronics, and control systems.
+
+But as they begin designing, building, testing, and modifying actual aircraft, they may develop an intuition for how these different mechanisms interact. They might anticipate that a particular design will be unstable, recognize when a structural arrangement seems unnecessarily heavy, or suspect that an unexpected flight behavior has something to do with the relationship between several components rather than any single component in isolation.
+
+These intuitions aren't necessarily formal proofs or established conclusions. They're often provisional ideas developed through repeated experience, comparison, and exposure to different variations of the same problem.
+
+We should take these intuitions seriously enough to investigate them, while still distinguishing them from what we've actually established.
+
+A similar phenomenon appears throughout the history of mathematics and physics. Galois's insights into the relationships between polynomial roots involved recognizing a deeper structure in algebraic equations. The development of entropy likewise involved identifying relationships that connected apparently different thermodynamic processes.
+
+These discoveries weren't simply the result of dividing a problem into smaller parts and solving each one independently. They required recognizing something about the relationships and structure of the problem as a whole.
+
+### [RSM-06.02] An investigation tree organizes reasoning, but doesn't guarantee invention
+
+Our investigation tree helps us decompose problems, navigate their constituent parts, preserve what we've learned, and understand how different findings relate to the bigger picture.
+
+But we shouldn't assume that every important discovery will emerge from following the existing branches of the tree.
+
+Sometimes the most valuable insight comes from realizing that the tree itself should be reorganized.
+
+Perhaps several branches we've been treating as independent are actually manifestations of the same underlying mechanism. Perhaps a distinction we considered fundamental turns out to be unnecessary. Or perhaps we've overlooked an entirely different way of representing the problem.
+
+For example, in our cardboard RC plane investigation, we might initially treat structural rigidity and aerodynamic stability as largely separate problems.
+
+But suppose we discover that allowing certain parts of the wing to deform under aerodynamic loading could actually improve its behavior under some flight conditions.
+
+We may have uncovered a new relationship between structural mechanics and aerodynamics that changes how we should organize the investigation. Instead of independently optimizing wing stiffness and aerodynamic performance, we might investigate aeroelasticity and whether controlled flexibility could be useful.
+
+This is why we should continually look for **relationships across branches, shared mechanisms, analogies, symmetries, invariants, and unexpected connections**.
+
+We should also be willing to introduce entirely new concepts or representations when the existing ones stop being useful.
+
+The investigation tree is a tool for organizing and developing our understanding, not a guarantee that the way we've currently decomposed the problem reflects its most useful underlying structure.
+
+### [RSM-06.03] Preserve the trajectory of insight, not just the conclusion
+
+When we arrive at an interesting result, especially one that changes how we understand the problem, we should try to preserve the trajectory that led us there.
+
+What were we originally investigating? What assumptions did we begin with? Which observations, failed approaches, analogies, or competing explanations led us to reconsider those assumptions?
+
+What was the actual connection or distinction that produced the insight?
+
+This connects directly to our earlier discussion of **certificates and references in RSM-01.04**. If someone has misgivings about our concluded interpretation of a source, questions a particular line of inference, or is genuinely curious about where we synthesized an idea from, they should be able to trace that reasoning back to the first-hand resource and inspect it themselves.
+
+It's not enough to merely attach a list of references to the end of an investigation. We should preserve which sources support which claims, how we interpreted them, what assumptions were involved, and how those claims contributed to the conclusions we eventually reached.
+
+This is particularly important when other people or LLMs are going to continue the investigation.
+
+For example, suppose one investigator discovers that a particular compliant wing structure produces better results than a rigid alternative.
+
+Simply recording that the compliant design performed better isn't nearly as useful as preserving why the investigator considered it in the first place, which alternatives they tested, what evidence supports the result, and under what conditions the advantage appears or disappears.
+
+Another investigator might then recognize a connection to a different structural mechanism, challenge the original interpretation, or identify circumstances in which the same approach would fail.
+
+By preserving the trajectory of our reasoning, we're not just storing conclusions. We're preserving the material from which further understanding and new ideas can develop.
+
+### [RSM-06.04] Collaboration: different investigators can recognize different possibilities
+
+One of the benefits of organizing investigations into trees with references, certificates, and cross-linked relationships is that different investigators can contribute their own perspectives, knowledge, and methods without having to reconstruct the entire problem from scratch.
+
+For example, suppose we're investigating how to design a lightweight, crash-resistant cardboard RC plane.
+
+A structural engineer might recognize useful ideas from compliant mechanisms or sandwich structures. Someone familiar with biological systems might think of how bird wings or insect structures distribute loads. A materials scientist might investigate how cardboard behaves under repeated bending, humidity, or impact. Someone with experience building RC aircraft might know of practical designs or failure modes that none of the other investigators considered.
+
+Each investigator can expand on, contribute to, resolve, challenge, or debate the need for particular nodes in the investigation tree.
+
+Importantly, these investigators don't necessarily have to agree on one explanation or representation from the beginning.
+
+They might explore competing models, propose different analogies, or investigate the same obstruction through entirely different approaches.
+
+We should preserve these alternatives and understand what each reveals, what it overlooks, and what evidence could help us distinguish between them.
+
+This becomes particularly useful when working with LLMs, where different models or agents can explore different branches, research existing literature, develop simulations, examine competing explanations, or search for analogies across domains.
+
+The point isn't to have several investigators generate more answers to the same question. It's to use their different perspectives to **expand the landscape of possibilities, expose assumptions, discover connections, and develop a richer understanding of the problem as a whole**.
+
+Ultimately, we want an investigation process that helps us develop intuition and discover new ideas while keeping the reasoning, evidence, and assumptions sufficiently clear that those ideas can be challenged, tested, and built upon.
+
+### [RSM-06.05] Anticipation and preconfiguration
+
+**[RSM-06.05]** **Anticipation and preconfiguration are rival models of an obstruction, not automatic optimizations.** A researcher may try to detect a coming expensive update, compute prerequisites ahead of time, maintain reserve capacity, prebuild alternate states, or defer reconciliation. Test whether these actions *reduce total work*, *shift work off the critical path*, *improve worst-case latency*, or merely *move cost elsewhere*. Count forecasting, false alarms, stale preparations, memory, maintenance, and rare missed events. Distinguish foreseeing an exact deterministic dependency (as in carry-lookahead) from statistically predicting an uncertain future. Preserve simpler competitors: on-demand recomputation, redundant representation, amortization, and graceful fallback. **Failure signature:** treating advance preparation as free energy savings, or confusing lower latency with less computation.
+
+### [RSM-06.06] Fast operation and scheduled reconciliation
+
+**[RSM-06.06]** **Separate fast operation from slow reorganization when the problem permits it.** An agent may maintain a quickly accessible working state while accumulating provisional observations, conflicts, and model repairs for replay, consolidation, reorganization, or simulation during lower-demand intervals. Treat this as a conditional strategy of **scheduled reconciliation**, not an assertion that biology defers all global updates to sleep. Specify (a) which obligations require immediate correctness; (b) which discrepancies can be deferred without changing relevant decisions; (c) the capacity and staleness of the provisional buffer; (d) how deferred work is selected, replayed, verified and merged; (e) the available off-peak capacity and backlog stability; and (f) when an urgent discrepancy must preempt deferral. Compare total lifetime work, active-period latency, worst-case failures and loss of retained distinctions against immediate repair and anticipation. **Failure signature:** calling work moved into sleep or background processing an energy saving without counting its cost, or allowing deferred errors to corrupt time-critical behavior. Neuroscientific sleep replay is a candidate analogue and source of hypotheses, not proof of this specific engineered scheduling mechanism.
 
 ## [RSM-07] Architecture discipline and failure conditions
 
@@ -703,10 +791,6 @@ Ultimately, the investigation tree should allow us to move between **the holisti
 
 ### [RSM-09.J] Delegation and centuries of papers — the graph must preserve intellectual continuity
 **[RSM-09.J.01]** **Invoke §§1(C), 5, 6 and 7.** The goal is not simply retrieving papers by topic. A researcher should be able to ask: **Which results depend on this premise? Which tests discriminate these theories? What should I read to work on this subproblem? What survives if a proposed mechanism is refuted?** The navigation tree represents where to look; cross-edges express evidentiary and logical relationships. Include *why a branch was opened*, *what the investigator already tried*, *what was learned*, and *which cross-branch analogies seem promising*. A short handoff retaining only conclusions loses the accumulated contact from which intuition develops. **Operational move:** construct compact claim-level certificates linked to primary sources and to their inferential ancestry; enable collapse/refinement, impact-of-retraction tracing, theory comparison, historically fair cutoffs and resumption. **Why:** human/LLM memory and attention are scarce; research must remain revisable and navigable without reducing the history to slogans. **Failure signature:** a tidy but irreproducible literature map that silently promotes conjectures into accepted results.
-
-**[RSM-06.06]** **Separate fast operation from slow reorganization when the problem permits it.** An agent may maintain a quickly accessible working state while accumulating provisional observations, conflicts, and model repairs for replay, consolidation, reorganization, or simulation during lower-demand intervals. Treat this as a conditional strategy of **scheduled reconciliation**, not an assertion that biology defers all global updates to sleep. Specify (a) which obligations require immediate correctness; (b) which discrepancies can be deferred without changing relevant decisions; (c) the capacity and staleness of the provisional buffer; (d) how deferred work is selected, replayed, verified and merged; (e) the available off-peak capacity and backlog stability; and (f) when an urgent discrepancy must preempt deferral. Compare total lifetime work, active-period latency, worst-case failures and loss of retained distinctions against immediate repair and anticipation. **Failure signature:** calling work moved into sleep or background processing an energy saving without counting its cost, or allowing deferred errors to corrupt time-critical behavior. Neuroscientific sleep replay is a candidate analogue and source of hypotheses, not proof of this specific engineered scheduling mechanism.
-
-**[RSM-06.05]** **Anticipation and preconfiguration are rival models of an obstruction, not automatic optimizations.** A researcher may try to detect a coming expensive update, compute prerequisites ahead of time, maintain reserve capacity, prebuild alternate states, or defer reconciliation. Test whether these actions *reduce total work*, *shift work off the critical path*, *improve worst-case latency*, or merely *move cost elsewhere*. Count forecasting, false alarms, stale preparations, memory, maintenance, and rare missed events. Distinguish foreseeing an exact deterministic dependency (as in carry-lookahead) from statistically predicting an uncertain future. Preserve simpler competitors: on-demand recomputation, redundant representation, amortization, and graceful fallback. **Failure signature:** treating advance preparation as free energy savings, or confusing lower latency with less computation.
 
 ### [RSM-09.K] Babbage's carry cascades — a simple analogue exposes the cost distribution
 **[RSM-09.K.01]** **Invoke §§3 (representation and analogy), 4 (boundary perturbations), 5 (competing-model links), and 6.** In the brain-energy investigation, the research tree had *already* isolated a potential obstruction: cheap local state updates can occasionally require extensive downstream propagation. It had **not** independently produced the mathematical analogy. The user recognized an old instance: incrementing a positional numeral usually changes one digit, but a long run of maximum digits causes a carry cascade; Babbage studied anticipation of carries and mechanical radix trade-offs. Under an idealized uniform base-`b` digit model, the probability that at least `k` trailing digits demand a carry is `b^{-k}`; ordinary cost and rare long latency must be analyzed separately. **Operational move:** search for structurally matching, tractable historical models; compare alternative bases, carry anticipation, redundant encodings and deferred normalization; investigate expected cost, worst-case latency, tail risk and hardware overhead. Translate conclusions back to intelligent-state updates only conditionally: arithmetic correctness and neural representational adequacy are different obligations. **Why:** a simple well-understood analogue can make an otherwise vague *rare global update* obstruction mathematically navigable, uncover architectures, and expose the trade-off between preventing cascades and paying continuous overhead. **Failure signature:** saying the tree itself discovered Babbage's insight, or assuming that rare global updates are always artifacts rather than sometimes necessary consequences of the problem.
