@@ -915,49 +915,273 @@ The following specialized protocols are retained under their original identifier
 
 ## [RSM-09] Calibration atlas: how this architecture was earned
 
-**[RSM-09.01]** **Read this section before applying §8 in a new domain.** These are stress cases, *not proofs of generality*. They show why particular distinctions exist and how to tell whether a method is earning its cost. Exact mappings identify what a new investigator should do, and what would have been a failure.
+The Richer Scientific Method wasn't developed simply by imagining what an ideal scientific methodology ought to look like. Much of it comes from investigating actual problems, encountering limitations in our reasoning, discovering better ways to represent or navigate those problems, and trying to understand what made those approaches useful.
 
-### [RSM-09.A] Store queue and operational institutions — from optimization to possibilities
-**[RSM-09.A.01]** **Invoke §§1(Q,M,B,C), 2, 3, 4 and 7.** We began with seemingly straightforward store/queue operations such as whether prestaging work improves service under uncertain demand. It was tempting to return one optimal policy or mean performance number. But the first question is **whether the present arrangement is even objectionable, by whose criteria, and which outcomes count as acceptable**. Alternative actions might include staffing rules, changed procedures, incentives, or no change. A linear queue model can estimate conditional waiting-time consequences but does not represent motives or the full grammar of institutional changes. **Operational move:** specify feasible interventions and their constraints; parameterize demand; compare distributions, trade-offs and sensitivities; certificate the model omissions. **Why:** without Q, “optimization” silently invents values; without an action grammar, it treats today's rules as physical law. **Failure signature:** a confident optimum whose utility weights and permitted interventions were never justified.
+In this section, we'll look at some of the investigations that motivated particular ideas in RSM.
 
-### [RSM-09.B] Strategic agents — changing the rules changes behavior
-**[RSM-09.B.01]** **Invoke §§1(M), 3, 4(backward reachability and incentives), 7.** In games and institutions, proposing new rules can change the agents' policies. Backward reasoning from cooperation may indicate enforcement or incentive conditions under which cooperating is an equilibrium, not just a favorable outcome under fixed behavior. The formerly learned transition kernel is not invariant to rule changes. **Operational move:** separate environmental dynamics from actor response and rule grammar; require incentive-compatible outcomes where relevant; explore rule changes as *hypotheses* with behavioral adaptation, then reason forward. **Why:** naive counterfactuals vary policy while freezing its behavioral consequences. **Failure signature:** a plan “works” only because agents are assumed not to react to altered incentives.
+The point isn't to demonstrate that RSM is universally correct or that every method will work equally well in every domain. Instead, we want to understand the circumstances under which these methods became useful, what obstructions they helped us address, and where their limitations might lie.
 
-### [RSM-09.C] Weather / Lorenz — the north star was a landscape, not a forecast
-**[RSM-09.C.01]** **Invoke §§1(B,Q,C), 3(parameterization), 4 and 7.** Chaotic atmospheric dynamics made single-trajectory prediction a poor answer to many practical questions. Near-identical initial states can separate; precise computations do not erase uncertainty in observations, model structure, or horizon. The goal became: **What scenarios are reachable, how plausible are classes of outcomes under warranted priors, what are their sensitivities, and where are robust decision boundaries?** A toy Lorenz system tests sensitivity, not the empirical probabilities of real weather. **Operational move:** propagate *sets or ensembles* of hypotheses; perturb initial conditions and parameters; inspect boundaries and robustness at decision-relevant horizons; keep numerical error separate from empirical/model uncertainty. **Why:** the user wants a navigable possibility landscape, not the fiction of knowing one future. **Failure signature:** beautiful deterministic trajectories presented as calibrated event likelihoods or long-range forecasts.
+In fact, we should apply RSM to RSM itself. For any particular methodological idea, we can ask what problem motivated it, what alternatives we considered, what evidence supports its usefulness, and whether we might have arrived at a better approach.
 
-### [RSM-09.D] Rare events — backwards reachability must preserve alternative routes
-**[RSM-09.D.01]** **Invoke §§3(coarse-graining), 4(backward), 5 and 7.** A rare outcome may arise via numerous distinct routes. Looking only at the most likely precursor or a single representative state undercounts or erases possibilities. If microscopic states grouped into one macrostate have different probabilities of reaching the target, the macrostate is **not a sufficient representation for this Q**, even if average behavior looks similar. **Operational move:** start at the target and propagate conditional reachability or probability backward through all admitted alternatives; preserve total path probability and error bounds; split coarse groups only where answers differ consequentially. A test for *closure* is whether hidden microscopic differences affect the projected transition law; if they do, refine or retain memory. **Why:** compression should preserve answers, not aesthetic simplicity. **Failure signature:** an apparently stable coarse model that misses a low-probability high-impact pathway or falsely calls a zero-estimate event impossible.
+These examples also give us something concrete to refer back to when applying RSM to new problems. Rather than simply following a methodological instruction because the document says so, we can inspect the investigation that motivated it and judge whether similar circumstances apply to our current problem.
 
-### [RSM-09.E] Connected infrastructure — interactions defeat naive decomposition
-**[RSM-09.E.01]** **Invoke §§3, 4, 5 and 7.** In a **synthetic** 324-bus, 637-line DC transmission model, switching the geography of generation changed which line outages caused overload; high-impact contingencies could not be inferred from isolated line load alone. The point was not that distributed generation is always safer, but that system topology makes consequences *contingent*. **Operational move:** retain the global coupling needed for the question, use a domain-specific sensitivity solver instead of individually recomputing every full case, refine bottlenecks and contingencies, and certificate omitted AC power-flow, protection, voltage and frequency physics. **Why:** factorization is an empirical/mathematical hypothesis, not an assumption that interacting pieces are independent. **Failure signature:** evaluating each component alone, or upgrading a synthetic DC result to a real-grid safety conclusion.
+### [RSM-09.A] Store queues and operational institutions — are we even optimizing the right thing?
 
-### [RSM-09.F] Scientific mysteries — provisional explanations without forced resolution
-**[RSM-09.F.01]** **Invoke §§1(M/B/C), 2, 3, 5 and 6.** In historical scientific investigations, rival theories can coexist while sharing valid consequences. Carnot's reversible-engine relationships outlived literal caloric conservation; Semmelweis's prevention argument did not require modern microbiology; Wegener's geographic evidence did not certify his proposed driving forces. **Operational move:** separate *observations*, *effective input-output laws*, *microscopic mechanisms*, *historical beliefs* and *modern hindsight*; preserve common conditional consequences; attach theory-specific predictions and discriminating observations. **Why:** demanding full mechanistic knowledge before reasoning stops useful progress, while forcing one explanation destroys uncertainty. **Failure signature:** either discarding all results of a mistaken theory or retrospectively pretending its original assumptions were correct.
+**[RSM-09.A.01]** Suppose we're investigating how to improve operations at a store. Perhaps customers are spending too long waiting in line, staff are frequently overwhelmed, or certain tasks aren't being completed efficiently.
 
-### [RSM-09.G] Algebra and Galois — search the transformations, then admit the limits of navigation
-**[RSM-09.G.01]** **Invoke §§2, 3, 4 and 6.** Quadratic completion suggests a parameterized representation; Cardano's auxiliary variables change the landscape by making a cubic reducible to simpler constraints; Lagrange's analysis asks what successful formulas share rather than assuming the quintic needs one more clever substitution. Abel's impossibility result makes the obstruction articulate. Galois's root-permutation structure remains a **non-obvious invention**. **Operational move:** investigate classes of substitutions, auxiliary variables, invariants and obstructions across prior successes; track the *whole problem*, not only independent subbranches. **Why:** intelligent question choice and repeated contact with the structure make new ideas more conceivable, but do not entail them. **Failure signature:** attributing an ingenious global representation to a routine traversal of the tree.
+It's tempting to immediately formulate an optimization problem. We could build a queueing model, estimate customer arrival rates, simulate different staffing arrangements, and search for the configuration that minimizes average waiting time.
 
-### [RSM-09.H] Neural-network history — separate technical possibility from collective recognition
-**[RSM-09.H.01]** **Invoke §§2, 3, 4(backward), 5 and 7.** Neural networks were not simply absent or universally discredited before AlexNet: earlier successes and GPU CNNs existed. The transition to broad recognition additionally required compelling comparative evidence, computational feasibility, credible evaluation and adoption incentives. **Operational move:** backward-propagate from the *specified* target (technical success versus widespread recognition), distinguish functional necessities from historically contingent implementations, then test minimally changed conditions. **Why:** causal history has multiple outcomes and reinforcing loops; the actual 2012 path was not the only conceivable one. **Failure signature:** identifying one famous paper, GPU, or inventor as a uniquely necessary butterfly cause without exploring alternative routes.
+But before doing any of that, we should ask: **What are we actually trying to accomplish?**
 
-### [RSM-09.I] Brain energy — normalize the question, then expose update-propagation costs
-**[RSM-09.I.01]** **Invoke §§2–4 and 7.** Comparing a continuous ~20 W brain with prompt-based accelerator inference conflates capabilities, training history, baseline power, useful computation, communication and substrate. The better inquiry separates **what computation is necessary**, **how experience amortizes it**, **how change propagates through persistent representation**, and **what each realization costs**. Toy selective-update savings assumed cheap detection; a dependency calculation showed small input changes may force widespread downstream recomputation. **Operational move:** hold task competence, latency and accounting boundary fixed; distinguish detection, propagation, revision, maintenance and acquisition costs; probe when local updates stay local and when global effects are essential. **Why:** “sparsity” or “biological neurons” alone cannot certify the efficiency of intelligence. **Failure signature:** large advertised energy savings obtained by not counting sensing/routing/relearning, or by allowing degraded performance.
+Is the current waiting time even a problem? For whom? Are customers dissatisfied, are workers experiencing unnecessary stress, or is the business losing revenue? Perhaps the existing arrangement is already sufficiently good, and optimizing it further wouldn't materially improve anything we care about.
 
-### [RSM-09.J] Delegation and centuries of papers — the graph must preserve intellectual continuity
-**[RSM-09.J.01]** **Invoke §§1(C), 5, 6 and 7.** The goal is not simply retrieving papers by topic. A researcher should be able to ask: **Which results depend on this premise? Which tests discriminate these theories? What should I read to work on this subproblem? What survives if a proposed mechanism is refuted?** The navigation tree represents where to look; cross-edges express evidentiary and logical relationships. Include *why a branch was opened*, *what the investigator already tried*, *what was learned*, and *which cross-branch analogies seem promising*. A short handoff retaining only conclusions loses the accumulated contact from which intuition develops. **Operational move:** construct compact claim-level certificates linked to primary sources and to their inferential ancestry; enable collapse/refinement, impact-of-retraction tracing, theory comparison, historically fair cutoffs and resumption. **Why:** human/LLM memory and attention are scarce; research must remain revisable and navigable without reducing the history to slogans. **Failure signature:** a tidy but irreproducible literature map that silently promotes conjectures into accepted results.
+Even if we identify a genuine problem, we shouldn't assume that adjusting the number of workers or changing the queueing algorithm exhausts the landscape of possible approaches.
 
-### [RSM-09.K] Babbage's carry cascades — a simple analogue exposes the cost distribution
-**[RSM-09.K.01]** **Invoke §§3 (representation and analogy), 4 (boundary perturbations), 5 (competing-model links), and 6.** In the brain-energy investigation, the research tree had *already* isolated a potential obstruction: cheap local state updates can occasionally require extensive downstream propagation. It had **not** independently produced the mathematical analogy. The user recognized an old instance: incrementing a positional numeral usually changes one digit, but a long run of maximum digits causes a carry cascade; Babbage studied anticipation of carries and mechanical radix trade-offs. Under an idealized uniform base-`b` digit model, the probability that at least `k` trailing digits demand a carry is `b^{-k}`; ordinary cost and rare long latency must be analyzed separately. **Operational move:** search for structurally matching, tractable historical models; compare alternative bases, carry anticipation, redundant encodings and deferred normalization; investigate expected cost, worst-case latency, tail risk and hardware overhead. Translate conclusions back to intelligent-state updates only conditionally: arithmetic correctness and neural representational adequacy are different obligations. **Why:** a simple well-understood analogue can make an otherwise vague *rare global update* obstruction mathematically navigable, uncover architectures, and expose the trade-off between preventing cascades and paying continuous overhead. **Failure signature:** saying the tree itself discovered Babbage's insight, or assuming that rare global updates are always artifacts rather than sometimes necessary consequences of the problem.
+We might change the procedures themselves, redistribute work, prepare certain tasks in advance, modify incentives, or reconsider how the service is organized.
 
-### [RSM-09.N] Cascading updates — stop at the useful effective interface
-**[RSM-09.N.01]** **Invoke §§3.07, 4.07, 5.02, 8.07.** The brain-energy investigation isolated a meaningful subproblem: local environmental changes may propagate through a dependency structure, and some moderately unusual changes induce disproportionately expensive global updates. Studying Babbage's mechanical carries, alternative radices, anticipation, deferral, and representation changes established a provisional *landscape*—ordinary versus tail costs, propagation reach, deadlines, and reconfiguration trade-offs. Continued mechanism-level experiments were tempting but no longer necessary to reason about the parent problem of efficient adaptive intelligence. **Operational move:** collapse the branch into a conditional input–output model, preserve its exception and validity boundaries, then ask what it implies for the overall organization and energy cost of intelligent systems. **Failure signature:** repeatedly measuring a carry-like toy model after it has already supplied the parent with its needed causal distinction.
+These possibilities belong to different parts of the investigation tree, and some might not even be represented in our initial mathematical model.
 
-### [RSM-09.M] Sleep, replay and scheduled reconciliation — useful analogy, not an equivalence
-**[RSM-09.M.01]** **Invoke §§3.07, 4.04, 5.02, 6.06, 8.06, 9.K–L.** In investigating efficient adaptive intelligence, the user connected rare expensive global revisions to sleep: retain a fast working state during active behavior, then revisit, simulate and reorganize accumulated experiences during periods with fewer real-time obligations. Research on hippocampal replay, active systems consolidation and synaptic downselection provides a real biological motivation; replay occurs in awake pauses as well as sleep, and the exact functional roles of different sleep stages are debated. **Operational move:** separate three effects—(i) *latency shifting* (repair occurs off the critical path), (ii) *work reduction* (batched or compressed reconciliation does less total work), and (iii) *learning benefit* (replay develops more reusable abstract structure). None implies the others. Introduce a pending-update queue and test burst load, correctness deadlines, stale decisions, replay selection and offline processing capacity. **Why:** the brain analogy turns a vague appeal to sleep into a falsifiable scheduling-and-representation model and reveals conditions where deferral is actually dangerous. **Failure signature:** inferring that sleep is merely a nightly full garbage collection or that its metabolic energy is zero.
+This illustrates why we should distinguish between **optimizing within a particular representation and investigating whether that representation captures the actual problem**.
 
-### [RSM-09.L] Anticipatory updates — foresee the cascade without hiding its costs
-**[RSM-09.L.01]** **Invoke §§3.07, 4.04, 5.02, 6.05 and 9.K.** Babbage's anticipating carriage shows a distinct intervention beyond choosing a radix or paying for a long sequential chain: **identify that several stages of a carry are needed before waiting for each one to complete**, permitting a faster parallel or pre-arranged response. The corresponding intelligence hypothesis is to prepare alternative internal configurations or global repairs before a rare disruptive observation arrives. **Operational move:** derive when warning information is available and what it can certify; compare reactive, warning-driven, and redundant encodings; distinguish the energy/work consumed in prediction and preparation from the latency of responding after the event; count wrong forecasts and stale alternatives. **Why:** rare-event optimization is usually a trade-off between expected cost, worst-case disruption, memory, and prediction quality, not a free reduction in all dimensions. **Failure signature:** assuming an artificial learner can reliably foresee its important surprises, or that moving computation to an earlier timestep removes the computation. Historical carry-anticipation has exact digit-state structure that general intelligence may lack.
+A queueing model might be very useful for understanding waiting times under particular assumptions. But it doesn't automatically tell us which outcomes we ought to value, what changes are institutionally feasible, or whether the available interventions have been represented adequately.
+
+We should therefore examine our parent purpose, identify the relevant constraints and possible actions, and explore what different outcomes would actually change before committing to a particular optimization.
+
+### [RSM-09.B] Strategic agents — changing the rules can change the behavior
+
+**[RSM-09.B.01]** Now consider problems involving people, institutions, markets, or other agents that make decisions in response to their environment.
+
+One difficulty with these systems is that changing the rules doesn't necessarily leave everyone else's behavior unchanged.
+
+For example, suppose we want to introduce a new incentive system to encourage cooperation between several groups.
+
+We might initially model their existing behavior and conclude that a particular policy would produce a desirable outcome.
+
+But what happens when the groups themselves recognize the new incentives? Could they change their strategies? Might some find ways to exploit the rules? Could an intervention that initially appears beneficial produce entirely different behavior once everyone adapts?
+
+This means we can't necessarily take a model of how people behave under one set of rules and assume it will remain valid after changing those rules.
+
+We should investigate both the proposed intervention and how the system's constituent agents might respond to it.
+
+Backward reasoning can be particularly useful here. If we want cooperation to emerge, what conditions would make cooperation a reasonable or stable choice for the agents involved? What incentives, constraints, or institutions might produce those conditions?
+
+We can then reason forward to investigate what happens when those changes are actually introduced, including whether the agents have reasons to behave differently from what we initially expected.
+
+The important distinction is between **changing a system while holding its behavior fixed in our model and changing a system whose behavior itself depends on the changes we make**.
+
+This is another example of why we need to understand the dynamics and relationships amongst a system's constituent parts, rather than treating our initial representation as an unquestionable description of reality.
+
+### [RSM-09.C] Weather and the Lorenz system — sometimes we care about the landscape, not one prediction
+
+**[RSM-09.C.01]** Suppose we're trying to predict the weather.
+
+We might initially imagine that the goal is to calculate the future state of the atmosphere as accurately as possible.
+
+But atmospheric dynamics are complicated, and small differences in initial conditions can lead to substantially different trajectories over time. Even highly precise numerical calculations don't necessarily eliminate uncertainty about the actual system.
+
+This raises a more interesting question: **Do we actually care about one predicted future, or do we care about the landscape of futures that could reasonably occur?**
+
+For example, suppose we're planning an outdoor event. We might care less about one exact prediction of the temperature and wind speed than about the plausible range of conditions, the probability of heavy rain, the consequences of different scenarios, and which decisions would remain sensible under uncertainty.
+
+We can investigate this by varying initial conditions, model parameters, or competing assumptions and studying how the system's behavior changes.
+
+The Lorenz system offers a useful mathematical example of how nearby initial states can evolve into very different trajectories. By experimenting with it, we can develop intuition for sensitivity to initial conditions and the limitations of long-term deterministic prediction.
+
+But we should be careful about what we've actually established. A mathematical simulation of the Lorenz system doesn't automatically certify the probability of a particular real-world weather event.
+
+It helps us understand certain kinds of dynamics and uncertainty, while empirical weather predictions require additional models, observations, and validation.
+
+This investigation illustrates why we should preserve the distinction between **what is possible, what is probable, and what we've actually established through evidence**.
+
+It also demonstrates why exploring a family of scenarios can sometimes be much more useful than pursuing increasingly precise calculations of one particular trajectory.
+
+### [RSM-09.D] Rare events — the danger of averaging away what actually matters
+
+**[RSM-09.D.01]** One of the difficulties with simplifying complicated systems is that we can accidentally remove precisely the details that matter most.
+
+Suppose we're investigating the reliability of our cardboard RC plane.
+
+We could perform several simulations under ordinary flight conditions, calculate the average structural load, and conclude that the wing is sufficiently strong.
+
+But what happens during a sudden maneuver, an unexpected gust, or a particular combination of loading conditions?
+
+A structural failure might be rare under ordinary operation but still be consequential enough that we should understand the conditions leading to it.
+
+This is where backward reasoning becomes especially useful.
+
+Rather than only simulating typical flights and observing what happens, we can start with the undesirable outcome—structural failure—and investigate the different routes that could lead to it.
+
+Could the wing fail through bending, buckling, twisting, material fatigue, or failure at a connection? Do these mechanisms have different precursors? Could combinations of otherwise harmless conditions cause failure?
+
+We should be careful not to simplify these distinct mechanisms into one average representation if doing so causes us to overlook important routes to failure.
+
+For example, two wing designs might experience similar average loads while behaving very differently near their respective instability thresholds.
+
+This doesn't mean we should investigate every imaginable catastrophe or increasingly improbable scenario. We should reason about the likelihood, consequences, and relevance of different failure modes to the parent problem.
+
+The point is that **a representation that describes ordinary behavior well isn't necessarily sufficient for understanding rare but consequential behavior**.
+
+When necessary, we should increase resolution around relevant thresholds, preserve alternative routes to the outcome, and investigate which assumptions or simplifications could be hiding important possibilities.
+
+### [RSM-09.E] Connected infrastructure — why understanding the parts isn't always enough
+
+**[RSM-09.E.01]** Suppose we're investigating how to make an electrical power grid more reliable. We might begin by examining its constituent generators, transmission lines, and substations, then asking which components are likely to fail or become overloaded.
+
+But a power grid is a connected system. What happens to one part depends on what's happening elsewhere, including where electricity is generated, where it's consumed, and which alternative routes remain available when a line goes down.
+
+In one synthetic investigation involving a 324-bus, 637-line DC transmission model, changing the locations of generation changed which line outages caused overloads. A line's importance couldn't be understood simply by inspecting its original load in isolation. Its consequences depended on the larger network and on how flows redistributed after a disturbance.
+
+This is why **decomposing a problem doesn't mean its constituent parts become independent**. Our investigation tree can organize local questions, but the relationships amongst those branches still matter. We might use efficient sensitivity calculations to explore many possible line failures, then increase resolution around the contingencies that appear most consequential.
+
+Careful though! The example was a synthetic DC power-flow model, not a validated prediction of the safety of a real grid. It leaves out important AC behavior, voltage dynamics, protection systems, and frequency effects. The conclusion isn't that one geography of generation is always safer than another. It's that **the arrangement and coupling of the system can materially change the consequences of the same local event**.
+
+### [RSM-09.F] Scientific mysteries — useful understanding before the entire mechanism is known
+
+**[RSM-09.F.01]** Scientific investigations don't always progress by identifying one complete explanation and then discarding everything associated with competing theories.
+
+Consider Carnot's work on heat engines. Some of his reasoning was developed using the caloric theory of heat, which was later rejected. Yet useful relationships concerning reversible engines and limits on efficiency survived the change in explanation.
+
+Or consider Semmelweis. His evidence that handwashing could reduce maternal deaths mattered even without a modern microbiological account of the organisms responsible. Similarly, Wegener brought together geographical and geological evidence for continental movement, although his proposed driving mechanisms were not adequate by modern standards.
+
+In each example, it helps to separate **what was observed, what relationship was established, what mechanism was proposed, and what later investigations revealed**. A flawed mechanism doesn't automatically invalidate every observation or effective relationship associated with it. Conversely, an effective prediction doesn't certify the entire theory used to produce it.
+
+This is why RSM preserves competing explanations and conditional findings in the investigation tree. We can keep making progress, develop discriminating questions, and certify what we've actually established without pretending that every unresolved mechanism has been solved.
+
+### [RSM-09.G] Algebra and Galois — sometimes the breakthrough is a new way of seeing the whole problem
+
+**[RSM-09.G.01]** The history of solving polynomial equations is a useful illustration of how representations, substitutions, and obstructions can change the landscape of a problem.
+
+Completing the square gives us a systematic way to approach quadratic equations. Methods for cubic equations introduce auxiliary variables that make the original constraints more tractable. These aren't merely faster calculations; they change how the problem is represented.
+
+If we then ask how to solve higher-degree equations, one tempting approach is to keep searching for another clever substitution. But we can also ask a more general question: **What do the successful methods have in common, and what would prevent the same kinds of methods from working in a broader family of equations?**
+
+The historical work of Lagrange, Abel, and Galois illustrates different stages of this shift. Instead of treating each equation as an isolated puzzle, investigators examined the structural properties of classes of equations, including the relationships among their roots and which transformations preserve those relationships.
+
+Galois's use of permutation-group structure wasn't simply the inevitable next step of decomposing a pre-existing investigation tree. It required a genuinely new conceptual representation.
+
+That's an important lesson for RSM: **investigation trees make our knowledge navigable, but they don't manufacture invention**. Repeatedly comparing cases, investigating failed methods, and maintaining contact with the bigger problem can make a breakthrough more conceivable. We should still recognize the intellectual leap involved when someone discovers a new way to represent the entire problem.
+
+### [RSM-09.H] Neural-network history — invention, feasibility, and widespread recognition are different questions
+
+**[RSM-09.H.01]** Suppose we ask: "Why did deep learning suddenly become successful around 2012?"
+
+Already, we should ask whether we're even posing the right question. Are we investigating when neural networks first became technically useful, when they became computationally practical on larger problems, or when a wider research community began paying serious attention to them?
+
+These are different outcomes with different parent questions. Neural networks and convolutional approaches existed well before AlexNet, and researchers had already demonstrated important results. But convincing performance on a widely recognized benchmark, available computing hardware, practical training techniques, and broader adoption incentives all affected the visibility and uptake of the work.
+
+We can reason backward from each outcome to the capabilities and evidence it required. We should then distinguish **necessary functional requirements** from the particular implementations, institutions, people, and events that happened to satisfy them historically.
+
+Careful though! Knowing the eventual outcome makes it easy to write a story in which every earlier event points inevitably toward the famous breakthrough. A better historical investigation asks what alternatives were reasonable with the information available at the time, what might have changed the trajectory, and which conclusions are only obvious in hindsight.
+
+### [RSM-09.I] Brain energy — are we even comparing the same thing?
+
+**[RSM-09.I.01]** The human brain operates at roughly tens of watts, while modern AI systems can require substantial computational infrastructure. It's tempting to compare the two numbers and immediately ask how to make artificial intelligence as energy-efficient as the brain.
+
+But what exactly are we comparing? Continuous biological perception and control? A short burst of model inference? The cost of training and acquiring competence? Memory maintenance, communication, learning, or long-term adaptation?
+
+Before looking for optimizations, we should identify which capabilities need to be held comparable and what costs we're actually counting. Otherwise, an apparently impressive efficiency improvement might simply come from excluding a large part of the work or allowing the system to perform a different task.
+
+One possibility worth investigating is whether an intelligent system can update only the portions of its internal state affected by new information. But this leads to another question: **How do we know which portions need updating?** A seemingly small change might propagate through a large network of dependencies, making an ostensibly local update unexpectedly expensive.
+
+So the investigation branches into detecting relevant changes, tracking their consequences, revising internal representations, preserving correctness, and accounting for the total work involved. The point isn't to declare biological intelligence automatically superior in every dimension. It's to develop a more precise landscape of the capabilities, costs, and possible architectures we actually care about.
+
+### [RSM-09.J] Delegation and centuries of papers — preserve intellectual continuity
+
+**[RSM-09.J.01]** Suppose an investigation grows to involve hundreds of papers, several competing theories, many experiments, and multiple people or LLMs working on different branches.
+
+Simply collecting the references isn't enough. We should be able to ask: **Which conclusions depend on this particular assumption? Which experiments distinguish the competing explanations? What would survive if a proposed mechanism were refuted? What should someone read to continue investigating this branch?**
+
+This is where our investigation tree and its cross-linked evidence graph become especially useful. The tree helps us navigate the broader purpose and constituent problems. The relationships between nodes preserve which claims support, challenge, depend on, or refine one another.
+
+As discussed in RSM-01.04 and RSM-06.03, we should preserve not only the conclusion but its trajectory and first-hand references. If another investigator has misgivings about our interpretation of a source, they should be able to inspect it themselves and see precisely which line of reasoning depends on it.
+
+A good handoff shouldn't require somebody to repeat months of research merely to reconstruct why a branch exists or how we reached a tentative conclusion. But it also shouldn't flatten the investigation into a handful of confident statements that obscure uncertainty, disagreement, or alternative possibilities.
+
+The aim is to preserve enough of our intellectual continuity that we can **expand, challenge, resolve, or debate the need for any node in the investigation tree**, even after the original investigator has moved on.
+
+### [RSM-09.K] Babbage's carry cascades — an old problem exposes a new obstruction
+
+**[RSM-09.K.01]** While investigating the energy cost of updating an intelligent system, we encountered a possible obstruction: many changes might be handled locally, but certain changes could require expensive updates throughout a much larger dependency structure.
+
+A useful analogy came from positional arithmetic and Babbage's mechanical calculating machines. Incrementing a number is usually cheap. But if the number ends in a long run of maximum digits, a carry can propagate across many positions.
+
+For an idealized model with independent, uniformly distributed base-`b` digits, the probability of encountering at least `k` trailing maximum digits is `b^{-k}`. This lets us distinguish ordinary update costs from rare but potentially long carry chains and investigate their distribution rather than only their average.
+
+We can then explore alternative radices, carry anticipation, redundant representations, or delaying normalization. Each approach changes a different part of the cost landscape: the ordinary work, exceptional latency, memory overhead, or complexity of maintaining the representation.
+
+This mathematical analogy makes a previously vague obstruction much easier to analyze. But we should preserve what actually happened in the investigation: **the tree helped expose the obstruction; the investigator recognized the Babbage analogy**. The method shouldn't claim credit for independently inventing an analogy that someone supplied.
+
+And the analogy has limits. Arithmetic carries obey exact rules; an intelligent system's internal representations might not have such cleanly defined dependencies. What transfers is a useful family of questions and candidate mechanisms, not proof that the two systems are equivalent.
+
+### [RSM-09.L] Anticipatory updates — can we foresee an expensive change?
+
+**[RSM-09.L.01]** Once we've identified that rare events may cause expensive updates, we might ask whether some of that work can be prepared in advance.
+
+Babbage's anticipation of carrying suggests one version of this idea. Instead of waiting for a carry to move sequentially through every stage, a calculating mechanism can use information about the current digits to prepare for or accelerate the propagation.
+
+What would the corresponding idea look like in an intelligent system? Could it prepare alternative internal states, maintain reserve capacity, or anticipate a consequential change before that change arrives?
+
+We should compare this against simply responding when the event occurs. How often does the event happen? How costly is anticipation? Can the system actually obtain a reliable warning signal? What happens when its forecast is wrong, its prepared state becomes stale, or it encounters an entirely unexpected event?
+
+**Moving work earlier doesn't necessarily reduce the total work.** It might reduce response latency, increase average overhead, improve worst-case performance, or merely relocate the cost. These are different conclusions and should be certified separately.
+
+We should also distinguish exact advance knowledge, such as dependency information in arithmetic, from probabilistic forecasts about the future. The latter can be useful, but its uncertainty and failure cases are part of the problem, not details we can assume away.
+
+### [RSM-09.M] Sleep, replay, and scheduled reconciliation — could we reorganize understanding later?
+
+**[RSM-09.M.01]** Another possibility is to separate the parts of an intelligent system that must respond immediately from the parts that can be revisited and reorganized later.
+
+One analogy comes from sleep and memory consolidation. Research on replay and related processes suggests that experiences can be reactivated and reorganized outside the original moment of experience. But replay also occurs during wakefulness, and the exact roles of different processes remain subjects of investigation.
+
+We might therefore explore an engineering design in which an agent maintains a fast working state during active operation while accumulating some observations, conflicts, or possible representation changes for later reconciliation.
+
+This leads to concrete questions. Which decisions absolutely require immediate correctness? What information could safely remain provisional? How large might the backlog become? How do we select what to revisit, verify the resulting changes, and reintegrate them without introducing new inconsistencies?
+
+Importantly, we should distinguish **shifting work away from a time-critical period, reducing the total amount of work, and learning a more useful representation**. These are different potential benefits. A system might achieve one without the others.
+
+Careful though! Sleep isn't simply evidence that a brain performs a nightly global software update, and deferred computation isn't free. The biological analogy gives us hypotheses worth investigating, not a certified engineering architecture.
+
+### [RSM-09.N] Cascading updates — know when we've investigated a branch enough
+
+**[RSM-09.N.01]** After exploring the carry analogy, anticipation, alternative representations, and deferred reconciliation, we could have continued inventing progressively more detailed experiments about how updates propagate through toy dependency systems.
+
+But we should return to the bigger picture. What were we actually trying to understand? The parent question concerned the organization and energy cost of adaptive intelligence, not positional arithmetic for its own sake.
+
+By this point, we had identified a useful conditional picture: ordinary changes might be inexpensive; certain changes can induce large propagation costs; different architectures trade preparation, average work, worst-case latency, storage, and correctness obligations against one another.
+
+That is already enough to ask better questions about the parent problem, even though we haven't resolved every possible mechanism of state revision.
+
+We can therefore **collapse the branch into an effective description**, preserve its assumptions, exceptions, and reopening conditions, and return to the larger investigation.
+
+This is an example of why more experiments aren't always better. If another measurement of a toy carry process wouldn't materially change the parent conclusion or which approaches deserve attention, the appropriate next move might be to investigate a different branch entirely.
+
+### [RSM-09.O] Nested purposes in practical engineering — what are we actually building for?
+
+**[RSM-09.O.01]** Suppose someone asks how to build an RC car. Are they primarily trying to own a working car, or are they using the car as a way to develop general competence in remote control, electronics, mechanical systems, and engineering?
+
+Both are legitimate goals, but they suggest different approaches. If the goal is simply a functioning vehicle, purchasing a controller and using a straightforward chassis might be the sensible choice. If the goal is developing transferable engineering skills, designing or exposing some of those interfaces may be exactly what makes the project worthwhile.
+
+The same distinction appears in other projects. An oscilloscope that displays attractive waveforms isn't necessarily an instrument that produces trustworthy measurements. A quadcopter that stabilizes its attitude isn't necessarily capable of hovering over a fixed position.
+
+We should therefore move upward toward the parent purpose and reason backward toward the capabilities that purpose actually requires, rather than silently assuming that one impressive demonstration proves a much broader capability.
+
+There is also no reason to erase multiple legitimate purposes. A project can be simultaneously a useful device, a learning vehicle, and a stepping stone toward a larger engineering ambition. The investigation tree helps us keep these purposes visible so we can decide which design choices serve which goals.
+
+### [RSM-09.P] Scientific institutions — the landscape includes growth, decline, migration, and reproduction
+
+**[RSM-09.P.01]** Consider the question: "Why do some scientific institutions become excellent?"
+
+It's an interesting question, but it examines only one region of a larger landscape. We could also ask what maintains scientific capacity, what causes it to decline or disperse, where expertise moves when institutions are disrupted, and how new generations of capable investigators emerge.
+
+These questions are related, but they aren't interchangeable. A highly productive scientist isn't necessarily evidence of an institution that can reproduce excellence across generations. A country's relative standing in citations isn't the same as the health of a particular laboratory or the experiences of individual researchers.
+
+Historical investigations into the dismissal of scholars from German universities in 1933 and the later contributions of émigré scientists illustrate why we should distinguish these scales and outcomes. The damage to one institution and the contributions of displaced researchers elsewhere can both matter without being the same phenomenon or supporting a simple universal story.
+
+Rather than forcing all of this into one explanation for institutional excellence, we can build a richer landscape of questions about **creation, persistence, collapse, migration, and reproduction of scientific capability**.
+
+We should then investigate the relevant mechanisms and evidence at the appropriate scale, preserving what each historical source actually establishes and what remains uncertain.
+
+The lesson isn't that we must generate every conceivable complementary question. It's that a few well-chosen alternatives can expose a much more useful picture of what we originally wanted to understand.
 
 ## [RSM-10] Behavioral acceptance tests for a newly initialized investigator
 
@@ -1002,15 +1226,3 @@ The following specialized protocols are retained under their original identifier
 | `RSM-10` | Behavioral acceptance tests |
 
 **Maintenance rule:** IDs are permanent semantic references. If a passage is significantly rewritten, record its version/date in a changelog; if its meaning changes incompatibly, issue a new ID and mark the old one superseded. This protects the user's ability to point to a specific earlier idea across chats, research notes, and models.
-
-
-### [RSM-09.O] Nested purpose in practical engineering — RC car, oscilloscope, quadcopter
-**[RSM-09.O.01]** **Invoke §§2.10–2.11, 3, 4(backward necessity), 5 and 7.** A request to *build an RC car* may have at least two independent purposes: obtain a functioning car, or acquire broadly transferable skills for constructing many remote-controlled devices. The former can rationally select a ready-made controller and simplest chassis; the latter may justify exposing radio, motor and feedback interfaces, provided the extra learning is intentional. An oscilloscope has a similar distinction between producing attractive plots and producing trustworthy measurements. A quadcopter that self-levels is not necessarily one that hovers at a fixed location. **Operational move:** identify parent purposes, preserve alternate goal interpretations, derive conditional minimal architectures, and expose interfaces so others can learn or replace subsystems without relearning everything. **Why:** downward decomposition alone can efficiently optimize the wrong project. **Failure signature:** teaching an entire textbook or adding sophisticated autonomy when the actual target was a bounded capability—or removing useful learning opportunities when learning was itself the purpose.
-
-
-### [RSM-09.P] Institutional rise, exile, and reproduction — question-landscape calibration
-**[RSM-09.P.01]** **Invoke §§2.09–2.12, 3.03, 5.02–5.04, 8.07.** The naive question *Why do great scientific institutions become excellent?* samples only one region of a larger problem. The meaningful complementary questions are *What maintains scientific capacity? What destroys or disperses it? Where does it migrate? What makes it reproduce in new scientists?* These reveal distinct outcomes at individual, laboratory, field, national, and intergenerational levels. Studies of the 1933 dismissals in German universities and of German Jewish chemist émigrés' influence on U.S. invention may appear inconsistent until their units and outcomes are separated. **Operational move:** correct the parent question, retain their distinct causal claims and source conditions, and identify common requirements for persistence and renewal without flattening history into a universal theory. **Stop:** when the landscape is enough to prioritize meaningful comparisons, rather than generating indefinitely many historical counterfactuals. **Failure signature:** interpreting a country’s relative citation rank, an individual’s migration, and a laboratory’s collapse as the same phenomenon, or equating a productive scientist with a self-reproducing research ecosystem.
-
-
-
-Minor reference note for review purposes: This document was made in collaboration and heavy discussion with https://chatgpt.com/c/6ad594f7-fde8-83e9-a0ea-f268b6e46a1d
