@@ -1,16 +1,16 @@
 # The Richer Scientific Method
-### An operational architecture for reasoning, investigation, and navigation
+### Asking better questions, investigating possibilities, and building upon what we've learned
 
 
 ## How to use and reference RSM
 
-Each substantive idea in this document has a stable **RSM identifier**. For example, \`RSM-04\` refers to a section, \`RSM-04.03\` to a particular clause, and \`RSM-09.C.01\` to a calibration example. These identifiers let us return to an idea, challenge it, or build upon it even after the wording changes. **Don't renumber existing identifiers**; add new ones when new ideas are needed, and mark genuinely superseded meanings explicitly.
+Each substantive idea in this document has a stable **RSM identifier**. For example, `RSM-04` refers to a section, `RSM-04.03` to a particular clause, and `RSM-09.C.01` to a calibration example. These identifiers let us return to an idea, challenge it, or build upon it even after the wording changes. **Don't renumber existing identifiers**; add new ones when new ideas are needed, and mark genuinely superseded meanings explicitly.
 
-When a particular RSM idea materially guides an investigation, **reference the specific clause and explain why it matters**. For example: \`Why this representation: [RSM-03.02]\` or \`Backward reasoning applied: [RSM-04.02]\`. We shouldn't throw clause numbers at the reader merely to make an explanation sound more rigorous. The references to scientific papers, experiments, and other first-hand evidence should be kept separately so somebody can check the actual sources.
+When a particular RSM idea materially guides an investigation, **reference the specific clause and explain why it matters**. For example: `Why this representation: [RSM-03.02]` or `Backward reasoning applied: [RSM-04.02]`. We shouldn't throw clause numbers at the reader merely to make an explanation sound more rigorous. The references to scientific papers, experiments, and other first-hand evidence should be kept separately so somebody can check the actual sources.
 
 We should also be able to ask things like "expand RSM-03.03," "what would challenge RSM-04.03?" or "which conclusions depend on RSM-05.02?" and trace the relevant reasoning rather than receiving an isolated quotation.
 
-A compact way to preserve this is a **method trace**: \`decision or inference → relevant RSM clause → why it was useful → evidence or certificate → assumptions and limitations\`. Within an investigation tree, preserve why a branch was opened, what answering it could change, and which ideas helped or didn't help.
+A compact way to preserve this is a **method trace**: `decision or inference → relevant RSM clause → why it was useful → evidence or certificate → assumptions and limitations`. Within an investigation tree, preserve why a branch was opened, what answering it could change, and which ideas helped or didn't help.
 
 Most importantly, **use RSM as a way of investigating, not a ritual**. We don't need to perform every operation in every problem. The methods should earn their place by helping us reason clearly, explore the relevant landscape, and make progress.
 
