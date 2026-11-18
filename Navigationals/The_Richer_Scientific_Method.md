@@ -14,7 +14,19 @@
 
 **Use this as an operating discipline.** The point of each operation below is to correct a failure we encountered while reasoning about real or stipulated systems; do not execute a step unless the question makes it relevant.
 
-**Purpose.** Given an imperfect understanding of a system or problem, efficiently discover **what is possible**, **which choices or transformations are available**, **what their consequences might be**, and **what one should investigate next**. Preserve the reasoning so another person or model can inspect, challenge, continue, and reorganize it. The product is a **question-conditioned, theory-conditional possibility landscape**
+## Purpose
+
+The Richer Scientific Method (RSM) is an exposition and consolidation of my thoughts and experiences applying the scientific method to various problems I've encountered in my life. It is an attempt to develop a clearer, more systematic way of investigating problems, asking better questions, and building upon what we've learned.
+
+Often we don’t actually care about the question in itself, but the broader landscape of questions it belongs to, where that question is simply an element in that set. Is our initial question \(Q\) even the right sort of question to be asking? What are we actually trying to understand or accomplish? What is the bigger picture, or parent purpose \(P(Q)\), that motivated the question in the first place?
+
+Understanding that larger purpose helps us discover other questions we might not have considered, and reason clearly and more objectively about what actually matters and which questions are actually relevant.
+
+The goal isn't just to arrive at an answer but to arrive at an understanding of the answer and an understanding of the trajectory to the answer, and what sub conditions or constraints could materially change the answer.
+
+We need a clear and consistent methodology and contract for going about this so that we or someone else can revisit it, challenge it, and build upon it and LLMs can work on problems in a consistent way and inspectable way.
+
+This is particularly important when working with large language models, where we want different models and investigators to approach problems in a consistent, inspectable way without having to reconstruct the reasoning from scratch.
 
 ## [RSM-01] The kernel: four epistemic objects, one investigator
 
