@@ -426,18 +426,141 @@ Understanding this distinction helps us identify which ideas might transfer, suc
 
 ## [RSM-04] Investigate the possibility landscape
 
-**[RSM-04.01]** Operate in whichever order the problem demands; revisit questions and representations continually:
+Once we have a question and some representation of the problem, we can begin exploring the landscape of possibilities surrounding it.
 
-- **[RSM-04.02]** **Discover possibilities (reachability):** Which actions, states, theories, rule changes, and target-reaching pathways are admissible? Propagate constraints **backward** from a desired/undesired condition to necessary precursors, candidate interventions, and obstructions. Admit new rules/actions only within an explicit hypothesized grammar; distinguish physical necessity from a convention of the current model.
-- **[RSM-04.03]** **Learn consequences (forward reasoning):** Run proofs, simulations, experiments, histories, or causal analysis to understand how candidate actions and conditions evolve. Record outcome sets, probabilities/bounds where justified, stability, bifurcations, incentives, sensitivities, multiple routes, and trade-offs—not only an average score.
-- **[RSM-04.04]** **Acquire information strategically:** Across *trails/runs of self-play*, perturb parameters, initial conditions, policies, intermediate variables, or adversarial hypotheses to find thresholds, counterexamples, boundary effects, latent dependencies, and robust conclusions. Probe where uncertainty matters, not everywhere uniformly. Mathematical self-play is a method of model-conditional exploration, **not evidence that the model is true**.
-- **[RSM-04.05]** **Update beliefs legitimately:** Real observations and identified evidence can condition empirical belief through stated likelihoods or explicit qualitative argument. Keep structural/model, measurement, statistical, numerical, approximation, and computational uncertainty distinct. A precise simulation under a wrong model remains a conditional result.
-- **[RSM-04.06]** **Navigate rather than worship optimality:** Map acceptable and unacceptable regions and *multidimensional* preferences. Ask whether a decision is sufficient, robust, reversible, safe, or incentive-stable; don't impose an invented scalar utility or maximize something the user does not value.
-- **[RSM-04.07]** **Stop, collapse, and reintegrate intelligently:** A branch is sufficiently investigated when its *parent question* can use a qualified effective description of its relevant behavior: admissible inputs and outputs, regimes, sensitivities, exceptional boundaries, consequential uncertainties, and assumptions. **Do not demand a microscopic mechanism or asymptotically improving precision if it would not change the parent's conclusions.** Package a conditional certificate and return it to the parent investigation; continue reasoning at the parent level. Reopen only if a parent-level conclusion becomes sensitive to an unresolved distinction, new evidence invalidates the certificate, or a changed question demands more resolution. The next experiment must earn its information value *relative to the parent goal*, not merely promise a locally interesting result. **Failure signature:** indefinitely elaborating an already usable subproblem while the original investigation stalls.
+We want to understand not just whether something is possible, but under what conditions it becomes possible, what constraints or mechanisms govern it, what alternative routes might exist, and what the consequences of those possibilities would be.
 
-**[RSM-04.08]** **Three research outcomes worth preserving:** (a) an explicit solution/decision, (b) a partial but warranted map of possibilities and consequences, (c) an obstruction or representation failure that explains what would be required for progress. Do not interpret (b) or (c) as failure to finish.
+There isn't necessarily one fixed sequence for doing this. We should move between different methods of investigation depending on what we've learned, what remains uncertain, and which questions are actually relevant to the bigger picture.
 
-**[RSM-04.09]** **Invariant:** *possible*, *probable*, *necessary*, *sufficient*, *causal*, *stable*, *robust*, and *empirically validated* are different claims.
+### [RSM-04.01–04.02] Investigate what is possible — backward reasoning
+<!-- RSM-04.01 RSM-04.02 -->
+
+Suppose we want to build an RC plane out of cardboard.
+
+Rather than immediately choosing a design and trying to make it work, we can start with the desired outcome and reason backward.
+
+What would have to be true for a cardboard RC plane to fly? What aerodynamic, structural, propulsion, and control requirements would it need to satisfy? Which of these requirements are necessary, and which depend on the particular design we've imagined?
+
+We can then explore the different ways those requirements might be satisfied.
+
+For example, perhaps the cardboard doesn't have to support every load by itself. Perhaps a different wing geometry, internal structure, reinforcement arrangement, or flight regime could make the design feasible.
+
+This is **backward reasoning**: starting from an outcome, identifying the conditions necessary to reach it, and investigating the possible mechanisms, actions, or transformations that could satisfy those conditions.
+
+We can also reason backward from outcomes we want to avoid. If our plane must not experience structural failure during flight, what conditions could lead to that failure? What would have to happen beforehand, and what design choices could prevent it?
+
+But what happens after our plane hits a wall or crashes into the ground? Given the real possibility of deforming or damaging its cardboard structures, should we consider modularity and repairability as part of the design from the beginning? Perhaps we want to be able to quickly swap out damaged wings, structural supports, or other cardboard components rather than rebuild the entire aircraft.
+
+What would that capability actually require? What kinds of joints, connections, or fastening mechanisms would allow us to replace parts easily while still maintaining sufficient structural integrity during flight? Could some connections be designed to release or fail preferentially during a crash, protecting more expensive components? How would these choices affect the plane's mass, stiffness, and aerodynamic performance?
+
+Notice how considering a plausible failure scenario reveals an entirely new landscape of design questions and constraints. We aren't just investigating whether the plane can fly, but what it would take for the aircraft to remain practical to operate, maintain, and repair.
+
+Importantly, we should distinguish between constraints imposed by the actual system and constraints introduced by our current representation or proposed implementation.
+
+We should also be willing to consider changing the rules of our proposed approach, provided those changes preserve the parent purpose we're actually trying to accomplish.
+
+### [RSM-04.03] Investigate what follows — forward reasoning
+
+Backward reasoning helps us identify possible routes toward an outcome. Forward reasoning helps us understand what actually follows from those routes.
+
+Given some initial conditions, assumptions, and proposed actions, what happens next?
+
+We might use mathematical analysis, physical experiments, simulations, historical evidence, or existing implementations to investigate the consequences of a particular possibility.
+
+For example, suppose we identify a promising cardboard wing design. We could investigate how it behaves under different aerodynamic loads, how much it deforms, how its deformation affects flight stability, and whether those effects create additional problems elsewhere in the aircraft.
+
+We shouldn't necessarily limit ourselves to one predicted outcome. A design might work under ordinary conditions but fail under stronger winds, higher speeds, or unusual loading conditions.
+
+We should therefore try to understand the broader landscape of outcomes, including relevant thresholds, boundary cases, sensitivities, and alternative trajectories.
+
+**Backward reasoning helps us discover what might make something possible. Forward reasoning helps us understand what happens if we actually pursue it.**
+
+This pairs really well with the practice of generating a question tree before an investigation, which we discussed earlier in **RSM-02.08**. Recall our cardboard RC plane example, where we explicitly considered possible answers—no, yes, yes under certain conditions, or yes but with particular limitations—and what we would investigate next depending on those answers.
+
+Backward reasoning helps us identify what would be required for each possibility to hold, while forward reasoning lets us explore the consequences of those possibilities. Together, they help us generate richer question trees, expose assumptions, and better understand which branches of the investigation are actually worth pursuing.
+
+### [RSM-04.04] Experimentation and self-play: explore the system, not just one solution
+
+Once we have a model or working representation of a system, we can begin deliberately varying its conditions, parameters, assumptions, or proposed actions to explore how its behavior changes.
+
+This is where experimentation, simulation, and what I like to think of as **self-play** become especially useful.
+
+Rather than running one simulation or experiment and treating its result as the answer, we can investigate entire families of related scenarios.
+
+For our cardboard RC plane, we might vary wingspan, mass, material thickness, propulsion power, wing geometry, reinforcement arrangements, and flight conditions.
+
+We could then explore questions such as: Which combinations work? Where do failures begin to appear? Are there unexpected regions where one design outperforms another? Which parameters actually matter most, and which have surprisingly little effect?
+
+We can also deliberately investigate scenarios where our current assumptions or favored explanations might fail.
+
+The purpose isn't to generate as many experiments as possible. It's to learn something consequential about the system, discover relationships or boundaries we hadn't considered, and improve our understanding of the broader possibility landscape.
+
+Importantly, simulation and mathematical self-play reveal what follows **within the assumptions and rules of the model we're using**. They don't, by themselves, establish that those assumptions accurately describe reality.
+
+### [RSM-04.05] Revise what we believe as we learn
+
+As we investigate, we should continually revise our beliefs in light of what we've actually learned.
+
+If an experiment produces an unexpected result, we should ask whether our model was wrong, our assumptions were incomplete, our measurements were misleading, or whether we've discovered something genuinely new about the system.
+
+We should distinguish between direct observations, mathematical deductions, simulation results, approximate calculations, hypotheses, and interpretations of evidence.
+
+For example, a simulation might predict that our cardboard wing can withstand a particular load. But that prediction depends on the material properties, boundary conditions, geometry, and physical mechanisms represented in the simulation.
+
+A real-world experiment might confirm the prediction within some range of conditions, or reveal failure modes the simulation didn't capture.
+
+We should preserve these distinctions in our beliefs and certificates rather than treating every result as equally established.
+
+The point is to maintain an understanding not only of what we currently believe, but **why we believe it, what evidence supports it, and within what reasonable scenarios those beliefs remain valid**.
+
+### [RSM-04.06] Don't assume every investigation has one optimal answer
+
+Not every problem has one best solution, and not every investigation should be reduced to maximizing a single quantity.
+
+For example, the best cardboard RC plane depends on what we actually care about.
+
+Are we trying to minimize cost? Maximize flight duration? Make the aircraft as lightweight as possible? Build something that survives repeated crashes? Learn about aerodynamics and structural engineering? Or demonstrate that an apparently unconventional material can work?
+
+Different goals might lead to different designs, and some goals may compete with one another.
+
+We should therefore investigate the relevant landscape of trade-offs, acceptable outcomes, constraints, and alternatives rather than assuming that one numerical score captures everything we value.
+
+Sometimes a sufficiently good, robust, inexpensive, or easily reversible solution is more useful than a theoretically optimal one.
+
+### [RSM-04.07] Know when to collapse a branch and return to the bigger picture
+
+One of the dangers of an investigation tree is that we can keep descending into increasingly detailed subproblems indefinitely.
+
+We might become extremely knowledgeable about one constituent mechanism while making very little progress on the bigger problem that originally motivated the investigation.
+
+This is why we need to know when we've understood a branch sufficiently for the purposes of its parent.
+
+For example, suppose we've investigated several cardboard wing structures and established that one candidate can withstand the relevant loading conditions with a reasonable margin of confidence.
+
+We might still be able to study the material's microscopic behavior, develop more precise simulations, or optimize the structure further. But would that additional work materially change whether we can build a functioning RC plane?
+
+If not, we can collapse that branch into a certificate containing its relevant findings, assumptions, constraints, uncertainties, and the conditions under which we might need to revisit it.
+
+We can then return to the parent investigation and continue making progress on the bigger picture.
+
+This doesn't mean abandoning the branch permanently. If we encounter new evidence, change our design requirements, or discover that an unresolved distinction matters, we can reopen it.
+
+**The purpose of investigating a constituent problem is to contribute to our understanding of the parent problem, not necessarily to exhaust everything that could ever be learned about that constituent.**
+
+### [RSM-04.08–04.09] Preserve what we've actually learned
+<!-- RSM-04.08 RSM-04.09 -->
+
+An investigation doesn't have to end with one definitive solution to have been worthwhile.
+
+We might arrive at a working answer, discover several promising possibilities, establish useful bounds or constraints, identify a fundamental obstruction, or simply develop a better representation of the problem.
+
+These are all potentially valuable results, provided we understand what we've actually established.
+
+We should also be careful about the kinds of claims we're making. Something being possible doesn't necessarily mean it's probable. Something that works under one set of conditions isn't necessarily robust under others. A simulation predicting an outcome isn't the same as experimentally demonstrating it.
+
+Our certificates should preserve these distinctions, along with the reasoning, evidence, assumptions, and limitations behind our findings.
+
+The goal is to leave the investigation with a richer understanding of the problem and its possibility landscape, including **what we now know, what remains uncertain, what could materially change our conclusions, and which questions might be worth investigating next**.
 
 ## [RSM-05] The research-navigation structure
 
