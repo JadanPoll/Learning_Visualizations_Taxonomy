@@ -731,11 +731,69 @@ Ultimately, we want an investigation process that helps us develop intuition and
 
 ## [RSM-07] Architecture discipline and failure conditions
 
-**[RSM-07.01]** The core is deliberately **four objects plus one investigator**. A method deserves a separate implementation only if it solves a demonstrated obstruction more efficiently; it does not automatically deserve a new conceptual component. Do not add universal neural, graph, agent, Bayesian, renormalization, self-play, or question-calculus engines for their own sake. Apply the ablation test: *would removal demonstrably compromise a required capability that cannot be recovered simply?*
+What should we do when things go wrong, or when we don't seem to be making any meaningful progress in an investigation?
 
-**[RSM-07.02]** A proposed change must state: **(i)** the concrete task currently blocked, **(ii)** why `M/B/Q/C` and appropriate existing operations cannot represent it, and **(iii)** the smallest necessary modification. A new experiment must likewise justify what possible outcome would change an actual decision or understanding. Synthetic cross-domain successes show portability of an interface, not scientific discovery, empirical validity, or universal optimality.
+Rather than blindly trying more approaches, running more experiments, or introducing increasingly complicated methods, we should investigate why we're not making progress in the first place. Are we asking the wrong sort of question? Have we overlooked some important constraint or assumption? Is our current representation making the problem unnecessarily difficult? Are we investigating the wrong branch of the tree, or have we simply reached a point where the information available isn't sufficient to proceed?
 
-**[RSM-07.03]** **Common failure modes:** wrong question; irrelevant precision; hidden presuppositions; conflating physical and conditional possibility; missing actions; mistaking simulation for evidence; false certainty from coarse-graining; erasing rare events; treating branch separation as causal independence; treating correlated historical narratives as proof; confusing a new algorithm with a new architecture; privileging retrospective explanations; making a strong result look like an unconditional one.
+We should also distinguish between **a failure of the methodology itself and a failure to apply the methodology appropriately**. An unsuccessful investigation doesn't necessarily mean we need a new reasoning framework. It might mean we need to revisit an earlier question, examine a different representation, look for existing research, or reconsider what progress would actually look like.
+
+This section gives us a framework for reasoning about these situations, including how to recognize common failure modes, identify the actual obstruction, and decide whether our methods or the methodology itself need to change.
+
+One of the dangers of developing a methodology like RSM is that we can keep introducing new concepts, abstractions, procedures, and architectural components until the methodology itself becomes more complicated than the problems we're trying to investigate.
+
+We should therefore apply the same reasoning principles to RSM that we would apply to any other investigation.
+
+### [RSM-07.01] Don't introduce complexity without a reason
+
+We've organized RSM around four main objects: Model, Belief, Question, and Certificate, with an investigator working with them.
+
+This gives us a general framework for reasoning about problems without requiring every investigation to follow a rigid sequence of steps.
+
+We might use Bayesian inference, neural networks, simulations, mathematical proofs, self-play, knowledge graphs, or multiple collaborating LLMs. But using a technique doesn't necessarily mean it deserves to become another fundamental component of our methodology.
+
+Before introducing some new architectural element, we should ask what it actually accomplishes. What problem does it solve? What capability does it provide? Could we accomplish the same thing with something we already have?
+
+A useful sanity check is to imagine removing the proposed component entirely. What would we actually lose? Would some important capability become impossible or materially more difficult, or would the rest of the system continue working just fine?
+
+The point isn't to avoid sophisticated methods. It's to avoid accumulating unnecessary complexity that makes our investigations harder to understand, maintain, and build upon.
+
+### [RSM-07.02] Changes to the methodology should themselves be justified
+
+When we encounter a limitation in RSM, we shouldn't immediately invent a new concept or mechanism to address it.
+
+We should first understand what exactly is failing.
+
+What were we trying to accomplish? What obstruction did we encounter? Why couldn't our existing representations or methods handle it? Is the problem genuinely a limitation of the methodology, or did we simply fail to apply an existing method appropriately?
+
+From there, we can investigate possible modifications, including whether a smaller change would resolve the problem without introducing unnecessary complexity elsewhere.
+
+This applies to our experiments as well. We shouldn't introduce another simulation, test, or research branch merely because it's something we can do.
+
+We should be able to explain what we expect to learn, which possible outcomes would materially change our understanding, and why the investigation is relevant to the bigger picture.
+
+For example, suppose an LLM repeatedly fails to investigate a problem correctly. Before deciding that RSM needs another reasoning stage, we should investigate whether the failure came from an unclear question, insufficient evidence, a poor representation, an unsuitable tool, or the model's failure to follow the methodology.
+
+These are different obstructions and might require entirely different interventions.
+
+### [RSM-07.03] Common ways investigations go wrong
+
+There are several recurring mistakes we should remain aware of throughout an investigation.
+
+Sometimes we begin with the wrong sort of question and invest substantial effort answering something that doesn't actually address our underlying curiosity or purpose.
+
+Sometimes we make our models increasingly detailed without asking whether that additional resolution changes anything important.
+
+We might unknowingly build assumptions into our representations, overlook alternative mechanisms, confuse what is possible under a model with what is physically possible, or treat simulation results as though they were direct empirical evidence.
+
+We might also simplify a system so aggressively that we average away rare but consequential behavior, overlook dependencies between supposedly separate branches, or mistake a convenient analogy for a genuinely shared mechanism.
+
+Another common failure is confusing improvements to individual methods with improvements to the overall architecture. A more sophisticated algorithm or additional tool might be useful without requiring us to fundamentally restructure how we organize investigations.
+
+We should also be careful about retrospective explanations. Once we know the answer to a problem, it's easy to construct a convincing story about how someone could have discovered it, even when that story doesn't accurately represent the historical investigation or the uncertainties people faced at the time.
+
+The general practice is to continually examine our reasoning, assumptions, representations, and investigative choices against what we're actually trying to understand.
+
+**RSM itself should remain open to investigation, criticism, and revision. The goal isn't to develop an increasingly elaborate methodology, but one that helps us reason more clearly, investigate more effectively, and build upon what we've learned.**
 
 ## [RSM-08] Reusable investigator protocol (paste into another LLM)
 
