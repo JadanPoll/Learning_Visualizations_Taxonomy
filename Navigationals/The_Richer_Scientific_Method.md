@@ -68,7 +68,9 @@ Within our investigation tree, a question can be decomposed into subquestions, r
 
 Questions themselves should also evolve throughout an investigation. As we discover new information, examine competing explanations, or encounter unexpected obstructions, we might discover that our original question was too narrow, relied on an incorrect assumption, or overlooked something more fundamental.
 
-The best questions are often the first-principles or childlike ones, such as **"How do you make an RC car?"** These seemingly simple questions often form the richest investigation trees because they open up entire landscapes of possibilities, mechanisms, constituent problems, and alternative approaches that more narrowly formulated questions might overlook.
+The best starting points are often the first-principles or childlike ones, such as **"How do you make an RC car?"** or even **"I want to build an OS!"** We don't need to turn that curiosity into a sophisticated technical question before we begin. We might first ask what an OS even is, whether we could make one ourselves, what we'd want it to do, or whether building one is really the best way to learn what we're curious about. Each of these can lead to its own rich landscape of questions.
+
+A good starting node should preserve what made us curious in the first place, without already assuming the answer, the machinery we'll use, or the way the field happens to be organized. It can be a question, an ambition, or a problem expressed in ordinary language. We can make it more precise as we discover what actually matters. Starting broadly doesn't mean staying vague forever; it means giving ourselves room to find the right questions before committing to one route.
 
 ### [RSM-01.04] Certificate (C)
 
@@ -183,7 +185,7 @@ Before even investigating it, we can explicitly write down a few potential answe
 
 Notice how each possible answer leads to a different trajectory of investigation. Even before knowing which answer is correct, we've already begun exposing the assumptions, constraints, and broader landscape of questions surrounding our original curiosity.
 
-We can grow a **question tree** in two complementary ways. We might explore a question's parent purpose, its constituent questions, or alternative questions we hadn't considered. But we can also explore what we would ask **if the answer were yes, yes but only under certain conditions, no, or no unless something changed**. These aren't answers we're claiming to have established. They're possible directions that help us discover questions we might otherwise overlook.
+We can grow a **question tree** in two complementary ways. Starting with what we're actually curious about, we might explore its parent purpose, its constituent questions, or alternative questions we hadn't considered. But we can also explore what we would ask **if the answer were yes, yes but only under certain conditions, no, or no unless something changed**. These aren't answers we're claiming to have established. They're possible directions that help us discover questions we might otherwise overlook.
 
 For example, a "no" might lead us to investigate an obstruction, while a "yes, but" might lead us to investigate the boundary of what's possible. This second way of branching helps us understand not just which questions belong together, but how different answers could change the course of our investigation.
 
@@ -886,7 +888,7 @@ This applies just as much to competing hypotheses, alternative representations, 
 
 For example, an LLM might discover several plausible explanations for an observed phenomenon. Rather than silently choosing one, it could present the competing hypotheses, briefly explain what each would imply, and ask which the human finds interesting or would like to investigate further. It should also be able to recommend which investigation might be most informative, or simply proceed when the distinction doesn't require human input.
 
-We can even develop a **question tree** together before doing substantial research, as discussed in RSM-02.08. For a question we care about, what might we ask if the answer were yes, yes but, no, or no unless? What other questions might turn out to be more relevant? Exploring these possibilities can help us decide what deserves investigation without assuming we already know the answer.
+We can even develop a **question tree** together before doing substantial research, as discussed in RSM-02.08. If someone says "I want to build an OS!", we shouldn't immediately replace that with a textbook outline of scheduling, memory, and filesystems. Why do they want to build one? What even counts as an OS? Could they really make one themselves? Those questions might eventually lead us to scheduling and memory, but now we'll understand why we're investigating them. For a question we care about, we can also ask what would follow if the answer were yes, yes but, no, or no unless. Exploring these possibilities helps us decide what deserves investigation without assuming we already know the answer.
 
 Importantly, **interaction shouldn't become an excuse to constantly interrupt the investigation with unnecessary questions**. The LLM should distinguish between choices where the human's purpose, curiosity, or preferences actually matter and questions it could reasonably answer through its own investigation.
 
