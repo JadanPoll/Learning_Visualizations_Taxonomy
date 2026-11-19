@@ -183,6 +183,10 @@ Before even investigating it, we can explicitly write down a few potential answe
 
 Notice how each possible answer leads to a different trajectory of investigation. Even before knowing which answer is correct, we've already begun exposing the assumptions, constraints, and broader landscape of questions surrounding our original curiosity.
 
+This gives us **two complementary ways to grow a question tree**. We can branch *from a question to other questions*—its parent purpose, constituent questions, alternatives, inverses, and nearby possibilities. Or we can branch *through possible answers*: **yes; yes, but only under certain limits; no; no, unless certain conditions change; and unknown or conditional**. Each answer possibility leads to different follow-up questions. For example, a "no" invites us to locate the obstruction, while a "yes, but" invites us to understand and perhaps extend the boundary. These are candidate answers for navigation, **not conclusions we have established**.
+
+The distinction is useful because a list of subquestions alone does not tell us which answers would redirect the investigation. Conversely, an answer-possibility tree is not merely a decision tree for choosing an action; it helps expose assumptions, counterexamples, obstructions, and entire question families that our initial formulation concealed.
+
 In fact, **it's good practice to explicitly write down potential answers and what we would do next based on those answers before beginning an investigation**. I haven't seen this done very often as an explicit practice in scientific literature, but it can be a useful way to reason more clearly about why we're asking a question in the first place.
 
 This also helps us recognize when a particular answer wouldn't actually satisfy what we originally cared about. For instance, if building a cardboard RC plane requires replacing most of the cardboard with conventional structural materials, we might technically have achieved flight without preserving the spirit of the original question.
@@ -571,6 +575,10 @@ We need a practical way of organizing all of this so that we can navigate betwee
 ### [RSM-05.01–05.02] The investigation tree
 <!-- RSM-05.01 RSM-05.02 -->
 
+It's useful to distinguish a **question tree** from the broader **investigation tree**, without treating them as two mandatory, disconnected artifacts. The question tree navigates what we might ask: parent and neighboring questions, constituent questions, and answer-contingent branches such as *yes / yes, but / no / no, unless* (RSM-02.08). The investigation tree navigates what we actually investigate and learn: models, beliefs, evidence, competing explanations, experiments, and certificates. A question can exist without opening a full investigation; one investigation can also inform several questions.
+
+A question node can point to **candidate reading or evidence references**—for example, a book chapter and page range we expect will clarify it. These are prospective leads, not yet certificates of a conclusion. In RSM-01.04, a Certificate (C) records what an investigation actually established, with its evidence, assumptions, and limits. Once a source has been examined, a precise page range or annotation may form part of that certificate. This distinction lets us plan reading in a question tree without claiming to have resolved its questions.
+
 The central representation we use is the **investigation tree**.
 
 We can start with a question, problem, or broader purpose at the root and progressively expand it into constituent questions, mechanisms, models, assumptions, and possible approaches.
@@ -878,7 +886,7 @@ This applies just as much to competing hypotheses, alternative representations, 
 
 For example, an LLM might discover several plausible explanations for an observed phenomenon. Rather than silently choosing one, it could present the competing hypotheses, briefly explain what each would imply, and ask which the human finds interesting or would like to investigate further. It should also be able to recommend which investigation might be most informative, or simply proceed when the distinction doesn't require human input.
 
-We can even collaboratively generate the investigation tree before beginning substantial research, as discussed in RSM-02.08. By explicitly considering possible answers, alternative questions, and what we would investigate next depending on those answers, the LLM can help the human better orient themselves within the question landscape.
+We can even collaboratively develop a **question tree** before beginning substantial research, as discussed in RSM-02.08. By exploring both alternative questions and answer-contingent branches (yes / yes-but / no / no-unless), and asking what we would investigate next under each, the LLM can help the human orient themselves before deciding which branches merit full investigations.
 
 Importantly, **interaction shouldn't become an excuse to constantly interrupt the investigation with unnecessary questions**. The LLM should distinguish between choices where the human's purpose, curiosity, or preferences actually matter and questions it could reasonably answer through its own investigation.
 
