@@ -47,12 +47,87 @@ summary{cursor:pointer;font-size:12px;font-weight:600}.fileinput{max-width:175px
 .reader-message{font-size:12px;margin:9px 0;min-height:16px;white-space:pre-wrap}
 .reader-message.error{color:#a53f2c}
 @media(max-width:650px){.reader-entry{flex-wrap:wrap}.reader-entry .reader-text{flex-basis:100%}}
+
+/* Touch-first, one-screen-at-a-time exploration. */
+:root{--ink:#193047;--quiet:#617287;--line:#e4eaf0;--sky:#e7f3ff;--paper:#fff;font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;background:#f8fafc;color:var(--ink)}
+html{font-size:16px;-webkit-text-size-adjust:100%}body{margin:0;min-height:100svh}
+button,input,textarea,select{font-family:inherit;font-size:16px}
+button{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.top{position:sticky;top:0;z-index:25;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px max(16px,env(safe-area-inset-right)) 12px max(16px,env(safe-area-inset-left));background:#fff;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px}.brand-icon{display:grid;place-items:center;background:#e6f1fd;color:#2671ae;font-size:22px;width:41px;height:41px;border-radius:13px}
+.top h1{font-size:19px;font-weight:760;letter-spacing:-.4px;margin:0}.top .sub{font-size:11px;letter-spacing:0;color:#718297}
+.top-actions{display:flex;align-items:center;gap:8px}.top-actions button{border:0;background:#f1f5f9;border-radius:13px;font-size:14px;font-weight:650;color:#31516d;padding:9px 12px}
+.top-actions button:first-child{background:#fff3d9;color:#8c5b19}
+.status{display:none}.status.err{display:block;position:relative;z-index:5;padding:12px 18px;color:#8d3832;background:#fff1ed;font-size:13px}
+.journey{width:min(760px,100%);margin:0 auto;min-height:calc(100svh - 73px);padding:20px clamp(18px,4vw,32px) max(70px,env(safe-area-inset-bottom));background:transparent}
+.journey-nav{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 18px}
+.journey-nav button{background:#fff;border:1px solid #e1e8ef;border-radius:13px;color:#3a688d;font-size:14px;font-weight:680;padding:9px 14px}
+.journey-nav button:disabled{visibility:hidden}
+.journey-breadcrumb{font-size:12px;color:#8395a7;line-height:1.5;overflow-wrap:anywhere;margin:0 0 18px}
+.journey-content{padding:0;background:transparent;overflow:visible}
+.journey-content h2{font-size:clamp(26px,4.5vw,36px);letter-spacing:-.8px;line-height:1.18;color:#19314a;margin:8px 0 12px;font-weight:760}
+.journey-content p{font-size:16px;line-height:1.58;color:#51657a;margin:8px 0 15px}
+.journey-content .chip{display:inline-block;background:#e5effa;color:#2a6599;padding:5px 9px;border-radius:99px;font-size:11px;font-weight:720}
+.journey-content h3{color:#26435d;font-size:18px;letter-spacing:-.2px;font-weight:750;border:0;padding:0;margin:28px 0 12px}
+.journey-content .meta{font-size:12px;color:#72869a;margin:6px 0}
+.journey-content .next-cards{display:grid;gap:11px;margin:15px 0 24px}
+.journey-content .next-card{width:100%;border:1px solid #dbe5ef;border-radius:18px;background:#fff;text-align:left;min-height:76px;padding:17px 19px;display:flex;align-items:center;gap:12px;box-shadow:0 3px 14px #2a4e6908;line-height:1.4;color:#233f5a;font-size:16px;font-weight:610}
+.journey-content .next-card .next-arrow{margin-left:auto;color:#8eacbf;font-size:27px;font-weight:400}
+.journey-content .next-card.reader-marked{border-color:#d8ac46;box-shadow:inset 4px 0 #ddaf47}
+.journey-content .next-card:active{transform:scale(.992);background:#edf6ff}
+.journey-content .details-fold{background:#fff;border:1px solid #e0e8f0;border-radius:16px;margin:11px 0;overflow:hidden}
+.journey-content .details-fold>summary{padding:15px 17px;min-height:52px;display:flex;align-items:center;gap:9px;font-size:15px;color:#2b4e6a;font-weight:680;list-style:none}
+.journey-content .details-fold>summary::-webkit-details-marker{display:none}
+.journey-content .details-fold>summary::after{content:'⌄';margin-left:auto;color:#7393a9;font-size:20px}
+.journey-content .details-fold[open]>summary::after{content:'⌃'}
+.journey-content .fold-body{padding:0 16px 16px}
+.journey-content .ref{margin:9px 0;background:#f9fbfd}
+.reader-actions{margin:18px 0 0;gap:9px}
+.reader-actions button{border-radius:13px;min-height:46px;padding:10px 16px;font-size:15px;font-weight:650}
+.reader-star{background:#fff;border:1px solid #dce5ee;color:#4a6681}
+.reader-star.on{background:#fff1ca;color:#865b17}
+.reader-note-box{margin:11px 0 4px;padding:0;border:0;background:transparent}
+.reader-note-box .note-show{display:block;border:1px solid #dce5ee;background:white;border-radius:13px;font-weight:630;font-size:15px;padding:11px 16px;min-height:46px}
+.reader-note-box .note-preview{background:#fffae8;color:#715927;padding:12px 14px;border-radius:12px;white-space:pre-wrap;margin-top:8px;font-size:14px}
+.reader-note-box .note-compose{margin-top:12px;padding:15px;background:#fff;border:1px solid #dce5ee;border-radius:14px}
+.reader-note-box .note-compose[hidden]{display:none}
+.reader-note-box textarea{font-size:16px;min-height:130px}
+.reader-dialog{padding:0;align-items:end;background:#18314965;z-index:60}
+.reader-dialog section{border-radius:23px 23px 0 0;width:min(760px,100%);max-height:92svh;padding:22px 20px max(24px,env(safe-area-inset-bottom));overscroll-behavior:contain}
+.reader-dialog .reader-top{align-items:center}
+.reader-dialog h2{font-size:23px;letter-spacing:-.4px}
+.reader-dialog .loader{display:grid;gap:10px;padding:12px 0;background:transparent;border:0}
+.reader-dialog .loader input[type=text]{width:100%;min-width:0;border-radius:12px;padding:12px}
+.reader-dialog .loader button,.reader-dialog .loader .local-button{width:100%;padding:12px;border-radius:12px;text-align:center;font-size:14px}
+.reader-dialog #choices{display:block;width:100%;margin-top:8px;padding:13px;border-radius:12px;border:1px solid #cfdae5}
+.reader-dialog #choices.hidden{display:none}
+.library-label{display:block;font-size:12px;font-weight:700;color:#708093;margin:14px 0 4px}
+.library-explainer{font-size:12px;color:#8797a6;line-height:1.5;margin-top:18px}
+.reader-dialog .reader-entry{border-radius:13px}
+@media(min-width:900px){.reader-dialog{align-items:center}.reader-dialog section{border-radius:22px;max-height:85vh}}
+@media(max-width:500px){.top-actions button{font-size:13px;padding:9px 10px}.top-actions button span:not(.reader-count){display:none}.journey{padding-top:16px}.journey-content h2{font-size:28px}}
 </style></head>
 <body>
-<header class="top"><div><h1>Knowledge Tree Navigator</h1><div class="sub">Questions, investigations, projects and knowledge landscapes</div></div><div class="reader-head"><button type="button" id="reader-open">My interests<span class="reader-count" id="reader-count"></span></button><div class="sub">Sources read-only · notes stay local</div></div></header>
-<form class="loader" id="loadForm"><input id="source" type="text" spellcheck="false" aria-label="GitHub repo or JSON URL" placeholder="GitHub repository or question_tree.json URL"><button type="submit" class="primary">Open</button><select id="choices" aria-label="Tree files" class="hidden"></select><label for="local" class="smallbtn" style="border:1px solid #bdcbd8;padding:7px;border-radius:7px;cursor:pointer">Local JSON</label><input id="local" type="file" accept=".json,application/json" class="hidden"><button id="addRef" type="button" title="Import reference_guide.json when using a local tree">+ Reference JSON</button><input id="localRef" type="file" accept=".json,application/json" class="hidden"></form>
-<div class="status" role="status" id="status">Loading the example OS tree…</div>
-<div class="layout"><aside class="panel"><div class="panehead"><strong>Explore</strong><input id="filter" type="text" aria-label="Search questions" placeholder="Search titles and IDs"><div class="tiny muted" id="count" style="margin-top:7px">No tree loaded</div></div><div id="outline" role="tree"></div></aside><main id="view"><div class="toolbar"><button id="back" class="smallbtn" title="Parent">↑ Parent</button><button id="root" class="smallbtn">Root</button><button id="fit" class="smallbtn">Top</button><span class="spacer"></span><select id="layoutMode" aria-label="Graph layout"><option value="family">Family view</option><option value="path">Path only</option></select></div><div id="breadcrumb" class="help">Select an item to explore its context, related items and sources.</div><div id="canvas" class="canvas"></div></main><aside class="panel detailpane"><div class="panehead"><strong>Selected item</strong><span id="sourceMeta" class="tiny muted" style="display:block;margin-top:4px"></span></div><section class="detail" id="detail"><p class="muted">Select an item to see its context and sources.</p></section></aside></div>
+<header class="top">
+  <div class="brand"><div class="brand-icon" aria-hidden="true">✦</div><div><h1>Explore</h1><div class="sub">Follow what makes you curious</div></div></div>
+  <div class="top-actions"><button id="reader-open" type="button">★ <span>Saved</span><span class="reader-count" id="reader-count"></span></button><button id="library-open" type="button">☰ <span>Library</span></button></div>
+</header>
+<div class="status" role="status" id="status">Opening your question tree…</div>
+<main class="journey" id="view">
+  <nav class="journey-nav" aria-label="Question navigation"><button id="back" type="button">‹ Back</button><button id="root" type="button">⌂ Start over</button><button id="fit" type="button" hidden>Top</button></nav>
+  <div id="breadcrumb" class="journey-breadcrumb"></div>
+  <section id="detail" class="detail journey-content"><p>Opening your first question…</p></section>
+  <div id="canvas" hidden></div>
+</main>
+<div id="library-dialog" class="reader-dialog" hidden><section role="dialog" aria-modal="true" aria-labelledby="library-title">
+  <div class="reader-top"><div><h2 id="library-title">Your library</h2><p class="muted">Pick a topic or bring your own GitHub tree.</p></div><button id="library-close" type="button">Close</button></div>
+  <form class="loader" id="loadForm"><label for="source" class="tiny">GitHub repository or JSON URL</label><input id="source" type="text" spellcheck="false" placeholder="https://github.com/…"><button type="submit" class="primary">Open</button>
+    <label for="local" class="smallbtn local-button">Choose JSON file</label><input id="local" type="file" accept=".json,application/json" class="hidden">
+    <button id="addRef" type="button" title="Add a reference guide to a local tree">Add references</button><input id="localRef" type="file" accept=".json,application/json" class="hidden"></form>
+  <label for="choices" class="library-label">Explore a collection</label><select id="choices" aria-label="Choose a tree" class="hidden"></select>
+  <div class="library-explainer">Your notes stay in this browser. Use Saved to export them to another device.</div>
+</section></div>
+<div id="outline" class="hidden" aria-hidden="true"></div><input id="filter" class="hidden" type="text"><div id="count" class="hidden"></div><select id="layoutMode" class="hidden"><option value="family">Family</option><option value="path">Path</option></select><span id="sourceMeta" class="hidden"></span>
 <div id="reader-dialog" class="reader-dialog" hidden>
   <section role="dialog" aria-modal="true" aria-labelledby="reader-title">
     <div class="reader-top"><div><h2 id="reader-title">My interests & notes</h2><div class="tiny muted">Only explicitly saved interests and notes. Navigating a question does not mark it as interesting.</div></div><button type="button" id="reader-close">Close</button></div>
@@ -129,21 +204,86 @@ async function loadSource(raw){setStatus('Opening '+raw+'…');const r=parseGith
  let found=paths.filter(p=>/\/(question_tree|investigation)\.json$/i.test('/'+p));if(!found.length)throw Error('No rsm-view.json mapping or recognized question_tree.json / investigation.json found');found.sort((a,b)=>a.includes('question_tree')?-1:b.includes('question_tree')?1:a.localeCompare(b));const filtered=r.path?found.filter(p=>p.startsWith(r.path.replace(/\/$/,'')+'/')):found;if(filtered.length)found=filtered;setChoices(found,false);await loadPath(r,found[0]);}
 function openTree(d,guide,source,origin=null){state.currentSource=origin||{type:'local',file:source||'unspecified',title:source||'Local JSON'};state.tree=d;state.guide=guide;state.selected=null;state.collapsed.clear();state.index=new Map();state.children=new Map();state.parent=new Map();const nodes=nodesOf(d);for(let i=0;i<nodes.length;i++){const n=nodes[i];const id=String(n.id||'node-'+i);n.id=id;state.index.set(id,n);state.children.set(id,[])}for(const n of nodes){const raw=n.parent_id??n.parent??null;const p=raw==null?null:String(raw);if(p&&p!==n.id&&state.index.has(p)){state.parent.set(n.id,p);state.children.get(p).push(n.id)}else state.parent.set(n.id,null)}let first=String(d.root||'');if(!state.index.has(first))first=nodes.find(n=>state.parent.get(n.id)===null)?.id||nodes[0].id;state.selected=first;$('sourceMeta').textContent=source||'Local JSON';render()}
 function ancestry(id){const out=[],visited=new Set();let x=id;while(x&&state.index.has(x)&&!visited.has(x)){out.unshift(x);visited.add(x);x=state.parent.get(x)}return out}
-function select(id){if(!state.index.has(id))return;state.selected=id;render();$('view').scrollTop=0;$('view').scrollLeft=0;const u=new URL(location.href);u.hash='node='+encodeURIComponent(id);try{history.replaceState(null,'',u.toString())}catch{}}
-function render(){renderOutline();renderGraph();renderDetail()}
+function select(id){if(!state.index.has(id))return;state.selected=id;render();window.scrollTo(0,0);const u=new URL(location.href);u.hash='node='+encodeURIComponent(id);try{history.replaceState(null,'',u.toString())}catch{}}
+function render(){renderDetail();renderOutline();renderGraph();$('back').disabled=!state.parent.get(state.selected)}
 function renderOutline(){const q=$('filter').value.toLowerCase().trim(),box=$('outline');clear(box);$('count').textContent=state.index.size+' nodes · '+(state.tree?.kind||'investigation');if(!state.tree)return;const match=id=>{const n=state.index.get(id);return(title(n)+' '+id).toLowerCase().includes(q)||state.children.get(id).some(match)};let done=new Set();function branch(id,parent,depth){if(done.has(id)||depth>120)return;done.add(id);if(q&&!match(id))return;const n=state.index.get(id);const wrap=el('div',depth?'tree-line':'branch');const row=el('div','rowbtn'+(id===state.selected?' selected':'')+(readerFor(id)?.interested?' reader-marked':''));const children=state.children.get(id);const toggle=el('button','twisty',children.length?(state.collapsed.has(id)&&!q?'▸':'▾'):'·');toggle.type='button';toggle.setAttribute('aria-label','Expand or collapse');toggle.onclick=()=>{state.collapsed.has(id)?state.collapsed.delete(id):state.collapsed.add(id);renderOutline()};row.append(toggle);const btn=el('button','rowbtn node-title');btn.style.padding='0';btn.append(el('span','',title(n)));btn.append(el('div','nodeid',id));btn.onclick=()=>select(id);row.append(btn);if(readerFor(id)?.interested){const star=el('button','reader-outline-star','★');star.type='button';star.title='Remove explicit interest';star.setAttribute('aria-label','Remove interest from '+title(n));star.onclick=()=>readerToggle(id);row.append(star)}else if(readerFor(id)?.note){row.append(el('span','reader-note-indicator','✎'))}wrap.append(row);parent.append(wrap);if((!state.collapsed.has(id)||q)&&children.length){for(const child of children)branch(child,wrap,depth+1)}}for(const [id] of state.index)if(!state.parent.get(id))branch(id,box,0);}
 function graphNodes(){const id=state.selected;if(!id)return[];const path=ancestry(id);const p=state.parent.get(id);if($('layoutMode').value==='path')return path.map(x=>[x]);const siblings=p?state.children.get(p):[id];const children=state.children.get(id)||[];const levels=[];if(path.length>1)levels.push(path.slice(0,-1).slice(-2));levels.push(siblings);if(children.length)levels.push(children);if(!children.length){const next=state.children.get(p||id)||[];if(next.length&&levels.length===1)levels.push(next)}return levels}
 function renderGraph(){const box=$('canvas');clear(box);if(!state.tree){box.append(el('p','empty','Load a tree to view it.'));return}const path=ancestry(state.selected);clear($('breadcrumb'));$('breadcrumb').append(el('span','',path.map(id=>title(state.index.get(id))).join('  ›  ')));const levels=graphNodes();const row=el('div','colnodes');levels.forEach((level,i)=>{const column=el('div','level');const hdr=i===levels.length-1&&level.some(x=>state.parent.get(x)===state.selected)?'What does this lead to?':i===0&&levels.length>2?'Where did this come from?':level.includes(state.selected)?'Current question and alternatives':'Related questions';column.append(el('h3','',hdr));for(const id of level){const n=state.index.get(id);const b=el('button','tile'+(id===state.selected?' active':'')+(readerFor(id)?.interested?' reader-marked':''));b.type='button';b.append(el('span','pill',id));b.append(document.createTextNode(title(n)));const cc=state.children.get(id).length;if(cc)b.append(el('span','hint',cc+' further question'+(cc===1?'':'s')));if(readerFor(id)?.interested)b.append(el('span','reader-note-indicator','★ Interested'));else if(readerFor(id)?.note)b.append(el('span','reader-note-indicator','✎ Note'));b.onclick=()=>select(id);column.append(b)}row.append(column);if(i<levels.length-1)row.append(el('span','arrow','→'))});box.append(row);}
 function entryRow(parent,ref,sources){const row=el('div','ref');const sid=ref.source_id||'OSTEP';const src=sources.get(sid);row.append(el('div','book',src?.title||sid));const section=ref.section||ref.title||(ref.chapter?'Chapter '+ref.chapter:'');if(section)row.append(el('div','',section));const pages=ref.pages||null;const start=pages?.start??ref.start;const end=pages?.end??ref.end;if(start!=null){row.append(el('div','page','Printed pages '+start+(end!=null?'–'+end:'')))}else row.append(el('div','meta','Page range not verified'));if(ref.role)row.append(el('div','meta',ref.role));if(src?.url)row.append(link(src.url,'Open book in Drive'));parent.append(row)}
-function renderDetail(){const box=$('detail');clear(box);if(!state.tree)return;const n=state.index.get(state.selected);box.append(el('span','chip',n.id));box.append(el('h2','',title(n)));if(n.why_ask||n.why||n.description)box.append(el('p','',n.why_ask||n.why||n.description));if(n.kind)box.append(el('div','meta','Kind: '+n.kind));if(n.url)box.append(link(n.url,'Open linked resource'));if(n.source_location?.url){const loc=el('div','meta','Source: ');loc.append(link(n.source_location.url,'Original JSON'+(n.source_location.pointer?' · '+n.source_location.pointer:'')));box.append(loc)}if(n.status)box.append(el('div','meta','Status: '+n.status));renderReaderDetail(box,n);const p=state.parent.get(n.id);if(p){const btn=el('button','smallbtn','↑ '+title(state.index.get(p)));btn.style.marginTop='10px';btn.onclick=()=>select(p);box.append(btn)}const answers=(state.tree.answer_branches||[]).find(a=>a.question_id===n.id)?.possible_answers||[];if(answers.length){box.append(el('h3','','If the answer turned out to be…'));for(const a of answers){const b=el('div','answer');b.append(el('b','',a.answer||a.possible_answer||'Possibility'));b.append(el('div','',a.follow_up||a.next_question||''));box.append(b)}}
-const children=state.children.get(n.id)||[];if(children.length){box.append(el('h3','','Further questions'));for(const id of children){const btn=el('button','rowbtn',title(state.index.get(id)));btn.onclick=()=>select(id);box.append(btn)}}
-const sources=new Map([...(state.tree.sources||[]),...(state.guide?.related_sources||[])].map(s=>[s.id,s]));if(state.guide?.book)sources.set(state.guide.book.source_id,state.guide.book);
-const sections=[];if(n.candidate_references?.length)sections.push({label:'Candidate reading references',refs:n.candidate_references});if(n.certificate?.references?.length)sections.push({label:'Investigation certificate references',refs:n.certificate.references});
-const guide=state.guide;let routes=[];if(guide){routes=(guide.routes||[]).filter(r=>(r.question_node_ids||[]).includes(n.id));const more=(guide.cross_source_routes||[]).filter(r=>(r.node_ids||[]).includes(n.id));for(const r of more){routes.push({...r,extra:true})}}
-if(sections.length||routes.length){box.append(el('h3','','Where could I look this up?'));for(const s of sections){const lbl=el('div','meta',s.label);box.append(lbl);for(const r of s.refs)entryRow(box,r,sources)}for(const route of routes){const det=el('details');det.open=true;const summary=el('summary','',route.question||route.id);det.append(summary);const refs=[];for(const x of route.references||[])refs.push({...x,source_id:x.source_id||'OSTEP'});for(const x of route.cross_book_references||[])refs.push(x);for(const x of refs)entryRow(det,x,sources);box.append(det)}}else{box.append(el('h3','','Reading references'));box.append(el('p','muted','No reference is linked to this node yet. That does not mean no sources are relevant.'))}
-if(state.tree.connections||state.tree.relations||state.tree.edges){const relations=(state.tree.connections||state.tree.relations||state.tree.edges).filter(x=>(x.from===n.id||x.to===n.id)&&(x.type||x.relationship)!=='contains');if(relations.length){box.append(el('h3','','Connections to other questions'));for(const r of relations){const other=r.from===n.id?r.to:r.from;if(!state.index.has(other))continue;const b=el('button','rowbtn',title(state.index.get(other))+' · '+(r.relationship||r.type||'related'));b.onclick=()=>select(other);box.append(b)}}}
-if(state.url)box.append(link(state.url,'View source JSON on GitHub'));}
-
+function renderDetail(){
+ const box=$('detail');clear(box);if(!state.tree)return;
+ const n=state.index.get(state.selected);
+ if(!n)return;
+ const marker=el('span','chip',(n.kind||'Question').replace(/_/g,' '));box.append(marker);
+ box.append(el('h2','',title(n)));
+ if(n.why_ask||n.why||n.description)box.append(el('p','',n.why_ask||n.why||n.description));
+ renderReaderDetail(box,n);
+ const children=state.children.get(n.id)||[];
+ if(children.length){
+  box.append(el('h3','','Explore next'));
+  const cards=el('div','next-cards');
+  for(const id of children){
+   const child=state.index.get(id),b=el('button','next-card'+(readerFor(id)?.interested?' reader-marked':''));
+   b.type='button';b.append(el('span','',title(child)));if(readerFor(id)?.interested)b.append(el('span','reader-note-indicator','★'));
+   b.append(el('span','next-arrow','›'));b.onclick=()=>select(id);cards.append(b);
+  }
+  box.append(cards);
+ }else{
+  const parent=state.parent.get(n.id);
+  if(parent)box.append(el('p','muted','You’ve reached the end of this branch. Go back to try another direction.'));
+ }
+ const answers=(state.tree.answer_branches||[]).find(a=>a.question_id===n.id)?.possible_answers||n.candidate_answers||[];
+ if(answers.length){
+  const fold=el('details','details-fold');const sum=el('summary','','Possible answers');fold.append(sum);
+  const body=el('div','fold-body');
+  for(const a of answers){
+   const x=el('div','answer');
+   if(typeof a==='string')x.append(el('div','',a));
+   else{x.append(el('b','',a.answer||a.possible_answer||'Possibility'));if(a.follow_up||a.next_question)x.append(el('div','',a.follow_up||a.next_question))}
+   body.append(x);
+  }fold.append(body);box.append(fold);
+ }
+ const sources=new Map([...(state.tree.sources||[]),...(state.guide?.related_sources||[])].map(s=>[s.id,s]));
+ if(state.guide?.book)sources.set(state.guide.book.source_id,state.guide.book);
+ const sections=[];
+ if(n.candidate_references?.length)sections.push({label:'Reading suggestions',refs:n.candidate_references});
+ if(n.certificate?.references?.length)sections.push({label:'Investigation references',refs:n.certificate.references});
+ let routes=[];
+ if(state.guide){
+  routes=(state.guide.routes||[]).filter(r=>(r.question_node_ids||[]).includes(n.id));
+  for(const r of state.guide.cross_source_routes||[])if((r.node_ids||[]).includes(n.id))routes.push(r);
+ }
+ if(sections.length||routes.length){
+  const fold=el('details','details-fold');fold.append(el('summary','','Books & sources'));
+  const body=el('div','fold-body');
+  for(const section of sections){body.append(el('h4','',section.label));for(const ref of section.refs)entryRow(body,ref,sources)}
+  for(const route of routes){
+   body.append(el('h4','',route.question||route.id));
+   for(const ref of route.references||[])entryRow(body,{...ref,source_id:ref.source_id||'OSTEP'},sources);
+   for(const ref of route.cross_book_references||[])entryRow(body,ref,sources);
+  }
+  fold.append(body);box.append(fold);
+ }
+ const relations=(state.tree.connections||state.tree.relations||state.tree.edges||[]).filter(r=>
+  (r.from===n.id||r.to===n.id)&&(r.type||r.relationship)!=='contains');
+ if(relations.length){
+  const fold=el('details','details-fold');fold.append(el('summary','','Related ideas'));
+  const body=el('div','fold-body');
+  for(const r of relations){
+   const other=r.from===n.id?r.to:r.from;if(!state.index.has(other))continue;
+   const b=el('button','next-card',title(state.index.get(other)));b.type='button';b.onclick=()=>select(other);body.append(b);
+  }
+  fold.append(body);box.append(fold);
+ }
+ if(n.url||n.source_location?.url||state.url){
+  const fold=el('details','details-fold');fold.append(el('summary','','Original material'));
+  const body=el('div','fold-body');
+  if(n.url)body.append(link(n.url,'Open linked resource'));
+  if(n.source_location?.url)body.append(link(n.source_location.url,'Original JSON'));
+  if(state.url)body.append(link(state.url,'View source on GitHub'));
+  fold.append(body);box.append(fold);
+ }
+}
 /* Browser-local reader state, keyed by source identity and stable node ID. */
 const READER_STORE='knowledgeTreeReaderStateV1',READER_FORMAT='knowledge-tree-reader-state';
 let readerEntries=new Map(),readerStoreError='';
@@ -206,17 +346,22 @@ function readerToggle(id){
  const x=readerFor(id);readerSave(id,!x?.interested,x?.note||'');
 }
 function renderReaderDetail(box,n){
- const wrap=el('div','reader-actions');
- const star=el('button','reader-star'+(readerFor(n.id)?.interested?' on':''),readerFor(n.id)?.interested?'★ Interested':'☆ Mark interest');
- star.type='button';star.setAttribute('aria-pressed',String(!!readerFor(n.id)?.interested));star.onclick=()=>readerToggle(n.id);
+ const wrap=el('div','reader-actions'),prior=readerFor(n.id);
+ const star=el('button','reader-star'+(prior?.interested?' on':''),prior?.interested?'★ Interested':'☆ Save interest');
+ star.type='button';star.setAttribute('aria-pressed',String(!!prior?.interested));star.onclick=()=>readerToggle(n.id);
  wrap.append(star);box.append(wrap);
- const panel=el('div','reader-note-box'),label=el('label','','Personal note');
- const note=el('textarea');note.id='reader-note-input';note.maxLength=16000;
- note.placeholder='Why does this matter? What should I investigate or try next?';
- label.htmlFor=note.id;note.value=readerFor(n.id)?.note||'';
- const save=el('button','smallbtn','Save note');save.type='button';save.onclick=()=>readerSave(n.id,!!readerFor(n.id)?.interested,note.value.trim());
- panel.append(label,note,save,el('div','tiny muted','Private to this browser until you export it.'));
- box.append(panel);
+ const panel=el('div','reader-note-box');
+ const toggle=el('button','note-show',(prior?.note?'✎ Edit note':'＋ Add note'));toggle.type='button';
+ const compose=el('div','note-compose');compose.hidden=true;
+ const label=el('label','','Your note'),note=el('textarea');note.id='reader-note-input';note.maxLength=16000;
+ note.placeholder='Why is this interesting? What might you explore next?';
+ label.htmlFor=note.id;note.value=prior?.note||'';
+ const save=el('button','primary','Save note');save.type='button';save.onclick=()=>readerSave(n.id,!!readerFor(n.id)?.interested,note.value.trim());
+ compose.append(label,note,save);
+ toggle.onclick=()=>{compose.hidden=!compose.hidden;if(!compose.hidden)note.focus()};
+ panel.append(toggle);
+ if(prior?.note)panel.append(el('div','note-preview',prior.note));
+ panel.append(compose);box.append(panel);
 }
 function readerJump(entry){
  const key=readerSourceKey(entry.origin);
@@ -296,12 +441,12 @@ $('reader-file').onchange=async e=>{
 };
 readerLoad();
 
-$('loadForm').addEventListener('submit',async e=>{e.preventDefault();try{await loadSource($('source').value)}catch(err){setStatus(err.message,true)}});
-$('choices').addEventListener('change',async e=>{try{const view=state.views?.find(v=>v.id===e.target.value);if(view)await loadMapped(state.repo,view);else await loadPath(state.repo,e.target.value)}catch(err){setStatus(err.message,true)}});
-$('local').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!isTree(d))throw Error('This JSON has no recognized nodes collection');state.url=null;openTree(d,null,f.name,{type:'local',file:f.name,size:f.size,title:d.title||f.name});setStatus('Loaded local '+f.name+' · '+state.index.size+' nodes. For book references, import reference_guide.json too.')}catch(err){setStatus(err.message,true)}});
+$('loadForm').addEventListener('submit',async e=>{e.preventDefault();try{await loadSource($('source').value);$('library-dialog').hidden=true;window.scrollTo(0,0)}catch(err){setStatus(err.message,true)}});
+$('choices').addEventListener('change',async e=>{try{const view=state.views?.find(v=>v.id===e.target.value);if(view)await loadMapped(state.repo,view);else await loadPath(state.repo,e.target.value);$('library-dialog').hidden=true;window.scrollTo(0,0)}catch(err){setStatus(err.message,true)}});
+$('local').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!isTree(d))throw Error('This JSON has no recognized nodes collection');state.url=null;openTree(d,null,f.name,{type:'local',file:f.name,size:f.size,title:d.title||f.name});$('library-dialog').hidden=true;setStatus('Loaded local '+f.name+' · '+state.index.size+' nodes. For book references, import reference_guide.json too.')}catch(err){setStatus(err.message,true)}});
 $('addRef').onclick=()=>$('localRef').click();$('localRef').onchange=async e=>{try{const f=e.target.files?.[0];if(!f)return;state.guide=JSON.parse(await f.text());render();setStatus('Loaded local reference guide '+f.name)}catch(err){setStatus(err.message,true)}};
 $('filter').addEventListener('input',renderOutline);$('layoutMode').onchange=renderGraph;
-$('root').onclick=()=>{if(state.tree)select(state.tree.root&&state.index.has(state.tree.root)?state.tree.root:[...state.index.keys()][0])};$('back').onclick=()=>{const p=state.parent.get(state.selected);if(p)select(p)};$('fit').onclick=()=>{$('view').scrollLeft=0;$('view').scrollTop=0};
-window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('reader-dialog').hidden){$('reader-dialog').hidden=true;return}if(e.target.matches('input,textarea,select'))return;if(e.key==='Escape'&&state.tree)$('root').click();if(e.key==='Backspace'&&state.tree){e.preventDefault();$('back').click()}});
+$('library-open').onclick=()=>{$('library-dialog').hidden=false};$('library-close').onclick=()=>{$('library-dialog').hidden=true};$('library-dialog').addEventListener('click',e=>{if(e.target===$('library-dialog'))$('library-dialog').hidden=true});$('root').onclick=()=>{if(state.tree)select(state.tree.root&&state.index.has(state.tree.root)?state.tree.root:[...state.index.keys()][0])};$('back').onclick=()=>{const p=state.parent.get(state.selected);if(p)select(p)};$('fit').onclick=()=>{$('view').scrollLeft=0;$('view').scrollTop=0};
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('reader-dialog').hidden){$('reader-dialog').hidden=true;return}if(e.key==='Escape'&&!$('library-dialog').hidden){$('library-dialog').hidden=true;return}if(e.target.matches('input,textarea,select'))return;if(e.key==='Escape'&&state.tree)$('root').click();if(e.key==='Backspace'&&state.tree){e.preventDefault();$('back').click()}});
 const params=new URLSearchParams(location.search);const source=params.get('repo')||params.get('url')||'https://github.com/JadanPoll/Kami_Uploads_RSM_Tree';$('source').value=source;loadSource(source).then(()=>{const match=location.hash.match(/^#node=(.+)$/);if(match&&state.index.has(decodeURIComponent(match[1])))select(decodeURIComponent(match[1]))}).catch(err=>setStatus(err.message,true))
 </script></body></html>
