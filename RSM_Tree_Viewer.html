@@ -13,16 +13,60 @@
 .detail{padding:17px}.detail h2{font-size:20px;line-height:1.35;margin:4px 0 9px}.detail h3{font-size:13px;color:#2b4c66;margin:24px 0 9px;border-bottom:1px solid #e5edf4;padding-bottom:6px}.detail p{font-size:13px;line-height:1.55}.chip{font-size:11px;background:#e8f2fa;color:#275b81;border-radius:4px;padding:3px 6px}.ref{padding:10px;margin:8px 0;background:#f8fbfe;border:1px solid #e2eaf1;border-radius:8px;font-size:12px;line-height:1.5}.ref .book{font-weight:650}.ref .page{font-weight:650;color:#154d7c}.answer{border-left:3px solid #9fbed6;padding:7px 11px;margin:9px 0;background:#f6f9fc;font-size:12px}.answer b{display:block;margin-bottom:3px}.sourcebar{display:flex;gap:5px;flex-wrap:wrap}.sourcebar label{font-size:12px}.smallbtn{font-size:12px;padding:5px 7px}.meta{font-size:11px;color:var(--muted)}
 summary{cursor:pointer;font-size:12px;font-weight:600}.fileinput{max-width:175px;font-size:12px}.hidden{display:none!important}
 @media(max-width:1050px){.layout{grid-template-columns:235px minmax(330px,1fr);height:auto;min-height:80vh}.panel.detailpane{grid-column:1/-1;border-top:1px solid var(--line);max-height:none}.panel{min-height:480px}#view{min-height:490px}}@media(max-width:650px){.layout{display:flex;flex-direction:column}.panel{min-height:0;max-height:360px;border-right:0;border-bottom:1px solid var(--line)}#view{height:420px;min-height:420px}.detailpane{max-height:none!important}.loader #source{min-width:180px}}
+
+/* Personal annotations: deliberate interests are independent of navigation/visits. */
+.reader-head{display:flex;align-items:center;gap:8px}.reader-count:not(:empty){font-size:11px;color:#194f7e;background:#e4f0fb;border-radius:12px;padding:1px 7px}
+.reader-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0 0}
+.reader-star{font-size:13px;border:1px solid #b7cbdc;background:#fff;border-radius:7px;padding:7px 10px}
+.reader-star.on{background:#fff1c9;border-color:#d9a33c;color:#825514}
+.reader-note-box{margin:12px 0 0;border:1px solid var(--line);background:#f8fbfd;padding:12px;border-radius:9px}
+.reader-note-box label{display:block;font-size:12px;font-weight:650;margin-bottom:7px}
+.reader-note-box textarea{display:block;width:100%;min-height:94px;max-height:260px;resize:vertical;border:1px solid #b8cadb;border-radius:7px;padding:9px;color:#1b2b3b;font:inherit;font-size:13px;background:#fff;line-height:1.45}
+.reader-note-box button{margin-top:8px}
+.reader-note-box .tiny{margin-top:7px;display:block}
+.reader-marked{box-shadow:inset 3px 0 #d49a2a}
+.tile.reader-marked{border-color:#d6ae55}
+.reader-note-indicator{font-size:11px;color:#987222;margin-left:4px}
+.reader-outline-star{font-size:16px;line-height:1;border:0;background:transparent;color:#a06d0b;flex:none;padding:2px 5px}
+.reader-outline-star:hover{background:#fff2cf}
+.reader-dialog{position:fixed;inset:0;background:#1e33495c;z-index:100;display:grid;place-items:center;padding:16px}
+.reader-dialog[hidden]{display:none}
+.reader-dialog section{background:#fff;border-radius:12px;padding:19px;width:min(750px,100%);max-height:calc(100vh - 30px);overflow:auto;box-shadow:0 20px 60px #122a4038}
+.reader-dialog h2{font-size:18px;margin:0 0 5px}
+.reader-dialog .reader-top{display:flex;justify-content:space-between;gap:8px;align-items:start}
+.reader-dialog .reader-list{display:grid;gap:7px;max-height:45vh;overflow:auto;margin:12px 0}
+.reader-entry{background:#f7fafc;border:1px solid var(--line);border-radius:8px;padding:11px;display:flex;gap:10px;align-items:start}
+.reader-entry .reader-text{flex:1;min-width:0;overflow-wrap:anywhere}
+.reader-entry strong{font-size:13px}.reader-entry small{display:block;color:var(--muted);font-size:11px;margin:4px 0}
+.reader-entry p{white-space:pre-wrap;margin:6px 0 0;font-size:12px}
+.reader-entry .reader-controls{display:flex;gap:5px;flex-wrap:wrap}
+.reader-entry button{font-size:12px;padding:6px 9px}
+.reader-transfer{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+.reader-transfer p{font-size:12px;color:var(--muted);line-height:1.4}
+.reader-transfer .reader-buttons{display:flex;flex-wrap:wrap;gap:7px}
+.reader-message{font-size:12px;margin:9px 0;min-height:16px;white-space:pre-wrap}
+.reader-message.error{color:#a53f2c}
+@media(max-width:650px){.reader-entry{flex-wrap:wrap}.reader-entry .reader-text{flex-basis:100%}}
 </style></head>
 <body>
-<header class="top"><div><h1>Knowledge Tree Navigator</h1><div class="sub">Questions, investigations, projects and knowledge landscapes</div></div><div class="sub">One HTML file · read-only · no external libraries</div></header>
+<header class="top"><div><h1>Knowledge Tree Navigator</h1><div class="sub">Questions, investigations, projects and knowledge landscapes</div></div><div class="reader-head"><button type="button" id="reader-open">My interests<span class="reader-count" id="reader-count"></span></button><div class="sub">Sources read-only · notes stay local</div></div></header>
 <form class="loader" id="loadForm"><input id="source" type="text" spellcheck="false" aria-label="GitHub repo or JSON URL" placeholder="GitHub repository or question_tree.json URL"><button type="submit" class="primary">Open</button><select id="choices" aria-label="Tree files" class="hidden"></select><label for="local" class="smallbtn" style="border:1px solid #bdcbd8;padding:7px;border-radius:7px;cursor:pointer">Local JSON</label><input id="local" type="file" accept=".json,application/json" class="hidden"><button id="addRef" type="button" title="Import reference_guide.json when using a local tree">+ Reference JSON</button><input id="localRef" type="file" accept=".json,application/json" class="hidden"></form>
 <div class="status" role="status" id="status">Loading the example OS tree…</div>
 <div class="layout"><aside class="panel"><div class="panehead"><strong>Explore</strong><input id="filter" type="text" aria-label="Search questions" placeholder="Search titles and IDs"><div class="tiny muted" id="count" style="margin-top:7px">No tree loaded</div></div><div id="outline" role="tree"></div></aside><main id="view"><div class="toolbar"><button id="back" class="smallbtn" title="Parent">↑ Parent</button><button id="root" class="smallbtn">Root</button><button id="fit" class="smallbtn">Top</button><span class="spacer"></span><select id="layoutMode" aria-label="Graph layout"><option value="family">Family view</option><option value="path">Path only</option></select></div><div id="breadcrumb" class="help">Select an item to explore its context, related items and sources.</div><div id="canvas" class="canvas"></div></main><aside class="panel detailpane"><div class="panehead"><strong>Selected item</strong><span id="sourceMeta" class="tiny muted" style="display:block;margin-top:4px"></span></div><section class="detail" id="detail"><p class="muted">Select an item to see its context and sources.</p></section></aside></div>
+<div id="reader-dialog" class="reader-dialog" hidden>
+  <section role="dialog" aria-modal="true" aria-labelledby="reader-title">
+    <div class="reader-top"><div><h2 id="reader-title">My interests & notes</h2><div class="tiny muted">Only explicitly saved interests and notes. Navigating a question does not mark it as interesting.</div></div><button type="button" id="reader-close">Close</button></div>
+    <div id="reader-list" class="reader-list"></div>
+    <div class="reader-transfer"><p>Export a portable JSON to continue in another browser or ask an LLM what to explore next. The exported file may contain private notes; it is not uploaded automatically.</p>
+      <div class="reader-buttons"><button type="button" id="reader-copy">Copy for LLM</button><button type="button" id="reader-export" class="primary">Export JSON</button><button type="button" id="reader-import">Import JSON</button><input id="reader-file" type="file" accept=".json,application/json" hidden></div>
+      <div id="reader-message" class="reader-message" role="status" aria-live="polite"></div>
+    </div>
+  </section>
+</div>
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
-const state={tree:null,guide:null,selected:null,collapsed:new Set(),url:null,repo:null,ref:null,files:[],views:null,activeView:null,index:new Map(),children:new Map(),parent:new Map()};
+const state={tree:null,guide:null,selected:null,collapsed:new Set(),url:null,repo:null,ref:null,files:[],views:null,activeView:null,currentSource:null,index:new Map(),children:new Map(),parent:new Map()};
 function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=String(text);return e}
 function clear(node){node.replaceChildren()}
 function setStatus(s,error=false){$('status').textContent=s;$('status').classList.toggle('err',!!error)}
@@ -77,21 +121,21 @@ async function discover(r){const data=await fetchJson(api(r,'git/trees/'+encodeU
 function viewList(manifest,paths){if(manifest.mapping_version!=='0.1'||!Array.isArray(manifest.views))throw Error('Unsupported mapping manifest');const views=[];for(const template of manifest.views){if(template.file){if(paths.includes(template.file))views.push(template);continue}if(template.glob){for(const file of paths.filter(p=>globMatch(template.glob,p)&&!(template.exclude||[]).some(ex=>globMatch(ex,p)))){const name=simpleLabel(file.endsWith('/domain.json')?file.split('/').slice(-2,-1)[0]:file);views.push({...template,id:template.id+':'+file,title:template.title+' · '+name,file})}}}return views}
 function setChoices(choices,mapped){state.files=choices;clear($('choices'));for(const v of choices){const opt=el('option','',mapped?v.title:v);opt.value=mapped?v.id:v;$('choices').append(opt)}$('choices').classList.toggle('hidden',choices.length<2)}
 async function loadMapped(r,view){setStatus('Opening '+view.title+'…');const data=await readRepoFile(r,view.file),tree=mappedView(data,view,r);if(!isTree(tree))throw Error('No navigable items in '+view.file);let guide=null;const guidePath=view.reference_file||data.reference_guide_path;if(guidePath)try{guide=await readRepoFile(r,guidePath)}catch{}
- openTree(tree,guide,view.title);state.activeView=view;state.url=repoUrl(r,view.file);state.repo=r;const params=new URLSearchParams(location.search);params.set('repo',`https://github.com/${r.owner}/${r.repo}`);params.set('view',view.id);try{history.replaceState(null,'','?'+params.toString()+(location.hash||''))}catch{}setStatus('Opened '+view.title+' · '+state.index.size+' items'+(guide?' · reading guide connected':''));}
-async function loadPath(r,path){setStatus('Loading '+path+'…');const d=await readRepoFile(r,path);if(!isTree(d))throw Error(path+' does not contain a supported nodes collection');let guide=null;const dir=path.includes('/')?path.slice(0,path.lastIndexOf('/')+1):'';const ref=d.reference_guide_path||'reference_guide.json';const gp=ref.startsWith(dir)?ref:dir+ref;try{guide=await readRepoFile(r,gp)}catch{}openTree(d,guide,path);state.url=repoUrl(r,path);state.repo=r;state.activeView=null;const params=new URLSearchParams(location.search);params.set('repo',state.url);params.delete('view');try{history.replaceState(null,'','?'+params.toString())}catch{}setStatus(`Loaded ${path} · ${state.index.size} nodes`+(guide?' · reference guide connected':' · no accompanying reference guide'));}
-async function loadSource(raw){setStatus('Opening '+raw+'…');const r=parseGithub(raw);if(r.directUrl){const d=await fetchJson(r.directUrl);if(!isTree(d))throw Error('JSON has no nodes');openTree(d,null,r.directUrl);setStatus('Loaded remote JSON');return}if(!r.branch){const metadata=await fetchJson(api(r));r.branch=metadata.default_branch||'main'}state.repo=r;state.views=null;state.activeView=null;
+ openTree(tree,guide,view.title,{type:'github',repo:r.owner+'/'+r.repo,branch:r.branch,file:view.file,view_id:view.id,title:view.title});state.activeView=view;state.url=repoUrl(r,view.file);state.repo=r;const params=new URLSearchParams(location.search);params.set('repo',`https://github.com/${r.owner}/${r.repo}`);params.set('view',view.id);try{history.replaceState(null,'','?'+params.toString()+(location.hash||''))}catch{}setStatus('Opened '+view.title+' · '+state.index.size+' items'+(guide?' · reading guide connected':''));}
+async function loadPath(r,path){setStatus('Loading '+path+'…');const d=await readRepoFile(r,path);if(!isTree(d))throw Error(path+' does not contain a supported nodes collection');let guide=null;const dir=path.includes('/')?path.slice(0,path.lastIndexOf('/')+1):'';const ref=d.reference_guide_path||'reference_guide.json';const gp=ref.startsWith(dir)?ref:dir+ref;try{guide=await readRepoFile(r,gp)}catch{}openTree(d,guide,path,{type:'github',repo:r.owner+'/'+r.repo,branch:r.branch,file:path,title:d.title||path});state.url=repoUrl(r,path);state.repo=r;state.activeView=null;const params=new URLSearchParams(location.search);params.set('repo',state.url);params.delete('view');try{history.replaceState(null,'','?'+params.toString())}catch{}setStatus(`Loaded ${path} · ${state.index.size} nodes`+(guide?' · reference guide connected':' · no accompanying reference guide'));}
+async function loadSource(raw){setStatus('Opening '+raw+'…');const r=parseGithub(raw);if(r.directUrl){const d=await fetchJson(r.directUrl);if(!isTree(d))throw Error('JSON has no nodes');state.repo=null;state.views=null;openTree(d,null,r.directUrl,{type:'url',url:r.directUrl,title:d.title||r.directUrl});setStatus('Loaded remote JSON');return}if(!r.branch){const metadata=await fetchJson(api(r));r.branch=metadata.default_branch||'main'}state.repo=r;state.views=null;state.activeView=null;
  if(r.path&&r.path.endsWith('.json')&&!r.path.endsWith('rsm-view.json')){setChoices([],false);await loadPath(r,r.path);return}
  const paths=await discover(r);if(paths.includes('rsm-view.json')){const manifest=await readRepoFile(r,'rsm-view.json'),views=viewList(manifest,paths);const filtered=r.path?views.filter(v=>v.file.startsWith(r.path.replace(/\/$/,'')+'/')):views;state.views=filtered.length?filtered:views;if(!state.views.length)throw Error('Mapping manifest has no files to display');setChoices(state.views,true);const wanted=new URLSearchParams(location.search).get('view');const selected=state.views.find(v=>v.id===wanted)||state.views[0];$('choices').value=selected.id;await loadMapped(r,selected);return}
  let found=paths.filter(p=>/\/(question_tree|investigation)\.json$/i.test('/'+p));if(!found.length)throw Error('No rsm-view.json mapping or recognized question_tree.json / investigation.json found');found.sort((a,b)=>a.includes('question_tree')?-1:b.includes('question_tree')?1:a.localeCompare(b));const filtered=r.path?found.filter(p=>p.startsWith(r.path.replace(/\/$/,'')+'/')):found;if(filtered.length)found=filtered;setChoices(found,false);await loadPath(r,found[0]);}
-function openTree(d,guide,source){state.tree=d;state.guide=guide;state.selected=null;state.collapsed.clear();state.index=new Map();state.children=new Map();state.parent=new Map();const nodes=nodesOf(d);for(let i=0;i<nodes.length;i++){const n=nodes[i];const id=String(n.id||'node-'+i);n.id=id;state.index.set(id,n);state.children.set(id,[])}for(const n of nodes){const raw=n.parent_id??n.parent??null;const p=raw==null?null:String(raw);if(p&&p!==n.id&&state.index.has(p)){state.parent.set(n.id,p);state.children.get(p).push(n.id)}else state.parent.set(n.id,null)}let first=String(d.root||'');if(!state.index.has(first))first=nodes.find(n=>state.parent.get(n.id)===null)?.id||nodes[0].id;state.selected=first;$('sourceMeta').textContent=source||'Local JSON';render()}
+function openTree(d,guide,source,origin=null){state.currentSource=origin||{type:'local',file:source||'unspecified',title:source||'Local JSON'};state.tree=d;state.guide=guide;state.selected=null;state.collapsed.clear();state.index=new Map();state.children=new Map();state.parent=new Map();const nodes=nodesOf(d);for(let i=0;i<nodes.length;i++){const n=nodes[i];const id=String(n.id||'node-'+i);n.id=id;state.index.set(id,n);state.children.set(id,[])}for(const n of nodes){const raw=n.parent_id??n.parent??null;const p=raw==null?null:String(raw);if(p&&p!==n.id&&state.index.has(p)){state.parent.set(n.id,p);state.children.get(p).push(n.id)}else state.parent.set(n.id,null)}let first=String(d.root||'');if(!state.index.has(first))first=nodes.find(n=>state.parent.get(n.id)===null)?.id||nodes[0].id;state.selected=first;$('sourceMeta').textContent=source||'Local JSON';render()}
 function ancestry(id){const out=[],visited=new Set();let x=id;while(x&&state.index.has(x)&&!visited.has(x)){out.unshift(x);visited.add(x);x=state.parent.get(x)}return out}
 function select(id){if(!state.index.has(id))return;state.selected=id;render();$('view').scrollTop=0;$('view').scrollLeft=0;const u=new URL(location.href);u.hash='node='+encodeURIComponent(id);try{history.replaceState(null,'',u.toString())}catch{}}
 function render(){renderOutline();renderGraph();renderDetail()}
-function renderOutline(){const q=$('filter').value.toLowerCase().trim(),box=$('outline');clear(box);$('count').textContent=state.index.size+' nodes · '+(state.tree?.kind||'investigation');if(!state.tree)return;const match=id=>{const n=state.index.get(id);return(title(n)+' '+id).toLowerCase().includes(q)||state.children.get(id).some(match)};let done=new Set();function branch(id,parent,depth){if(done.has(id)||depth>120)return;done.add(id);if(q&&!match(id))return;const n=state.index.get(id);const wrap=el('div',depth?'tree-line':'branch');const row=el('div','rowbtn'+(id===state.selected?' selected':''));const children=state.children.get(id);const toggle=el('button','twisty',children.length?(state.collapsed.has(id)&&!q?'▸':'▾'):'·');toggle.type='button';toggle.setAttribute('aria-label','Expand or collapse');toggle.onclick=()=>{state.collapsed.has(id)?state.collapsed.delete(id):state.collapsed.add(id);renderOutline()};row.append(toggle);const btn=el('button','rowbtn node-title');btn.style.padding='0';btn.append(el('span','',title(n)));btn.append(el('div','nodeid',id));btn.onclick=()=>select(id);row.append(btn);wrap.append(row);parent.append(wrap);if((!state.collapsed.has(id)||q)&&children.length){for(const child of children)branch(child,wrap,depth+1)}}for(const [id] of state.index)if(!state.parent.get(id))branch(id,box,0);}
+function renderOutline(){const q=$('filter').value.toLowerCase().trim(),box=$('outline');clear(box);$('count').textContent=state.index.size+' nodes · '+(state.tree?.kind||'investigation');if(!state.tree)return;const match=id=>{const n=state.index.get(id);return(title(n)+' '+id).toLowerCase().includes(q)||state.children.get(id).some(match)};let done=new Set();function branch(id,parent,depth){if(done.has(id)||depth>120)return;done.add(id);if(q&&!match(id))return;const n=state.index.get(id);const wrap=el('div',depth?'tree-line':'branch');const row=el('div','rowbtn'+(id===state.selected?' selected':'')+(readerFor(id)?.interested?' reader-marked':''));const children=state.children.get(id);const toggle=el('button','twisty',children.length?(state.collapsed.has(id)&&!q?'▸':'▾'):'·');toggle.type='button';toggle.setAttribute('aria-label','Expand or collapse');toggle.onclick=()=>{state.collapsed.has(id)?state.collapsed.delete(id):state.collapsed.add(id);renderOutline()};row.append(toggle);const btn=el('button','rowbtn node-title');btn.style.padding='0';btn.append(el('span','',title(n)));btn.append(el('div','nodeid',id));btn.onclick=()=>select(id);row.append(btn);if(readerFor(id)?.interested){const star=el('button','reader-outline-star','★');star.type='button';star.title='Remove explicit interest';star.setAttribute('aria-label','Remove interest from '+title(n));star.onclick=()=>readerToggle(id);row.append(star)}else if(readerFor(id)?.note){row.append(el('span','reader-note-indicator','✎'))}wrap.append(row);parent.append(wrap);if((!state.collapsed.has(id)||q)&&children.length){for(const child of children)branch(child,wrap,depth+1)}}for(const [id] of state.index)if(!state.parent.get(id))branch(id,box,0);}
 function graphNodes(){const id=state.selected;if(!id)return[];const path=ancestry(id);const p=state.parent.get(id);if($('layoutMode').value==='path')return path.map(x=>[x]);const siblings=p?state.children.get(p):[id];const children=state.children.get(id)||[];const levels=[];if(path.length>1)levels.push(path.slice(0,-1).slice(-2));levels.push(siblings);if(children.length)levels.push(children);if(!children.length){const next=state.children.get(p||id)||[];if(next.length&&levels.length===1)levels.push(next)}return levels}
-function renderGraph(){const box=$('canvas');clear(box);if(!state.tree){box.append(el('p','empty','Load a tree to view it.'));return}const path=ancestry(state.selected);clear($('breadcrumb'));$('breadcrumb').append(el('span','',path.map(id=>title(state.index.get(id))).join('  ›  ')));const levels=graphNodes();const row=el('div','colnodes');levels.forEach((level,i)=>{const column=el('div','level');const hdr=i===levels.length-1&&level.some(x=>state.parent.get(x)===state.selected)?'What does this lead to?':i===0&&levels.length>2?'Where did this come from?':level.includes(state.selected)?'Current question and alternatives':'Related questions';column.append(el('h3','',hdr));for(const id of level){const n=state.index.get(id);const b=el('button','tile'+(id===state.selected?' active':''));b.type='button';b.append(el('span','pill',id));b.append(document.createTextNode(title(n)));const cc=state.children.get(id).length;if(cc)b.append(el('span','hint',cc+' further question'+(cc===1?'':'s')));b.onclick=()=>select(id);column.append(b)}row.append(column);if(i<levels.length-1)row.append(el('span','arrow','→'))});box.append(row);}
+function renderGraph(){const box=$('canvas');clear(box);if(!state.tree){box.append(el('p','empty','Load a tree to view it.'));return}const path=ancestry(state.selected);clear($('breadcrumb'));$('breadcrumb').append(el('span','',path.map(id=>title(state.index.get(id))).join('  ›  ')));const levels=graphNodes();const row=el('div','colnodes');levels.forEach((level,i)=>{const column=el('div','level');const hdr=i===levels.length-1&&level.some(x=>state.parent.get(x)===state.selected)?'What does this lead to?':i===0&&levels.length>2?'Where did this come from?':level.includes(state.selected)?'Current question and alternatives':'Related questions';column.append(el('h3','',hdr));for(const id of level){const n=state.index.get(id);const b=el('button','tile'+(id===state.selected?' active':'')+(readerFor(id)?.interested?' reader-marked':''));b.type='button';b.append(el('span','pill',id));b.append(document.createTextNode(title(n)));const cc=state.children.get(id).length;if(cc)b.append(el('span','hint',cc+' further question'+(cc===1?'':'s')));if(readerFor(id)?.interested)b.append(el('span','reader-note-indicator','★ Interested'));else if(readerFor(id)?.note)b.append(el('span','reader-note-indicator','✎ Note'));b.onclick=()=>select(id);column.append(b)}row.append(column);if(i<levels.length-1)row.append(el('span','arrow','→'))});box.append(row);}
 function entryRow(parent,ref,sources){const row=el('div','ref');const sid=ref.source_id||'OSTEP';const src=sources.get(sid);row.append(el('div','book',src?.title||sid));const section=ref.section||ref.title||(ref.chapter?'Chapter '+ref.chapter:'');if(section)row.append(el('div','',section));const pages=ref.pages||null;const start=pages?.start??ref.start;const end=pages?.end??ref.end;if(start!=null){row.append(el('div','page','Printed pages '+start+(end!=null?'–'+end:'')))}else row.append(el('div','meta','Page range not verified'));if(ref.role)row.append(el('div','meta',ref.role));if(src?.url)row.append(link(src.url,'Open book in Drive'));parent.append(row)}
-function renderDetail(){const box=$('detail');clear(box);if(!state.tree)return;const n=state.index.get(state.selected);box.append(el('span','chip',n.id));box.append(el('h2','',title(n)));if(n.why_ask||n.why||n.description)box.append(el('p','',n.why_ask||n.why||n.description));if(n.kind)box.append(el('div','meta','Kind: '+n.kind));if(n.url)box.append(link(n.url,'Open linked resource'));if(n.source_location?.url){const loc=el('div','meta','Source: ');loc.append(link(n.source_location.url,'Original JSON'+(n.source_location.pointer?' · '+n.source_location.pointer:'')));box.append(loc)}if(n.status)box.append(el('div','meta','Status: '+n.status));const p=state.parent.get(n.id);if(p){const btn=el('button','smallbtn','↑ '+title(state.index.get(p)));btn.style.marginTop='10px';btn.onclick=()=>select(p);box.append(btn)}const answers=(state.tree.answer_branches||[]).find(a=>a.question_id===n.id)?.possible_answers||[];if(answers.length){box.append(el('h3','','If the answer turned out to be…'));for(const a of answers){const b=el('div','answer');b.append(el('b','',a.answer||a.possible_answer||'Possibility'));b.append(el('div','',a.follow_up||a.next_question||''));box.append(b)}}
+function renderDetail(){const box=$('detail');clear(box);if(!state.tree)return;const n=state.index.get(state.selected);box.append(el('span','chip',n.id));box.append(el('h2','',title(n)));if(n.why_ask||n.why||n.description)box.append(el('p','',n.why_ask||n.why||n.description));if(n.kind)box.append(el('div','meta','Kind: '+n.kind));if(n.url)box.append(link(n.url,'Open linked resource'));if(n.source_location?.url){const loc=el('div','meta','Source: ');loc.append(link(n.source_location.url,'Original JSON'+(n.source_location.pointer?' · '+n.source_location.pointer:'')));box.append(loc)}if(n.status)box.append(el('div','meta','Status: '+n.status));renderReaderDetail(box,n);const p=state.parent.get(n.id);if(p){const btn=el('button','smallbtn','↑ '+title(state.index.get(p)));btn.style.marginTop='10px';btn.onclick=()=>select(p);box.append(btn)}const answers=(state.tree.answer_branches||[]).find(a=>a.question_id===n.id)?.possible_answers||[];if(answers.length){box.append(el('h3','','If the answer turned out to be…'));for(const a of answers){const b=el('div','answer');b.append(el('b','',a.answer||a.possible_answer||'Possibility'));b.append(el('div','',a.follow_up||a.next_question||''));box.append(b)}}
 const children=state.children.get(n.id)||[];if(children.length){box.append(el('h3','','Further questions'));for(const id of children){const btn=el('button','rowbtn',title(state.index.get(id)));btn.onclick=()=>select(id);box.append(btn)}}
 const sources=new Map([...(state.tree.sources||[]),...(state.guide?.related_sources||[])].map(s=>[s.id,s]));if(state.guide?.book)sources.set(state.guide.book.source_id,state.guide.book);
 const sections=[];if(n.candidate_references?.length)sections.push({label:'Candidate reading references',refs:n.candidate_references});if(n.certificate?.references?.length)sections.push({label:'Investigation certificate references',refs:n.certificate.references});
@@ -99,12 +143,165 @@ const guide=state.guide;let routes=[];if(guide){routes=(guide.routes||[]).filter
 if(sections.length||routes.length){box.append(el('h3','','Where could I look this up?'));for(const s of sections){const lbl=el('div','meta',s.label);box.append(lbl);for(const r of s.refs)entryRow(box,r,sources)}for(const route of routes){const det=el('details');det.open=true;const summary=el('summary','',route.question||route.id);det.append(summary);const refs=[];for(const x of route.references||[])refs.push({...x,source_id:x.source_id||'OSTEP'});for(const x of route.cross_book_references||[])refs.push(x);for(const x of refs)entryRow(det,x,sources);box.append(det)}}else{box.append(el('h3','','Reading references'));box.append(el('p','muted','No reference is linked to this node yet. That does not mean no sources are relevant.'))}
 if(state.tree.connections||state.tree.relations||state.tree.edges){const relations=(state.tree.connections||state.tree.relations||state.tree.edges).filter(x=>(x.from===n.id||x.to===n.id)&&(x.type||x.relationship)!=='contains');if(relations.length){box.append(el('h3','','Connections to other questions'));for(const r of relations){const other=r.from===n.id?r.to:r.from;if(!state.index.has(other))continue;const b=el('button','rowbtn',title(state.index.get(other))+' · '+(r.relationship||r.type||'related'));b.onclick=()=>select(other);box.append(b)}}}
 if(state.url)box.append(link(state.url,'View source JSON on GitHub'));}
+
+/* Browser-local reader state, keyed by source identity and stable node ID. */
+const READER_STORE='knowledgeTreeReaderStateV1',READER_FORMAT='knowledge-tree-reader-state';
+let readerEntries=new Map(),readerStoreError='';
+function readerSourceKey(o){
+ if(!o)return '';
+ if(o.type==='github')return 'github:'+o.repo+'|'+(o.file||'')+'|'+(o.view_id||'');
+ if(o.type==='url')return 'url:'+o.url;
+ return 'local:'+(o.file||'')+':'+(o.size||0);
+}
+function readerKey(origin,id){return JSON.stringify([readerSourceKey(origin),String(id)])}
+function readerFor(id){return readerEntries.get(readerKey(state.currentSource,id))||null}
+function readerCount(){return [...readerEntries.values()].filter(x=>x.interested).length}
+function readerUpdateCount(){$('reader-count').textContent=readerCount()?' '+readerCount():''}
+function readerValidate(x){
+ return x&&typeof x==='object'&&x.origin&&['github','url','local'].includes(x.origin.type)&&
+ typeof x.node_id==='string'&&x.node_id.length>0&&x.node_id.length<=400&&
+ typeof x.label==='string'&&x.label.length<=1000&&typeof x.note==='string'&&x.note.length<=16000&&
+ typeof x.interested==='boolean'&&
+ typeof readerSourceKey(x.origin)==='string'&&readerSourceKey(x.origin).length<=2400&&
+ (!x.context||Array.isArray(x.context)&&x.context.length<=40&&x.context.every(z=>typeof z==='string'&&z.length<=1000));
+}
+function readerLoad(){
+ try{
+  const raw=localStorage.getItem(READER_STORE);
+  if(!raw)return;
+  const obj=JSON.parse(raw);
+  if(obj.version!==1||!Array.isArray(obj.entries)||obj.entries.length>20000)throw Error('Unsupported saved reader state');
+  const next=new Map();
+  for(const e of obj.entries){if(!readerValidate(e))throw Error('Malformed saved annotation');next.set(readerKey(e.origin,e.node_id),e)}
+  readerEntries=next;
+ }catch(e){readerStoreError=e.message;setStatus('Could not read saved annotations: '+e.message+'. Import a valid backup to recover.',true)}
+ readerUpdateCount();
+}
+function readerWrite(next){
+ localStorage.setItem(READER_STORE,JSON.stringify({version:1,entries:[...next.values()]}));
+ readerEntries=next;readerStoreError='';readerUpdateCount();
+}
+function readerCapture(id){
+ const n=state.index.get(id);
+ const path=ancestry(id).map(x=>title(state.index.get(x)));
+ return {origin:{...state.currentSource},node_id:id,label:title(n),node_kind:n.kind||state.tree?.kind||'question',context:path,
+  description:String(n.why_ask||n.why||n.description||'').slice(0,1200),
+  source_url:n.source_location?.url||n.url||state.url||'',
+  interested:false,note:'',updated_at:new Date().toISOString()};
+}
+function readerSave(id,interest,note){
+ if(!state.currentSource||!state.index.has(id))return;
+ if(readerStoreError){readerMessage('Saved annotations are unreadable. Import a backup to repair before making changes.',true);return}
+ const next=new Map(readerEntries),k=readerKey(state.currentSource,id),prior=next.get(k);
+ const entry={...readerCapture(id),...prior,interested:interest,note,updated_at:new Date().toISOString()};
+ if(!entry.interested&&!entry.note)next.delete(k);else next.set(k,entry);
+ try{readerWrite(next);render();readerMessage('Saved to this browser. Export JSON to move to another device.')}
+ catch(e){readerMessage('Unable to save: '+e.message,true)}
+}
+function readerMessage(message,error=false){
+ const box=$('reader-message');box.textContent=message;box.classList.toggle('error',error);
+ if(error)setStatus(message,true);
+}
+function readerToggle(id){
+ const x=readerFor(id);readerSave(id,!x?.interested,x?.note||'');
+}
+function renderReaderDetail(box,n){
+ const wrap=el('div','reader-actions');
+ const star=el('button','reader-star'+(readerFor(n.id)?.interested?' on':''),readerFor(n.id)?.interested?'★ Interested':'☆ Mark interest');
+ star.type='button';star.setAttribute('aria-pressed',String(!!readerFor(n.id)?.interested));star.onclick=()=>readerToggle(n.id);
+ wrap.append(star);box.append(wrap);
+ const panel=el('div','reader-note-box'),label=el('label','','Personal note');
+ const note=el('textarea');note.id='reader-note-input';note.maxLength=16000;
+ note.placeholder='Why does this matter? What should I investigate or try next?';
+ label.htmlFor=note.id;note.value=readerFor(n.id)?.note||'';
+ const save=el('button','smallbtn','Save note');save.type='button';save.onclick=()=>readerSave(n.id,!!readerFor(n.id)?.interested,note.value.trim());
+ panel.append(label,note,save,el('div','tiny muted','Private to this browser until you export it.'));
+ box.append(panel);
+}
+function readerJump(entry){
+ const key=readerSourceKey(entry.origin);
+ if(key===readerSourceKey(state.currentSource)&&state.index.has(entry.node_id)){
+  $('reader-dialog').hidden=true;select(entry.node_id);return;
+ }
+ if(entry.origin.type==='local'){readerMessage('Open the matching local JSON file, then select this saved item.',true);return}
+ const href=new URL(location.href);
+ if(entry.origin.type==='github'){
+  const o=entry.origin;
+  if(o.view_id){href.searchParams.set('repo','https://github.com/'+o.repo);href.searchParams.set('view',o.view_id)}
+  else{href.searchParams.set('repo','https://github.com/'+o.repo+'/blob/'+encodeURIComponent(o.branch||'main')+'/'+o.file.split('/').map(encodeURIComponent).join('/'));href.searchParams.delete('view')}
+ }else{href.searchParams.set('repo',entry.origin.url);href.searchParams.delete('view')}
+ href.searchParams.delete('url');href.hash='node='+encodeURIComponent(entry.node_id);
+ location.assign(href.href);
+}
+function readerList(){
+ const pane=$('reader-list');clear(pane);
+ const items=[...readerEntries.values()].sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at)));
+ if(!items.length){pane.append(el('p','muted','No saved interests or notes. Select a question and mark it or add a note.'));return}
+ for(const entry of items){
+  const row=el('div','reader-entry'),copy=el('div','reader-text');
+  copy.append(el('strong','',entry.label+(entry.interested?' ★':'')));
+  copy.append(el('small','',(entry.origin.title||entry.origin.repo||entry.origin.url||entry.origin.file||'Local source')+' · '+entry.node_id));
+  if(entry.context?.length>1)copy.append(el('small','',entry.context.join(' › ')));
+  if(entry.note)copy.append(el('p','',entry.note));
+  const controls=el('div','reader-controls'),open=el('button','','Open'),remove=el('button','','Remove');
+  open.type=remove.type='button';open.onclick=()=>readerJump(entry);
+  remove.onclick=()=>{
+   if(!confirm('Remove this saved interest/note?'))return;
+   const next=new Map(readerEntries);next.delete(readerKey(entry.origin,entry.node_id));
+   try{readerWrite(next);readerList();render()}catch(e){readerMessage('Could not remove item: '+e.message,true)}
+  };
+  controls.append(open,remove);row.append(copy,controls);pane.append(row);
+ }
+}
+function readerOpen(){$('reader-dialog').hidden=false;readerMessage('');readerList()}
+function readerExportObject(){
+ return {format:READER_FORMAT,version:1,exported_at:new Date().toISOString(),
+  explanation:'Deliberately marked interests and personal notes only; browsing does not imply interest or verification.',
+  entries:[...readerEntries.values()].map(e=>({...e}))};
+}
+function readerDownload(){
+ const obj=readerExportObject(),blob=new Blob([JSON.stringify(obj,null,2)+'\n'],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=el('a');a.href=url;a.download='knowledge-tree-interests-'+new Date().toISOString().slice(0,10)+'.json';
+ document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ readerMessage('Exported '+obj.entries.length+' saved items.');
+}
+async function readerCopy(){
+ if(!navigator.clipboard?.writeText)throw Error('Clipboard unavailable. Use Export JSON.');
+ const obj=readerExportObject();await navigator.clipboard.writeText(JSON.stringify(obj,null,2));
+ readerMessage('Copied '+obj.entries.length+' saved items for an LLM.');
+}
+async function readerImport(file){
+ if(file.size>5*1024*1024)throw Error('Reader-state file exceeds 5 MB');
+ const obj=JSON.parse(await file.text());
+ if(obj?.format!==READER_FORMAT||obj.version!==1||!Array.isArray(obj.entries)||obj.entries.length>20000)
+  throw Error('Not a Knowledge Tree reader-state v1 export');
+ const incoming=new Map();
+ for(const x of obj.entries){if(!readerValidate(x))throw Error('Invalid saved annotation');if(x.interested||x.note)incoming.set(readerKey(x.origin,x.node_id),x)}
+ const overlap=[...incoming.keys()].filter(k=>readerEntries.has(k)).length;
+ if(!confirm('Import '+incoming.size+' saved interests/notes? '+overlap+' matching records will be replaced; unrelated saved items stay.'))return;
+ const next=new Map(readerEntries);for(const [k,x] of incoming)next.set(k,x);
+ readerWrite(next);render();readerList();
+ readerMessage('Imported '+incoming.size+' records. '+overlap+' matching records were updated.');
+}
+$('reader-open').onclick=readerOpen;
+$('reader-close').onclick=()=>{$('reader-dialog').hidden=true};
+$('reader-dialog').addEventListener('click',e=>{if(e.target===$('reader-dialog'))$('reader-dialog').hidden=true});
+$('reader-export').onclick=()=>{try{readerDownload()}catch(e){readerMessage(e.message,true)}};
+$('reader-copy').onclick=()=>readerCopy().catch(e=>readerMessage(e.message,true));
+$('reader-import').onclick=()=>$('reader-file').click();
+$('reader-file').onchange=async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ try{await readerImport(file)}catch(err){readerMessage('Import failed: '+err.message,true)}
+ finally{e.target.value=''}
+};
+readerLoad();
+
 $('loadForm').addEventListener('submit',async e=>{e.preventDefault();try{await loadSource($('source').value)}catch(err){setStatus(err.message,true)}});
 $('choices').addEventListener('change',async e=>{try{const view=state.views?.find(v=>v.id===e.target.value);if(view)await loadMapped(state.repo,view);else await loadPath(state.repo,e.target.value)}catch(err){setStatus(err.message,true)}});
-$('local').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!isTree(d))throw Error('This JSON has no recognized nodes collection');state.url=null;openTree(d,null,f.name);setStatus('Loaded local '+f.name+' · '+state.index.size+' nodes. For book references, import reference_guide.json too.')}catch(err){setStatus(err.message,true)}});
+$('local').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!isTree(d))throw Error('This JSON has no recognized nodes collection');state.url=null;openTree(d,null,f.name,{type:'local',file:f.name,size:f.size,title:d.title||f.name});setStatus('Loaded local '+f.name+' · '+state.index.size+' nodes. For book references, import reference_guide.json too.')}catch(err){setStatus(err.message,true)}});
 $('addRef').onclick=()=>$('localRef').click();$('localRef').onchange=async e=>{try{const f=e.target.files?.[0];if(!f)return;state.guide=JSON.parse(await f.text());render();setStatus('Loaded local reference guide '+f.name)}catch(err){setStatus(err.message,true)}};
 $('filter').addEventListener('input',renderOutline);$('layoutMode').onchange=renderGraph;
 $('root').onclick=()=>{if(state.tree)select(state.tree.root&&state.index.has(state.tree.root)?state.tree.root:[...state.index.keys()][0])};$('back').onclick=()=>{const p=state.parent.get(state.selected);if(p)select(p)};$('fit').onclick=()=>{$('view').scrollLeft=0;$('view').scrollTop=0};
-window.addEventListener('keydown',e=>{if(e.target.matches('input,textarea,select'))return;if(e.key==='Escape'&&state.tree)$('root').click();if(e.key==='Backspace'&&state.tree){e.preventDefault();$('back').click()}});
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('reader-dialog').hidden){$('reader-dialog').hidden=true;return}if(e.target.matches('input,textarea,select'))return;if(e.key==='Escape'&&state.tree)$('root').click();if(e.key==='Backspace'&&state.tree){e.preventDefault();$('back').click()}});
 const params=new URLSearchParams(location.search);const source=params.get('repo')||params.get('url')||'https://github.com/JadanPoll/Kami_Uploads_RSM_Tree';$('source').value=source;loadSource(source).then(()=>{const match=location.hash.match(/^#node=(.+)$/);if(match&&state.index.has(decodeURIComponent(match[1])))select(decodeURIComponent(match[1]))}).catch(err=>setStatus(err.message,true))
 </script></body></html>
