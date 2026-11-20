@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/JadanPoll/Learning_Visualizations_Taxonomy/blob/main/Schemas/view-mapping-v0.1.schema.json",
+  "title": "Repository-local map for Knowledge Tree Navigator",
+  "type": "object",
+  "required": [
+    "mapping_version",
+    "views"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "mapping_version": {
+      "const": "0.1"
+    },
+    "name": {
+      "type": "string"
+    },
+    "views": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "projection"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "file": {
+            "type": "string"
+          },
+          "glob": {
+            "type": "string"
+          },
+          "exclude": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reference_file": {
+            "type": "string"
+          },
+          "projection": {
+            "type": "object",
+            "required": [
+              "shape"
+            ],
+            "properties": {
+              "shape": {
+                "enum": [
+                  "flat",
+                  "record"
+                ]
+              },
+              "records": {
+                "type": "string"
+              },
+              "fields": {
+                "type": "object"
+              },
+              "relations": {
+                "type": "string"
+              },
+              "root": {
+                "type": "object"
+              },
+              "collections": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/collection"
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "file"
+            ]
+          },
+          {
+            "required": [
+              "glob"
+            ]
+          }
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "collection": {
+      "type": "object",
+      "required": [
+        "path",
+        "kind"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "label_field": {
+          "type": "string"
+        },
+        "description_field": {
+          "type": "string"
+        },
+        "url_field": {
+          "type": "string"
+        },
+        "children_field": {
+          "type": "string"
+        },
+        "collections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/collection"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
