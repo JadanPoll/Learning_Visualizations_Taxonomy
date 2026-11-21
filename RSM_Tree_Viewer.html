@@ -240,7 +240,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
-const state={tree:null,guide:null,selected:null,expanded:new Set(),detailOpen:false,url:null,repo:null,ref:null,files:[],views:null,activeView:null,currentSource:null,index:new Map(),children:new Map(),parent:new Map()};
+const state={tree:null,guide:null,selected:null,expanded:new Set(),detailOpen:false,atlas:{x:0,y:0,z:1,ready:false,layout:null,saved:null,pointers:new Map(),gesture:null},url:null,repo:null,ref:null,files:[],views:null,activeView:null,currentSource:null,index:new Map(),children:new Map(),parent:new Map()};
 function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=String(text);return e}
 function clear(node){node.replaceChildren()}
 function setStatus(s,error=false){$('status').textContent=s;$('status').classList.toggle('err',!!error)}
@@ -301,7 +301,7 @@ async function loadSource(raw){setStatus('Opening '+raw+'…');const r=parseGith
  if(r.path&&r.path.endsWith('.json')&&!r.path.endsWith('rsm-view.json')){setChoices([],false);await loadPath(r,r.path);return}
  const paths=await discover(r);if(paths.includes('rsm-view.json')){const manifest=await readRepoFile(r,'rsm-view.json'),views=viewList(manifest,paths);const filtered=r.path?views.filter(v=>v.file.startsWith(r.path.replace(/\/$/,'')+'/')):views;state.views=filtered.length?filtered:views;if(!state.views.length)throw Error('Mapping manifest has no files to display');setChoices(state.views,true);const wanted=new URLSearchParams(location.search).get('view');const selected=state.views.find(v=>v.id===wanted)||state.views[0];$('choices').value=selected.id;await loadMapped(r,selected);return}
  let found=paths.filter(p=>/\/(question_tree|investigation)\.json$/i.test('/'+p));if(!found.length)throw Error('No rsm-view.json mapping or recognized question_tree.json / investigation.json found');found.sort((a,b)=>a.includes('question_tree')?-1:b.includes('question_tree')?1:a.localeCompare(b));const filtered=r.path?found.filter(p=>p.startsWith(r.path.replace(/\/$/,'')+'/')):found;if(filtered.length)found=filtered;setChoices(found,false);await loadPath(r,found[0]);}
-function openTree(d,guide,source,origin=null){state.currentSource=origin||{type:'local',file:source||'unspecified',title:source||'Local JSON'};state.tree=d;state.guide=guide;state.selected=null;state.detailOpen=false;state.index=new Map();state.children=new Map();state.parent=new Map();const nodes=nodesOf(d);for(let i=0;i<nodes.length;i++){const n=nodes[i];const id=String(n.id||'node-'+i);n.id=id;state.index.set(id,n);state.children.set(id,[])}for(const n of nodes){const raw=n.parent_id??n.parent??null;const p=raw==null?null:String(raw);if(p&&p!==n.id&&state.index.has(p)){state.parent.set(n.id,p);state.children.get(p).push(n.id)}else state.parent.set(n.id,null)}let first=String(d.root||'');if(!state.index.has(first))first=nodes.find(n=>state.parent.get(n.id)===null)?.id||nodes[0].id;state.selected=first;restoreLandscape();$('sourceMeta').textContent=source||'Local JSON';$('collection-title').textContent=d.title||source||'Explore';render()}
+function openTree(d,guide,source,origin=null){state.currentSource=origin||{type:'local',file:source||'unspecified',title:source||'Local JSON'};state.tree=d;state.guide=guide;state.selected=null;state.detailOpen=false;state.index=new Map();state.children=new Map();state.parent=new Map();const nodes=nodesOf(d);for(let i=0;i<nodes.length;i++){const n=nodes[i];const id=String(n.id||'node-'+i);n.id=id;state.index.set(id,n);state.children.set(id,[])}for(const n of nodes){const raw=n.parent_id??n.parent??null;const p=raw==null?null:String(raw);if(p&&p!==n.id&&state.index.has(p)){state.parent.set(n.id,p);state.children.get(p).push(n.id)}else state.parent.set(n.id,null)}let first=String(d.root||'');if(!state.index.has(first))first=nodes.find(n=>state.parent.get(n.id)===null)?.id||nodes[0].id;state.selected=first;restoreAtlas();$('sourceMeta').textContent=source||'Local JSON';$('collection-title').textContent=d.title||source||'Explore';render()}
 function ancestry(id){const out=[],visited=new Set();let x=id;while(x&&state.index.has(x)&&!visited.has(x)){out.unshift(x);visited.add(x);x=state.parent.get(x)}return out}
 function select(id){
  if(!state.index.has(id))return;
@@ -311,87 +311,143 @@ function select(id){
  try{history.replaceState(null,'',u.toString())}catch{}
 }
 function closeDetail(){state.detailOpen=false;$('detail').hidden=true;updateSelection()}
-function updateSelection(){
- for(const n of $('canvas').querySelectorAll('.landscape-node')){
-  const selected=n.dataset.nodeId===state.selected;
-  n.classList.toggle('landscape-selected',selected&&state.detailOpen);
-  const button=n.querySelector(':scope > .landscape-row > .landscape-pick');
-  if(button)button.setAttribute('aria-pressed',String(selected&&state.detailOpen));
- }
-}
-function landscapeStoreKey(){return 'knowledgeTreeLandscapeV1:'+JSON.stringify(state.currentSource||{}).slice(0,350)}
-function saveLandscape(){try{localStorage.setItem(landscapeStoreKey(),JSON.stringify({expanded:[...state.expanded]}))}catch{}}
-function restoreLandscape(){
- state.expanded=new Set();
- try{const saved=JSON.parse(localStorage.getItem(landscapeStoreKey())||'null');
- if(saved&&Array.isArray(saved.expanded))state.expanded=new Set(saved.expanded.filter(id=>state.index.has(id)&&state.children.get(id)?.length))}catch{}
- for(const [id] of state.index)if(!state.parent.get(id))state.expanded.add(id);
-}
-function toggleLandscape(id){
- if(state.expanded.has(id))state.expanded.delete(id);else state.expanded.add(id);
- saveLandscape();renderLandscape(id);
-}
-function allLandscape(){
- const roots=[...state.index.keys()].filter(id=>!state.parent.get(id));
- const expandable=[...state.children].filter(([,kids])=>kids.length).map(([id])=>id);
- const full=expandable.every(id=>state.expanded.has(id));
- state.expanded=new Set(full?roots:expandable);
- saveLandscape();renderLandscape();
-}
-function renderLandscape(anchorId=null){
- const box=$('canvas');
- // Preserve the clicked node's screen position while its branch opens or closes.
- const previous=anchorId?[...box.querySelectorAll('.landscape-node')].find(n=>n.dataset.nodeId===anchorId):null;
- const oldTop=previous?.getBoundingClientRect().top;
- const oldScroll=window.scrollY;
- clear(box);if(!state.tree)return;
- let visible=0;const used=new Set();const roots=[...state.index.keys()].filter(id=>!state.parent.get(id));
- const grid=el('div','landscape-grid');
- const laneCount=window.innerWidth<=650?1:window.innerWidth<=1020?2:window.innerWidth<=1320?3:4;
- const lanes=Array.from({length:laneCount},()=>el('div','landscape-lane'));
- let branchCount=0;
- const addBranch=entry=>{
-  const section=el('section','landscape-branch');section.append(entry);
-  lanes[branchCount++%lanes.length].append(section);
- };
- function renderNode(id,depth){
-  if(used.has(id))return null;used.add(id);visible++;
-  const n=state.index.get(id),kids=state.children.get(id)||[],opened=state.expanded.has(id);
-  const entry=el('div','landscape-node'+(id===state.selected?' landscape-selected':'')+(readerFor(id)?.interested?' reader-marked':''));
-  entry.dataset.nodeId=id;
-  const row=el('div','landscape-row');
-  if(kids.length){const toggle=el('button','landscape-toggle',opened?'−':'+');toggle.type='button';toggle.setAttribute('aria-label',(opened?'Collapse ':'Expand ')+title(n));toggle.setAttribute('aria-expanded',String(opened));toggle.title=opened?'Collapse this branch':'Expand this branch';toggle.onclick=()=>toggleLandscape(id);row.append(toggle)}
-  else row.append(el('span','landscape-leaf','·'));
-  const pick=el('button','landscape-pick');pick.type='button';pick.title='Inspect this question';pick.append(el('span','landscape-label',title(n)));if(depth===0||state.index.size>40)pick.append(el('span','landscape-id',id));pick.onclick=()=>select(id);row.append(pick);
-  if(kids.length){const count=el('span','landscape-child-count',String(kids.length));count.title=kids.length+' direct children';row.append(count)}
-  if(readerFor(id)?.interested)row.append(el('span','landscape-saved','★'));
-  entry.append(row);
-  if(opened&&kids.length){const children=el('div','landscape-children');for(const child of kids){const c=renderNode(child,depth+1);if(c)children.append(c)}entry.append(children)}
-  return entry;
- }
- 
- if(roots.length===1&&state.children.get(roots[0])?.length){
-  const id=roots[0],rootNode=renderNode(id,0);
-  const rootSection=el('section','landscape-root');
-  rootSection.append(rootNode);box.append(rootSection);
-  if(state.expanded.has(id)){
-   const children=rootNode.querySelector('.landscape-children');
-   if(children){children.remove();for(const child of [...children.children])addBranch(child)}
-  }
- }else{
-  for(const id of roots){const n=renderNode(id,0);if(n)addBranch(n)}
- }
- for(const lane of lanes)grid.append(lane);
- box.append(grid);$('expand-all').textContent=[...state.children].filter(([,kids])=>kids.length).every(([id])=>state.expanded.has(id))?'Show less':'Show all';
- if(oldTop!==undefined){
-  const current=[...box.querySelectorAll('.landscape-node')].find(n=>n.dataset.nodeId===anchorId);
-  if(current){
-   const delta=current.getBoundingClientRect().top-oldTop;
-   if(Math.abs(delta)>1)window.scrollTo(window.scrollX,oldScroll+delta);
-  }
- }
-}
 
+function updateSelection(){
+ for(const n of $('canvas').querySelectorAll('[data-node-id]')){
+  const selected=n.dataset.nodeId===state.selected&&state.detailOpen;
+  n.classList.toggle('is-selected',selected);
+  if(n.matches('button'))n.setAttribute('aria-pressed',String(selected));
+ }
+}
+function atlasStoreKey(){return 'knowledgeTreeAtlasV1:'+readerSourceKey(state.currentSource)}
+function saveAtlas(){
+ const a=state.atlas;
+ try{localStorage.setItem(atlasStoreKey(),JSON.stringify({x:a.x,y:a.y,z:a.z}))}catch{}
+}
+function restoreAtlas(){
+ let saved=null;
+ try{saved=JSON.parse(localStorage.getItem(atlasStoreKey())||'null')}catch{}
+ state.atlas={x:0,y:0,z:1,ready:false,layout:null,saved,pointers:new Map(),gesture:null};
+}
+function atlasLayout(){
+ const index=state.index,children=state.children;
+ const roots=[...index.keys()].filter(id=>!state.parent.get(id));
+ const regionIDs=roots.length===1&&children.get(roots[0])?.length?children.get(roots[0]):roots;
+ const seen=new Set(),regions=[],positions=new Map();
+ const cols=regionIDs.length<=1?1:regionIDs.length<=4?2:regionIDs.length<=9?3:4;
+ for(const id of regionIDs){
+  const descendants=[];
+  function walk(parent,depth){
+   for(const child of children.get(parent)||[]){
+    if(seen.has(child))continue;
+    seen.add(child);descendants.push({id:child,depth});walk(child,depth+1);
+   }
+  }
+  seen.add(id);walk(id,1);
+  regions.push({id,descendants,w:580,h:Math.max(240,140+Math.ceil(descendants.length/2)*104+20)});
+ }
+ const rowCount=Math.ceil(regions.length/cols),rowHeights=[];
+ for(let row=0;row<rowCount;row++)rowHeights[row]=Math.max(...regions.slice(row*cols,row*cols+cols).map(a=>a.h));
+ let y=65;
+ regions.forEach((region,i)=>{
+  const col=i%cols,row=Math.floor(i/cols);
+  let top=65;for(let n=0;n<row;n++)top+=rowHeights[n]+100;
+  region.x=65+col*690;region.y=top;
+  positions.set(region.id,{x:region.x+region.w/2,y:region.y+54,region:region.id});
+  region.descendants.forEach((n,j)=>{
+   const slotX=18+(j%2)*274,slotY=121+Math.floor(j/2)*104;
+   n.x=slotX;n.y=slotY;n.w=258;n.h=87;
+   positions.set(n.id,{x:region.x+slotX+129,y:region.y+slotY+44,region:region.id});
+  });
+ });
+ const width=Math.max(260,regions.length?regions[regions.length-1].x+580+65:650);
+ const height=65+rowHeights.reduce((a,b)=>a+b,0)+Math.max(0,rowCount-1)*100+75;
+ return {regions,positions,width:65+cols*580+Math.max(0,cols-1)*110+65,height};
+}
+function atlasViewport(){return $('canvas')}
+function applyAtlas(){
+ const a=state.atlas,box=atlasViewport(),world=box.querySelector('.atlas-world');
+ if(!world)return;
+ world.style.transform='translate('+a.x+'px,'+a.y+'px) scale('+a.z+')';
+ const level=a.z<.62?'overview':a.z<.97?'near':'detail';
+ box.dataset.level=level;
+ for(const {region,el} of a.overviewLabels||[]){
+  const x=a.x+region.x*a.z,y=a.y+region.y*a.z;
+  const width=Math.max(50,Math.min(220,region.w*a.z-10));
+  const height=Math.max(35,Math.min(120,region.h*a.z-9));
+  el.style.left=(x+region.w*a.z/2-width/2)+'px';
+  el.style.top=(y+Math.min(22,region.h*a.z*.12))+'px';
+  el.style.width=width+'px';el.style.height=height+'px';
+ }
+}
+function fitAtlas(persist=true){
+ const a=state.atlas,l=a.layout,box=atlasViewport();if(!l||!box.clientWidth||!box.clientHeight)return;
+ a.z=Math.max(.09,Math.min(1.1,(box.clientWidth-42)/l.width,(box.clientHeight-42)/l.height));
+ a.x=(box.clientWidth-l.width*a.z)/2;a.y=(box.clientHeight-l.height*a.z)/2;
+ applyAtlas();if(persist)saveAtlas();
+}
+function zoomAtlas(scale,localX=null,localY=null){
+ const a=state.atlas,box=atlasViewport();if(!a.layout)return;
+ const px=localX??box.clientWidth/2,py=localY??box.clientHeight/2;
+ const nx=Math.max(.09,Math.min(2.4,scale));
+ const wx=(px-a.x)/a.z,wy=(py-a.y)/a.z;
+ a.x=px-wx*nx;a.y=py-wy*nx;a.z=nx;
+ applyAtlas();saveAtlas();
+}
+function zoomToRegion(id){
+ const region=state.atlas.layout?.regions.find(r=>r.id===id);if(!region)return;
+ const box=atlasViewport(),a=state.atlas;
+ const newScale=Math.max(.7,Math.min(1.25,(box.clientWidth-35)/region.w,(box.clientHeight-55)/Math.min(region.h,700)));
+ a.z=newScale;a.x=(box.clientWidth-region.w*a.z)/2-region.x*a.z;
+ a.y=45-region.y*a.z;applyAtlas();saveAtlas();
+}
+function focusAtlasNode(id){
+ const pos=state.atlas.layout?.positions.get(id);if(!pos)return;
+ const box=atlasViewport(),a=state.atlas;
+ a.z=Math.max(1,a.z);
+ a.x=box.clientWidth*.48-pos.x*a.z;a.y=box.clientHeight*.40-pos.y*a.z;
+ applyAtlas();saveAtlas();
+}
+function renderLandscape(){
+ const box=atlasViewport();clear(box);if(!state.tree)return;
+ const a=state.atlas,l=atlasLayout();a.layout=l;
+ const world=el('div','atlas-world');world.style.width=l.width+'px';world.style.height=l.height+'px';
+ const labels=el('div','atlas-overview-labels');a.overviewLabels=[];
+ for(const region of l.regions){
+  const section=el('section','atlas-region');section.style.left=region.x+'px';section.style.top=region.y+'px';
+  section.style.width=region.w+'px';section.style.height=region.h+'px';section.dataset.nodeId=region.id;
+  const head=el('div','atlas-region-heading'),name=el('button','atlas-region-title',title(state.index.get(region.id)));
+  name.type='button';name.onclick=()=>select(region.id);
+  const actions=el('div','atlas-region-actions'),count=el('span','',region.descendants.length+' nearby'),visit=el('button','','Explore');
+  visit.type='button';visit.onclick=()=>zoomToRegion(region.id);
+  actions.append(count,visit);head.append(name,actions);section.append(head);
+  for(const item of region.descendants){
+   const node=state.index.get(item.id);
+   const button=el('button','atlas-item'+(item.depth>1?' is-deep':''));
+   button.type='button';button.dataset.nodeId=item.id;
+   button.style.left=item.x+'px';button.style.top=item.y+'px';button.style.width=item.w+'px';button.style.height=item.h+'px';
+   button.append(el('span','atlas-item-label',title(node)));
+   if(readerFor(item.id)?.interested)button.classList.add('is-saved');
+   button.onclick=()=>select(item.id);section.append(button);
+  }
+  if(readerFor(region.id)?.interested)section.classList.add('is-saved');
+  world.append(section);
+  const summary=el('button','atlas-overview-card');
+  summary.type='button';summary.append(el('strong','',title(state.index.get(region.id))));
+  summary.append(el('small','',region.descendants.length+' nearby · Explore'));
+  summary.onclick=()=>zoomToRegion(region.id);
+  labels.append(summary);a.overviewLabels.push({region,el:summary});
+ }
+ box.append(world,labels);
+ if(!a.ready){
+  const saved=a.saved;
+  if(saved&&Number.isFinite(saved.z)&&saved.z>=.09&&saved.z<=2.4&&Number.isFinite(saved.x)&&Number.isFinite(saved.y)){
+   a.x=saved.x;a.y=saved.y;a.z=saved.z;
+  }else fitAtlas(false);
+  a.ready=true;
+ }
+ applyAtlas();updateSelection();
+}
 function render(){renderLandscape();renderDetail()}
 // A Kami "state" opening action is known to accept a Google Drive file ID.
 // Printed page numbers are NOT PDF page indexes; do not invent a page anchor.
