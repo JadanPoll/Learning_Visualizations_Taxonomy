@@ -107,10 +107,6 @@ button{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:tra
 @media(min-width:900px){.reader-dialog{align-items:center}.reader-dialog section{border-radius:22px;max-height:85vh}}
 @media(max-width:500px){.top-actions button{font-size:13px;padding:9px 10px}.top-actions button span:not(.reader-count){display:none}.journey{padding-top:16px}.journey-content h2{font-size:28px}}
 
-.pdf-align{margin:8px 0;font-size:12px}
-.pdf-align summary{cursor:pointer;color:#386e9e;font-size:12px;font-weight:600}
-.pdf-align input{width:min(190px,65%);min-height:44px;padding:9px;border:1px solid #bdcbd8;border-radius:9px;margin:8px 8px 7px 0;font-size:16px}
-.pdf-align button{min-height:44px}
 </style></head>
 <body>
 <header class="top">
@@ -225,79 +221,26 @@ function driveFileId(href){
   const id=u.searchParams.get('id');return /^[\w-]{12,}$/.test(id||'')?id:null;
  }catch{return null}
 }
-function kamiFileUrl(source,pdfPage=null){
+function kamiFileUrl(source){
+ if(source?.kami_url&&safeHref(source.kami_url))return source.kami_url;
  const id=driveFileId(source?.url);
- let url;
- if(source?.kami_url&&safeHref(source.kami_url))url=new URL(source.kami_url);
- else{
-  if(!id)return null;
-  url=new URL('https://web.kamihq.com/web/viewer.html');
-  url.searchParams.set('state',JSON.stringify({ids:[id],action:'open'}));
- }
- // This query is consumed by the companion userscript, not by Kami itself.
- // Only send a verified PDF page (or a reader-calibrated printed-to-PDF mapping).
- if(pdfPage!==null&&id&&Number.isSafeInteger(pdfPage)&&pdfPage>0){
-  url.searchParams.set('krc_page',String(pdfPage));
-  url.searchParams.set('krc_doc',id);
- }
- return url.href;
-}
-const PDF_ALIGN_STORE='knowledgeTreePdfAlignmentV1';
-function pdfAlignment(source){
- const id=driveFileId(source?.url);if(!id)return null;
- try{
-  const value=JSON.parse(localStorage.getItem(PDF_ALIGN_STORE)||'{}')[id];
-  return Number.isSafeInteger(value)&&Math.abs(value)<10000?value:null;
- }catch{return null}
-}
-function pdfPageFor(ref,src){
- const direct=ref.pdf_page??ref.pdf_page_start??ref.pages?.pdf_start??null;
- if(Number.isSafeInteger(direct)&&direct>0)return direct;
- const printed=ref.pages?.start??ref.start??null,offset=pdfAlignment(src);
- if(Number.isSafeInteger(printed)&&Number.isSafeInteger(offset)&&printed+offset>0)return printed+offset;
- return null;
-}
-function savePdfAlignment(source,printed,pdfPage){
- const id=driveFileId(source?.url);
- if(!id||!Number.isSafeInteger(printed)||!Number.isSafeInteger(pdfPage)||pdfPage<1||pdfPage>20000)
-  throw Error('Enter an actual positive PDF page number');
- const data=JSON.parse(localStorage.getItem(PDF_ALIGN_STORE)||'{}');
- data[id]=pdfPage-printed;
- localStorage.setItem(PDF_ALIGN_STORE,JSON.stringify(data));
+ if(!id)return null;
+ return 'https://web.kamihq.com/web/viewer.html?state='+encodeURIComponent(JSON.stringify({ids:[id],action:'open'}));
 }
 function entryRow(parent,ref,sources){
  const row=el('div','ref'),sid=ref.source_id||'OSTEP',src=sources.get(sid);
  row.append(el('div','book',src?.title||sid));
  const section=ref.section||ref.title||(ref.chapter?'Chapter '+ref.chapter:'');
  if(section)row.append(el('div','',section));
- const pages=ref.pages||null;
- const start=pages?.start??ref.start,end=pages?.end??ref.end;
+ const start=ref.pages?.start??ref.start,end=ref.pages?.end??ref.end;
  if(start!=null)row.append(el('div','page','Printed pages '+start+(end!=null?'–'+end:'')));
  else row.append(el('div','meta','Page range not verified'));
  if(ref.role)row.append(el('div','meta',ref.role));
- const pdfPage=pdfPageFor(ref,src),open=kamiFileUrl(src,pdfPage);
- if(open){
-  row.append(link(open,pdfPage!==null?'Open in Kami · PDF page '+pdfPage:'Open in Kami'));
-  if(pdfPage===null&&Number.isSafeInteger(start)){
-   const align=el('details','pdf-align'),summary=el('summary','','Set up page jumping');align.append(summary);
-   const instructions=el('p','tiny muted','Find printed page '+start+' in Kami once. Enter the PDF viewer page number shown there. This book will then open at the correct page on future visits.');
-   const input=el('input');input.type='number';input.min='1';input.max='20000';input.step='1';input.placeholder='PDF page number';input.setAttribute('aria-label','PDF page number for printed page '+start);
-   const save=el('button','smallbtn','Save');save.type='button';
-   const feedback=el('div','tiny muted');
-   save.onclick=()=>{
-    try{
-     savePdfAlignment(src,start,Number(input.value));
-     feedback.textContent='Page alignment saved in this browser.';
-     renderDetail();
-     // Reopen the books section after refreshing its newly generated links.
-     [...document.querySelectorAll('.details-fold')].find(x=>x.querySelector('summary')?.textContent==='Books & sources')?.setAttribute('open','');
-    }catch(e){feedback.textContent=e.message;}
-   };
-   align.append(instructions,input,save,feedback);row.append(align);
-  }else if(pdfPage!==null&&Number.isSafeInteger(start)){
-   row.append(el('div','meta','Printed page '+start+' → PDF page '+pdfPage+(ref.pdf_page!=null||ref.pdf_page_start!=null||ref.pages?.pdf_start!=null?' (explicit reference)':' (your saved alignment)')));
-  }else if(start!=null)row.append(el('div','meta','Printed page '+start+' · PDF position not mapped'));
-  if(src?.url){const fallback=el('div','meta','');fallback.append(link(src.url,'Open original in Drive'));row.append(fallback);}
+ const kami=kamiFileUrl(src);
+ if(kami){
+  row.append(link(kami,'Open in Kami'));
+  if(start!=null)row.append(el('div','meta','Find printed page '+start+' in Kami; direct page navigation is not available yet.'));
+  if(src?.url){const fallback=el('div','meta','');fallback.append(link(src.url,'Open original in Drive'));row.append(fallback)}
  }else if(src?.url)row.append(link(src.url,'Open original in Drive'));
  parent.append(row);
 }
