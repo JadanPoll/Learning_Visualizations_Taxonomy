@@ -1515,7 +1515,7 @@ Requirements:
     if (layer && layer.children.length > 0) {
       // Page is loaded in the DOM — smooth scroll directly
       (layer.parentElement ?? layer).scrollIntoView({ behavior: 'smooth', block: 'start' });
-      return;
+      return true;
     }
 
     // Page is lazy-loaded away — delegate to Kami's navigation control
@@ -1523,7 +1523,7 @@ Requirements:
     if (gotoBtn) {
       gotoBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
       L.info(`scrollToPage: navigated via Kami control to page ${pageNo}`);
-      return;
+      return true;
     }
 
     // Last resort: drive the page number input field
@@ -1535,11 +1535,58 @@ Requirements:
       );
       input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
       L.warn(`scrollToPage: used input fallback for page ${pageNo} — gotopage element missing`);
-      return;
+      return true;
     }
 
     setSyncBanner('err', `✕ Could not navigate to page ${pageNo} — Kami controls not found`);
     L.fail(`scrollToPage: no navigation pathway found for page ${pageNo}`);
+    return false;
+  }
+
+
+  // A handoff from Knowledge Tree Navigator may request an actual PDF-viewer
+  // page index. This is NOT necessarily the number printed on the book page.
+  // Example: ?state=...&krc_page=23&krc_doc=DRIVE_FILE_ID
+  function navigateRequestedPage() {
+    const params = new URLSearchParams(location.search);
+    const raw = params.get('krc_page');
+    if (raw === null) return;
+    const page = Number(raw);
+    const expectedDocument = params.get('krc_doc');
+    if (!Number.isSafeInteger(page) || page < 1 || page > 10000) {
+      L.warn('Ignored invalid krc_page', raw);
+      return;
+    }
+    if (!expectedDocument) {
+      L.warn('Ignored krc_page without krc_doc document identity');
+      return;
+    }
+    let attempts = 0;
+    const limit = 60;
+    function tryNavigate() {
+      if (doc.identifier && doc.identifier !== expectedDocument) {
+        // NOTABLEOPEN may still correct a URL-derived identity. Do not jump to
+        // any page until this source is the requested document.
+        attempts++;
+        if (attempts < limit) return setTimeout(tryNavigate, 350);
+        L.warn('Page handoff stopped: loaded Kami document differs from requested source');
+        return;
+      }
+      const container = document.getElementById('viewerContainer');
+      if (doc.identifier === expectedDocument && container &&
+          (document.getElementById('textLayer' + page) ||
+           document.getElementById('gotopage' + page) ||
+           document.getElementById('page-input-field'))) {
+        if (scrollToPage(page)) {
+          L.success('Knowledge Tree page handoff completed — PDF page', page);
+          return;
+        }
+      }
+      attempts++;
+      if (attempts < limit) setTimeout(tryNavigate, 350);
+      else L.warn('Could not complete page handoff. Page controls unavailable after load.');
+    }
+    setTimeout(tryNavigate, 400);
   }
 
   // ─── Clipboard Helper ─────────────────────────────────────────────────────
@@ -1592,6 +1639,7 @@ Requirements:
     }
 
     buildPanel();
+    navigateRequestedPage();
 
     if (doc.identifier) {
       loadState().catch(e => L.fail('loadState threw at boot:', e));
