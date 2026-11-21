@@ -209,7 +209,48 @@ function render(){renderDetail();renderOutline();renderGraph();$('back').disable
 function renderOutline(){const q=$('filter').value.toLowerCase().trim(),box=$('outline');clear(box);$('count').textContent=state.index.size+' nodes · '+(state.tree?.kind||'investigation');if(!state.tree)return;const match=id=>{const n=state.index.get(id);return(title(n)+' '+id).toLowerCase().includes(q)||state.children.get(id).some(match)};let done=new Set();function branch(id,parent,depth){if(done.has(id)||depth>120)return;done.add(id);if(q&&!match(id))return;const n=state.index.get(id);const wrap=el('div',depth?'tree-line':'branch');const row=el('div','rowbtn'+(id===state.selected?' selected':'')+(readerFor(id)?.interested?' reader-marked':''));const children=state.children.get(id);const toggle=el('button','twisty',children.length?(state.collapsed.has(id)&&!q?'▸':'▾'):'·');toggle.type='button';toggle.setAttribute('aria-label','Expand or collapse');toggle.onclick=()=>{state.collapsed.has(id)?state.collapsed.delete(id):state.collapsed.add(id);renderOutline()};row.append(toggle);const btn=el('button','rowbtn node-title');btn.style.padding='0';btn.append(el('span','',title(n)));btn.append(el('div','nodeid',id));btn.onclick=()=>select(id);row.append(btn);if(readerFor(id)?.interested){const star=el('button','reader-outline-star','★');star.type='button';star.title='Remove explicit interest';star.setAttribute('aria-label','Remove interest from '+title(n));star.onclick=()=>readerToggle(id);row.append(star)}else if(readerFor(id)?.note){row.append(el('span','reader-note-indicator','✎'))}wrap.append(row);parent.append(wrap);if((!state.collapsed.has(id)||q)&&children.length){for(const child of children)branch(child,wrap,depth+1)}}for(const [id] of state.index)if(!state.parent.get(id))branch(id,box,0);}
 function graphNodes(){const id=state.selected;if(!id)return[];const path=ancestry(id);const p=state.parent.get(id);if($('layoutMode').value==='path')return path.map(x=>[x]);const siblings=p?state.children.get(p):[id];const children=state.children.get(id)||[];const levels=[];if(path.length>1)levels.push(path.slice(0,-1).slice(-2));levels.push(siblings);if(children.length)levels.push(children);if(!children.length){const next=state.children.get(p||id)||[];if(next.length&&levels.length===1)levels.push(next)}return levels}
 function renderGraph(){const box=$('canvas');clear(box);if(!state.tree){box.append(el('p','empty','Load a tree to view it.'));return}const path=ancestry(state.selected);clear($('breadcrumb'));$('breadcrumb').append(el('span','',path.map(id=>title(state.index.get(id))).join('  ›  ')));const levels=graphNodes();const row=el('div','colnodes');levels.forEach((level,i)=>{const column=el('div','level');const hdr=i===levels.length-1&&level.some(x=>state.parent.get(x)===state.selected)?'What does this lead to?':i===0&&levels.length>2?'Where did this come from?':level.includes(state.selected)?'Current question and alternatives':'Related questions';column.append(el('h3','',hdr));for(const id of level){const n=state.index.get(id);const b=el('button','tile'+(id===state.selected?' active':'')+(readerFor(id)?.interested?' reader-marked':''));b.type='button';b.append(el('span','pill',id));b.append(document.createTextNode(title(n)));const cc=state.children.get(id).length;if(cc)b.append(el('span','hint',cc+' further question'+(cc===1?'':'s')));if(readerFor(id)?.interested)b.append(el('span','reader-note-indicator','★ Interested'));else if(readerFor(id)?.note)b.append(el('span','reader-note-indicator','✎ Note'));b.onclick=()=>select(id);column.append(b)}row.append(column);if(i<levels.length-1)row.append(el('span','arrow','→'))});box.append(row);}
-function entryRow(parent,ref,sources){const row=el('div','ref');const sid=ref.source_id||'OSTEP';const src=sources.get(sid);row.append(el('div','book',src?.title||sid));const section=ref.section||ref.title||(ref.chapter?'Chapter '+ref.chapter:'');if(section)row.append(el('div','',section));const pages=ref.pages||null;const start=pages?.start??ref.start;const end=pages?.end??ref.end;if(start!=null){row.append(el('div','page','Printed pages '+start+(end!=null?'–'+end:'')))}else row.append(el('div','meta','Page range not verified'));if(ref.role)row.append(el('div','meta',ref.role));if(src?.url)row.append(link(src.url,'Open book in Drive'));parent.append(row)}
+// A Kami "state" opening action is known to accept a Google Drive file ID.
+// Printed page numbers are NOT PDF page indexes; do not invent a page anchor.
+function driveFileId(href){
+ try{
+  const u=new URL(href);
+  if(u.hostname!=='drive.google.com'&&u.hostname!=='docs.google.com')return null;
+  const match=u.pathname.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if(match)return match[1];
+  const id=u.searchParams.get('id');return /^[\w-]{12,}$/.test(id||'')?id:null;
+ }catch{return null}
+}
+function kamiFileUrl(source){
+ if(source?.kami_url&&safeHref(source.kami_url))return source.kami_url;
+ const id=driveFileId(source?.url);
+ if(!id)return null;
+ const state={ids:[id],action:'open'};
+ return 'https://web.kamihq.com/web/viewer.html?state='+encodeURIComponent(JSON.stringify(state));
+}
+function entryRow(parent,ref,sources){
+ const row=el('div','ref'),sid=ref.source_id||'OSTEP',src=sources.get(sid);
+ row.append(el('div','book',src?.title||sid));
+ const section=ref.section||ref.title||(ref.chapter?'Chapter '+ref.chapter:'');
+ if(section)row.append(el('div','',section));
+ const pages=ref.pages||null;
+ const start=pages?.start??ref.start,end=pages?.end??ref.end;
+ if(start!=null)row.append(el('div','page','Printed pages '+start+(end!=null?'–'+end:'')));
+ else row.append(el('div','meta','Page range not verified'));
+ if(ref.role)row.append(el('div','meta',ref.role));
+ // Exact page targeting requires both a verified Kami page URL and PDF-page
+ // position, neither of which can be derived from the book's printed pagination.
+ const open=kamiFileUrl(src);
+ if(open){
+  row.append(link(open,'Open in Kami'));
+  if(start!=null)row.append(el('div','meta','Find printed page '+start+' in Kami · direct page jump not yet verified'));
+  if(src?.url){
+   const fallback=el('div','meta','');
+   fallback.append(link(src.url,'Open original in Drive'));
+   row.append(fallback);
+  }
+ }else if(src?.url)row.append(link(src.url,'Open original in Drive'));
+ parent.append(row);
+}
 function renderDetail(){
  const box=$('detail');clear(box);if(!state.tree)return;
  const n=state.index.get(state.selected);
