@@ -118,7 +118,7 @@ button{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:tra
 .landscape-canvas{margin:0 0 28px}.landscape-canvas[hidden]{display:none}
 .landscape-help{font-size:13px;color:#59758a;margin:5px 0 14px;line-height:1.5}
 .landscape-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,295px),1fr));align-items:start;gap:13px}
-.landscape-branch{background:#fff;border:1px solid #dbe6ee;border-radius:15px;padding:8px;min-width:0;box-shadow:0 3px 11px #1e496609}
+.landscape-root{background:#eaf4fc;border:1px solid #c9deef;border-radius:14px;padding:8px 12px;margin:0 0 13px}.landscape-branch{background:#fff;border:1px solid #dbe6ee;border-radius:15px;padding:8px;min-width:0;box-shadow:0 3px 11px #1e496609}
 .landscape-node{border-radius:9px;margin:3px 0}.landscape-node.landscape-selected>.landscape-row{background:#e8f3fc;outline:1px solid #afd0ed}
 .landscape-row{display:flex;align-items:flex-start;gap:6px;border-radius:9px;padding:4px 3px;min-height:34px}
 .landscape-toggle{flex:0 0 30px;min-width:30px;min-height:32px;padding:0;border:1px solid #e4ecf2;border-radius:7px;color:#416d91;background:#f7fafc;font-weight:700;font-size:18px;line-height:1}
@@ -268,8 +268,18 @@ function renderLandscape(){
   if(opened&&kids.length){const children=el('div','landscape-children');for(const child of kids){const c=renderNode(child,depth+1);if(c)children.append(c)}entry.append(children)}
   return entry;
  }
- for(const id of roots){const section=el('section','landscape-branch');const n=renderNode(id,0);if(n)section.append(n);grid.append(section)}
  box.append(el('p','landscape-help','Expand several branches to see them together. Select a question to read its details below; your map stays open.'));
+ if(roots.length===1&&state.children.get(roots[0])?.length){
+  const id=roots[0],rootNode=renderNode(id,0);
+  const rootSection=el('section','landscape-root');
+  rootSection.append(rootNode);box.append(rootSection);
+  if(state.expanded.has(id)){
+   const children=rootNode.querySelector('.landscape-children');
+   if(children){children.remove();for(const child of [...children.children]){const section=el('section','landscape-branch');section.append(child);grid.append(section)}}
+  }
+ }else{
+  for(const id of roots){const section=el('section','landscape-branch');const n=renderNode(id,0);if(n)section.append(n);grid.append(section)}
+ }
  box.append(grid);$('landscape-count').textContent=visible+' / '+state.index.size+' visible';
 }
 
