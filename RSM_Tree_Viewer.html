@@ -124,12 +124,12 @@ button{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:tra
 .landscape-heading p{font-size:13px;color:#748698;margin:0}
 .landscape-heading button{min-height:40px;white-space:nowrap;font-size:13px;border-radius:11px;background:#fff;border:1px solid #d4e0eb}
 .explore-workspace{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:18px}
-.explore-workspace:has(>.journey-content:not([hidden])){grid-template-columns:minmax(0,1fr) minmax(310px,390px)}
-.landscape-canvas{min-width:0;margin:0}
+.explore-workspace:has(>.journey-content:not([hidden])){grid-template-columns:minmax(0,1fr)}
+.landscape-canvas{min-width:0;margin:0;overflow-anchor:none}
 .landscape-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
 .landscape-node.landscape-selected>.landscape-row{background:#e5f1fb}
 .journey:has(.landscape-grid){width:min(1440px,100%)}
-.explore-workspace>.journey-content{width:100%;min-width:0;margin:0;padding:20px;background:#fff;border:1px solid #dde7f0;border-radius:15px;position:sticky;top:90px;max-height:calc(100svh - 112px);overflow:auto}
+.explore-workspace>.journey-content{width:min(420px,calc(100vw - 24px));min-width:0;margin:0;padding:20px;background:#fff;border:1px solid #dde7f0;border-radius:16px;position:fixed;right:12px;top:82px;z-index:45;max-height:calc(100svh - 95px);overflow:auto;box-shadow:0 12px 45px #1b3b5638;overscroll-behavior:contain}
 .explore-workspace>.journey-content[hidden]{display:none}
 .explore-workspace>.journey-content h2{font-size:clamp(20px,2.4vw,27px);padding-right:22px}
 .detail-dismiss{float:right;border:0;background:#f0f5fa;border-radius:10px;min-width:38px;min-height:38px;font-size:24px;line-height:1;color:#536d83}
@@ -142,7 +142,7 @@ button{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:tra
 .case-source p{font-size:12px;margin:2px 0 6px}
 @media(max-width:850px){
  .explore-workspace:has(>.journey-content:not([hidden])){grid-template-columns:minmax(0,1fr)}
- .explore-workspace>.journey-content:not([hidden]){position:fixed;z-index:45;left:0;right:0;bottom:0;top:auto;width:100%;max-height:min(72svh,750px);overflow:auto;border-radius:19px 19px 0 0;box-shadow:0 -14px 50px #122a4040;padding:19px max(20px,env(safe-area-inset-right)) max(25px,env(safe-area-inset-bottom))}
+ .explore-workspace>.journey-content:not([hidden]){position:fixed;z-index:45;left:0;right:0;bottom:0;top:auto;width:100%;max-height:min(65svh,700px);overflow:auto;border-radius:19px 19px 0 0;box-shadow:0 -14px 50px #122a4040;padding:19px max(20px,env(safe-area-inset-right)) max(25px,env(safe-area-inset-bottom))}
  .landscape-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
 }
 </style></head>
@@ -247,12 +247,19 @@ function ancestry(id){const out=[],visited=new Set();let x=id;while(x&&state.ind
 function select(id){
  if(!state.index.has(id))return;
  state.selected=id;state.detailOpen=true;
- for(const a of ancestry(id).slice(0,-1))state.expanded.add(a);
- saveLandscape();render();
+ updateSelection();renderDetail();
  const u=new URL(location.href);u.hash='node='+encodeURIComponent(id);
  try{history.replaceState(null,'',u.toString())}catch{}
 }
-function closeDetail(){state.detailOpen=false;render()}
+function closeDetail(){state.detailOpen=false;$('detail').hidden=true;updateSelection()}
+function updateSelection(){
+ for(const n of $('canvas').querySelectorAll('.landscape-node')){
+  const selected=n.dataset.nodeId===state.selected;
+  n.classList.toggle('landscape-selected',selected&&state.detailOpen);
+  const button=n.querySelector(':scope > .landscape-row > .landscape-pick');
+  if(button)button.setAttribute('aria-pressed',String(selected&&state.detailOpen));
+ }
+}
 function landscapeStoreKey(){return 'knowledgeTreeLandscapeV1:'+JSON.stringify(state.currentSource||{}).slice(0,350)}
 function saveLandscape(){try{localStorage.setItem(landscapeStoreKey(),JSON.stringify({expanded:[...state.expanded]}))}catch{}}
 function restoreLandscape(){
@@ -261,7 +268,10 @@ function restoreLandscape(){
  if(saved&&Array.isArray(saved.expanded))state.expanded=new Set(saved.expanded.filter(id=>state.index.has(id)&&state.children.get(id)?.length))}catch{}
  for(const [id] of state.index)if(!state.parent.get(id))state.expanded.add(id);
 }
-function toggleLandscape(id){if(state.expanded.has(id))state.expanded.delete(id);else state.expanded.add(id);saveLandscape();renderLandscape()}
+function toggleLandscape(id){
+ if(state.expanded.has(id))state.expanded.delete(id);else state.expanded.add(id);
+ saveLandscape();renderLandscape(id);
+}
 function allLandscape(){
  const roots=[...state.index.keys()].filter(id=>!state.parent.get(id));
  const expandable=[...state.children].filter(([,kids])=>kids.length).map(([id])=>id);
@@ -269,8 +279,13 @@ function allLandscape(){
  state.expanded=new Set(full?roots:expandable);
  saveLandscape();renderLandscape();
 }
-function renderLandscape(){
- const box=$('canvas');clear(box);if(!state.tree)return;
+function renderLandscape(anchorId=null){
+ const box=$('canvas');
+ // Preserve the clicked node's screen position while its branch opens or closes.
+ const previous=anchorId?[...box.querySelectorAll('.landscape-node')].find(n=>n.dataset.nodeId===anchorId):null;
+ const oldTop=previous?.getBoundingClientRect().top;
+ const oldScroll=window.scrollY;
+ clear(box);if(!state.tree)return;
  let visible=0;const used=new Set();const roots=[...state.index.keys()].filter(id=>!state.parent.get(id));
  const grid=el('div','landscape-grid');
  function renderNode(id,depth){
@@ -281,7 +296,7 @@ function renderLandscape(){
   const row=el('div','landscape-row');
   if(kids.length){const toggle=el('button','landscape-toggle',opened?'−':'+');toggle.type='button';toggle.setAttribute('aria-label',(opened?'Collapse ':'Expand ')+title(n));toggle.setAttribute('aria-expanded',String(opened));toggle.title=opened?'Collapse this branch':'Expand this branch';toggle.onclick=()=>toggleLandscape(id);row.append(toggle)}
   else row.append(el('span','landscape-leaf','·'));
-  const pick=el('button','landscape-pick');pick.type='button';pick.title='Inspect this question';pick.append(el('span','landscape-label',title(n)));if(depth===0||state.index.size>40)pick.append(el('span','landscape-id',id));pick.onclick=()=>{if(kids.length)state.expanded.add(id);select(id)};row.append(pick);
+  const pick=el('button','landscape-pick');pick.type='button';pick.title='Inspect this question';pick.append(el('span','landscape-label',title(n)));if(depth===0||state.index.size>40)pick.append(el('span','landscape-id',id));pick.onclick=()=>select(id);row.append(pick);
   if(kids.length){const count=el('span','landscape-child-count',String(kids.length));count.title=kids.length+' direct children';row.append(count)}
   if(readerFor(id)?.interested)row.append(el('span','landscape-saved','★'));
   entry.append(row);
@@ -301,6 +316,13 @@ function renderLandscape(){
   for(const id of roots){const section=el('section','landscape-branch');const n=renderNode(id,0);if(n)section.append(n);grid.append(section)}
  }
  box.append(grid);$('expand-all').textContent=[...state.children].filter(([,kids])=>kids.length).every(([id])=>state.expanded.has(id))?'Show less':'Show all';
+ if(oldTop!==undefined){
+  const current=[...box.querySelectorAll('.landscape-node')].find(n=>n.dataset.nodeId===anchorId);
+  if(current){
+   const delta=current.getBoundingClientRect().top-oldTop;
+   if(Math.abs(delta)>1)window.scrollTo(window.scrollX,oldScroll+delta);
+  }
+ }
 }
 
 function render(){renderLandscape();renderDetail()}
