@@ -126,7 +126,8 @@ button{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:tra
 .explore-workspace{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:18px}
 .explore-workspace:has(>.journey-content:not([hidden])){grid-template-columns:minmax(0,1fr)}
 .landscape-canvas{min-width:0;margin:0;overflow-anchor:none}
-.landscape-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
+.landscape-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.landscape-lane{display:flex;flex-direction:column;gap:13px;min-width:0}
 .landscape-node.landscape-selected>.landscape-row{background:#e5f1fb}
 .journey:has(.landscape-grid){width:min(1440px,100%)}
 .explore-workspace>.journey-content{width:min(420px,calc(100vw - 24px));min-width:0;margin:0;padding:20px;background:#fff;border:1px solid #dde7f0;border-radius:16px;position:fixed;right:12px;top:82px;z-index:45;max-height:calc(100svh - 95px);overflow:auto;box-shadow:0 12px 45px #1b3b5638;overscroll-behavior:contain}
@@ -140,11 +141,14 @@ button{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:tra
 .case-section ul{padding-left:21px;margin:6px 0}
 .case-source{font-size:13px;line-height:1.5;padding:5px 0;overflow-wrap:anywhere}
 .case-source p{font-size:12px;margin:2px 0 6px}
+@media(max-width:1320px){.landscape-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:1020px){.landscape-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:850px){
  .explore-workspace:has(>.journey-content:not([hidden])){grid-template-columns:minmax(0,1fr)}
  .explore-workspace>.journey-content:not([hidden]){position:fixed;z-index:45;left:0;right:0;bottom:0;top:auto;width:100%;max-height:min(65svh,700px);overflow:auto;border-radius:19px 19px 0 0;box-shadow:0 -14px 50px #122a4040;padding:19px max(20px,env(safe-area-inset-right)) max(25px,env(safe-area-inset-bottom))}
- .landscape-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
+ .landscape-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+@media(max-width:650px){.landscape-grid{grid-template-columns:minmax(0,1fr)}}
 </style></head>
 <body>
 <header class="top">
@@ -288,6 +292,13 @@ function renderLandscape(anchorId=null){
  clear(box);if(!state.tree)return;
  let visible=0;const used=new Set();const roots=[...state.index.keys()].filter(id=>!state.parent.get(id));
  const grid=el('div','landscape-grid');
+ const laneCount=window.innerWidth<=650?1:window.innerWidth<=1020?2:window.innerWidth<=1320?3:4;
+ const lanes=Array.from({length:laneCount},()=>el('div','landscape-lane'));
+ let branchCount=0;
+ const addBranch=entry=>{
+  const section=el('section','landscape-branch');section.append(entry);
+  lanes[branchCount++%lanes.length].append(section);
+ };
  function renderNode(id,depth){
   if(used.has(id))return null;used.add(id);visible++;
   const n=state.index.get(id),kids=state.children.get(id)||[],opened=state.expanded.has(id);
@@ -310,11 +321,12 @@ function renderLandscape(anchorId=null){
   rootSection.append(rootNode);box.append(rootSection);
   if(state.expanded.has(id)){
    const children=rootNode.querySelector('.landscape-children');
-   if(children){children.remove();for(const child of [...children.children]){const section=el('section','landscape-branch');section.append(child);grid.append(section)}}
+   if(children){children.remove();for(const child of [...children.children])addBranch(child)}
   }
  }else{
-  for(const id of roots){const section=el('section','landscape-branch');const n=renderNode(id,0);if(n)section.append(n);grid.append(section)}
+  for(const id of roots){const n=renderNode(id,0);if(n)addBranch(n)}
  }
+ for(const lane of lanes)grid.append(lane);
  box.append(grid);$('expand-all').textContent=[...state.children].filter(([,kids])=>kids.length).every(([id])=>state.expanded.has(id))?'Show less':'Show all';
  if(oldTop!==undefined){
   const current=[...box.querySelectorAll('.landscape-node')].find(n=>n.dataset.nodeId===anchorId);
