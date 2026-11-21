@@ -132,6 +132,35 @@ button{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:tra
 .journey:has(.landscape-grid){width:min(1320px,100%)}
 .journey:has(.landscape-grid)>.journey-content{width:min(760px,100%);margin:14px auto 0;padding:22px;background:#fff;border:1px solid #e5eaf0;border-radius:17px;scroll-margin-top:85px}
 @media(max-width:650px){.landscape-grid{grid-template-columns:1fr}.landscape-controls{gap:6px}.landscape-count{width:100%;margin-left:0}.journey:has(.landscape-grid)>.journey-content{padding:17px}.landscape-children{margin-left:10px;padding-left:6px}}
+
+/* One stable landscape with an optional contextual reading pane. */
+.journey{width:min(1440px,100%);padding:18px clamp(14px,3vw,32px) 60px}
+.landscape-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin:3px 0 16px}
+.landscape-heading h2{font-size:clamp(19px,3vw,25px);line-height:1.25;margin:0 0 4px}
+.landscape-heading p{font-size:13px;color:#748698;margin:0}
+.landscape-heading button{min-height:40px;white-space:nowrap;font-size:13px;border-radius:11px;background:#fff;border:1px solid #d4e0eb}
+.explore-workspace{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:18px}
+.explore-workspace:has(>.journey-content:not([hidden])){grid-template-columns:minmax(0,1fr) minmax(310px,390px)}
+.landscape-canvas{min-width:0;margin:0}
+.landscape-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
+.landscape-node.landscape-selected>.landscape-row{background:#e5f1fb}
+.journey:has(.landscape-grid){width:min(1440px,100%)}
+.explore-workspace>.journey-content{width:100%;min-width:0;margin:0;padding:20px;background:#fff;border:1px solid #dde7f0;border-radius:15px;position:sticky;top:90px;max-height:calc(100svh - 112px);overflow:auto}
+.explore-workspace>.journey-content[hidden]{display:none}
+.explore-workspace>.journey-content h2{font-size:clamp(20px,2.4vw,27px);padding-right:22px}
+.detail-dismiss{float:right;border:0;background:#f0f5fa;border-radius:10px;min-width:38px;min-height:38px;font-size:24px;line-height:1;color:#536d83}
+.case-byline{margin-top:8px;font-size:12px;color:#627c91}
+.case-section{margin-top:17px;border-top:1px solid #e7edf3;padding-top:11px}
+.case-section h3{margin:0 0 8px;font-size:14px;color:#274b68}
+.case-section p,.case-section li{font-size:13px;line-height:1.5;color:#4c6071}
+.case-section ul{padding-left:21px;margin:6px 0}
+.case-source{font-size:13px;line-height:1.5;padding:5px 0;overflow-wrap:anywhere}
+.case-source p{font-size:12px;margin:2px 0 6px}
+@media(max-width:850px){
+ .explore-workspace:has(>.journey-content:not([hidden])){grid-template-columns:minmax(0,1fr)}
+ .explore-workspace>.journey-content:not([hidden]){position:fixed;z-index:45;left:0;right:0;bottom:0;top:auto;width:100%;max-height:min(72svh,750px);overflow:auto;border-radius:19px 19px 0 0;box-shadow:0 -14px 50px #122a4040;padding:19px max(20px,env(safe-area-inset-right)) max(25px,env(safe-area-inset-bottom))}
+ .landscape-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
+}
 </style></head>
 <body>
 <header class="top">
@@ -326,27 +355,57 @@ function entryRow(parent,ref,sources){
  parent.append(row);
 }
 function renderDetail(){
- const box=$('detail');clear(box);if(!state.tree)return;
+ const box=$('detail');clear(box);
+ box.hidden=!state.detailOpen;
+ if(!state.tree||!state.detailOpen)return;
  const n=state.index.get(state.selected);
  if(!n)return;
+ const dismiss=el('button','detail-dismiss','×');dismiss.type='button';dismiss.title='Close details';dismiss.setAttribute('aria-label','Close details');dismiss.onclick=closeDetail;box.append(dismiss);
  const marker=el('span','chip',(n.kind||'Question').replace(/_/g,' '));box.append(marker);
  box.append(el('h2','',title(n)));
  if(n.why_ask||n.why||n.description)box.append(el('p','',n.why_ask||n.why||n.description));
- renderReaderDetail(box,n);
- const children=state.children.get(n.id)||[];
- if(children.length){
-  box.append(el('h3','','Explore next'));
-  const cards=el('div','next-cards');
-  for(const id of children){
-   const child=state.index.get(id),b=el('button','next-card'+(readerFor(id)?.interested?' reader-marked':''));
-   b.type='button';b.append(el('span','',title(child)));if(readerFor(id)?.interested)b.append(el('span','reader-note-indicator','★'));
-   b.append(el('span','next-arrow','›'));b.onclick=()=>select(id);cards.append(b);
-  }
-  box.append(cards);
- }else{
-  const parent=state.parent.get(n.id);
-  if(parent)box.append(el('p','muted','You’ve reached the end of this branch. Go back to try another direction.'));
+ if(n.actor)box.append(el('div','case-byline',n.actor+(n.evidence_status?' · '+n.evidence_status:'')));
+ function fieldSection(label,value){
+  if(value==null||value===''||(Array.isArray(value)&&!value.length))return;
+  const section=el('div','case-section');section.append(el('h3','',label));
+  if(Array.isArray(value)){
+   const list=el('ul');
+   for(const item of value)list.append(el('li','',typeof item==='string'?item:JSON.stringify(item)));
+   section.append(list);
+  }else section.append(el('p','',String(value)));
+  box.append(section);
  }
+ if(n.observed && n.observed!==n.why_ask)fieldSection('What happened',n.observed);
+ fieldSection('How it worked',n.mechanisms_to_investigate);
+ fieldSection('What remains uncertain',n.unresolved_questions);
+ fieldSection('Try reproducing it',n.minimum_reconstruction_probe);
+ fieldSection('Limits',n.resource_or_outcome_limitations);
+ const notes=(state.tree.evidence_notes||[]).filter(e=>e.node_id===n.id);
+ for(const e of notes){fieldSection('Evidence',e.observation);fieldSection('Interpretation',e.interpretation)}
+ const refsById=new Map([...(state.tree.sources||[]),...(state.guide?.related_sources||[])].map(x=>[x.id,x]));
+ if(n.source_ids?.length){
+  const section=el('div','case-section');section.append(el('h3','','Sources'));
+  for(const id of n.source_ids){
+   const src=refsById.get(id),row=el('div','case-source');
+   row.append(src?.url?link(src.url,src.title||id):el('span','',src?.title||id));
+   if(src?.scope)row.append(el('p','muted',src.scope));
+   section.append(row);
+  }
+  box.append(section);
+ }
+ const relatedProjects=(state.tree.projects||[]).filter(p=>(p.case_ids||[]).includes(n.id));
+ if(relatedProjects.length){
+  const section=el('div','case-section');section.append(el('h3','','Working implementations'));
+  for(const p of relatedProjects){
+   const row=el('div','case-source');
+   row.append(p.url?link(p.url,p.name||p.id):el('span','',p.name||p.id));
+   if(p.role)row.append(el('p','',p.role));
+   section.append(row);
+  }
+  box.append(section);
+ }
+ renderReaderDetail(box,n);
+ // Children remain in the landscape; do not duplicate navigation inside the details panel.
  const answers=(state.tree.answer_branches||[]).find(a=>a.question_id===n.id)?.possible_answers||n.candidate_answers||[];
  if(answers.length){
   const fold=el('details','details-fold');const sum=el('summary','','Possible answers');fold.append(sum);
