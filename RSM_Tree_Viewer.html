@@ -140,15 +140,11 @@ button{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:tra
 </header>
 <div class="status" role="status" id="status">Opening your question tree…</div>
 <main class="journey" id="view">
-  <nav class="journey-nav" aria-label="Question navigation"><button id="back" type="button">‹ Back</button><button id="root" type="button">⌂ Start over</button><button id="fit" type="button" hidden>Top</button></nav>
-  <div class="landscape-controls" id="landscape-controls" aria-label="Landscape controls">
-    <div class="mode-switch"><button id="landscape-mode" type="button" aria-pressed="true">Landscape</button><button id="focus-mode" type="button" aria-pressed="false">Focus</button></div>
-    <button id="expand-all" type="button">Expand all</button><button id="collapse-all" type="button">Collapse all</button>
-    <span id="landscape-count" class="landscape-count" aria-live="polite"></span>
+  <div class="landscape-heading"><div><h2 id="collection-title">Your question landscape</h2><p>Open several directions. Select one to inspect what we know.</p></div><button id="expand-all" type="button">Show all</button></div>
+  <div class="explore-workspace">
+    <div id="canvas" class="landscape-canvas"></div>
+    <section id="detail" class="detail journey-content" aria-label="Selected question details" hidden></section>
   </div>
-  <div id="breadcrumb" class="journey-breadcrumb"></div>
-  <div id="canvas" class="landscape-canvas"></div>
-  <section id="detail" class="detail journey-content"><p>Opening your first question…</p></section>
 </main>
 <div id="library-dialog" class="reader-dialog" hidden><section role="dialog" aria-modal="true" aria-labelledby="library-title">
   <div class="reader-top"><div><h2 id="library-title">Your library</h2><p class="muted">Pick a topic or bring your own GitHub tree.</p></div><button id="library-close" type="button">Close</button></div>
@@ -158,7 +154,7 @@ button{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:tra
   <label for="choices" class="library-label">Explore a collection</label><select id="choices" aria-label="Choose a tree" class="hidden"></select>
   <div class="library-explainer">Your notes stay in this browser. Use Saved to export them to another device.</div>
 </section></div>
-<div id="outline" class="hidden" aria-hidden="true"></div><input id="filter" class="hidden" type="text"><div id="count" class="hidden"></div><select id="layoutMode" class="hidden"><option value="family">Family</option><option value="path">Path</option></select><span id="sourceMeta" class="hidden"></span>
+<span id="sourceMeta" class="hidden"></span>
 <div id="reader-dialog" class="reader-dialog" hidden>
   <section role="dialog" aria-modal="true" aria-labelledby="reader-title">
     <div class="reader-top"><div><h2 id="reader-title">My interests & notes</h2><div class="tiny muted">Only explicitly saved interests and notes. Navigating a question does not mark it as interesting.</div></div><button type="button" id="reader-close">Close</button></div>
@@ -172,7 +168,7 @@ button{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:tra
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
-const state={tree:null,guide:null,selected:null,collapsed:new Set(),expanded:new Set(),mode:'landscape',url:null,repo:null,ref:null,files:[],views:null,activeView:null,currentSource:null,index:new Map(),children:new Map(),parent:new Map()};
+const state={tree:null,guide:null,selected:null,expanded:new Set(),detailOpen:false,url:null,repo:null,ref:null,files:[],views:null,activeView:null,currentSource:null,index:new Map(),children:new Map(),parent:new Map()};
 function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=String(text);return e}
 function clear(node){node.replaceChildren()}
 function setStatus(s,error=false){$('status').textContent=s;$('status').classList.toggle('err',!!error)}
@@ -233,24 +229,35 @@ async function loadSource(raw){setStatus('Opening '+raw+'…');const r=parseGith
  if(r.path&&r.path.endsWith('.json')&&!r.path.endsWith('rsm-view.json')){setChoices([],false);await loadPath(r,r.path);return}
  const paths=await discover(r);if(paths.includes('rsm-view.json')){const manifest=await readRepoFile(r,'rsm-view.json'),views=viewList(manifest,paths);const filtered=r.path?views.filter(v=>v.file.startsWith(r.path.replace(/\/$/,'')+'/')):views;state.views=filtered.length?filtered:views;if(!state.views.length)throw Error('Mapping manifest has no files to display');setChoices(state.views,true);const wanted=new URLSearchParams(location.search).get('view');const selected=state.views.find(v=>v.id===wanted)||state.views[0];$('choices').value=selected.id;await loadMapped(r,selected);return}
  let found=paths.filter(p=>/\/(question_tree|investigation)\.json$/i.test('/'+p));if(!found.length)throw Error('No rsm-view.json mapping or recognized question_tree.json / investigation.json found');found.sort((a,b)=>a.includes('question_tree')?-1:b.includes('question_tree')?1:a.localeCompare(b));const filtered=r.path?found.filter(p=>p.startsWith(r.path.replace(/\/$/,'')+'/')):found;if(filtered.length)found=filtered;setChoices(found,false);await loadPath(r,found[0]);}
-function openTree(d,guide,source,origin=null){state.currentSource=origin||{type:'local',file:source||'unspecified',title:source||'Local JSON'};state.tree=d;state.guide=guide;state.selected=null;state.collapsed.clear();state.index=new Map();state.children=new Map();state.parent=new Map();const nodes=nodesOf(d);for(let i=0;i<nodes.length;i++){const n=nodes[i];const id=String(n.id||'node-'+i);n.id=id;state.index.set(id,n);state.children.set(id,[])}for(const n of nodes){const raw=n.parent_id??n.parent??null;const p=raw==null?null:String(raw);if(p&&p!==n.id&&state.index.has(p)){state.parent.set(n.id,p);state.children.get(p).push(n.id)}else state.parent.set(n.id,null)}let first=String(d.root||'');if(!state.index.has(first))first=nodes.find(n=>state.parent.get(n.id)===null)?.id||nodes[0].id;state.selected=first;restoreLandscape();$('sourceMeta').textContent=source||'Local JSON';render()}
+function openTree(d,guide,source,origin=null){state.currentSource=origin||{type:'local',file:source||'unspecified',title:source||'Local JSON'};state.tree=d;state.guide=guide;state.selected=null;state.detailOpen=false;state.index=new Map();state.children=new Map();state.parent=new Map();const nodes=nodesOf(d);for(let i=0;i<nodes.length;i++){const n=nodes[i];const id=String(n.id||'node-'+i);n.id=id;state.index.set(id,n);state.children.set(id,[])}for(const n of nodes){const raw=n.parent_id??n.parent??null;const p=raw==null?null:String(raw);if(p&&p!==n.id&&state.index.has(p)){state.parent.set(n.id,p);state.children.get(p).push(n.id)}else state.parent.set(n.id,null)}let first=String(d.root||'');if(!state.index.has(first))first=nodes.find(n=>state.parent.get(n.id)===null)?.id||nodes[0].id;state.selected=first;restoreLandscape();$('sourceMeta').textContent=source||'Local JSON';$('collection-title').textContent=d.title||source||'Explore';render()}
 function ancestry(id){const out=[],visited=new Set();let x=id;while(x&&state.index.has(x)&&!visited.has(x)){out.unshift(x);visited.add(x);x=state.parent.get(x)}return out}
-function select(id){if(!state.index.has(id))return;state.selected=id;if(state.mode==='landscape'){for(const a of ancestry(id).slice(0,-1))state.expanded.add(a);saveLandscape()}render();if(state.mode==='focus')window.scrollTo(0,0);const u=new URL(location.href);u.hash='node='+encodeURIComponent(id);try{history.replaceState(null,'',u.toString())}catch{}}
+function select(id){
+ if(!state.index.has(id))return;
+ state.selected=id;state.detailOpen=true;
+ for(const a of ancestry(id).slice(0,-1))state.expanded.add(a);
+ saveLandscape();render();
+ const u=new URL(location.href);u.hash='node='+encodeURIComponent(id);
+ try{history.replaceState(null,'',u.toString())}catch{}
+}
+function closeDetail(){state.detailOpen=false;render()}
 function landscapeStoreKey(){return 'knowledgeTreeLandscapeV1:'+JSON.stringify(state.currentSource||{}).slice(0,350)}
-function saveLandscape(){try{localStorage.setItem(landscapeStoreKey(),JSON.stringify({mode:state.mode,expanded:[...state.expanded]}))}catch{}}
+function saveLandscape(){try{localStorage.setItem(landscapeStoreKey(),JSON.stringify({expanded:[...state.expanded]}))}catch{}}
 function restoreLandscape(){
- state.expanded=new Set();state.mode='landscape';
- try{const saved=JSON.parse(localStorage.getItem(landscapeStoreKey())||'null');if(saved&&Array.isArray(saved.expanded)){state.expanded=new Set(saved.expanded.filter(id=>state.index.has(id)&&state.children.get(id)?.length));if(saved.mode==='focus'||saved.mode==='landscape')state.mode=saved.mode;return}}catch{}
+ state.expanded=new Set();
+ try{const saved=JSON.parse(localStorage.getItem(landscapeStoreKey())||'null');
+ if(saved&&Array.isArray(saved.expanded))state.expanded=new Set(saved.expanded.filter(id=>state.index.has(id)&&state.children.get(id)?.length))}catch{}
  for(const [id] of state.index)if(!state.parent.get(id))state.expanded.add(id);
 }
-function setLandscapeMode(mode){state.mode=mode;saveLandscape();render()}
 function toggleLandscape(id){if(state.expanded.has(id))state.expanded.delete(id);else state.expanded.add(id);saveLandscape();renderLandscape()}
-function allLandscape(open){state.expanded=new Set(open?[...state.children].filter(([,kids])=>kids.length).map(([id])=>id):[]);saveLandscape();renderLandscape()}
+function allLandscape(){
+ const roots=[...state.index.keys()].filter(id=>!state.parent.get(id));
+ const expandable=[...state.children].filter(([,kids])=>kids.length).map(([id])=>id);
+ const full=expandable.every(id=>state.expanded.has(id));
+ state.expanded=new Set(full?roots:expandable);
+ saveLandscape();renderLandscape();
+}
 function renderLandscape(){
  const box=$('canvas');clear(box);if(!state.tree)return;
- const wide=state.mode==='landscape';$('landscape-mode').setAttribute('aria-pressed',String(wide));$('focus-mode').setAttribute('aria-pressed',String(!wide));
- $('expand-all').hidden=!wide;$('collapse-all').hidden=!wide;$('landscape-count').hidden=!wide;$('landscape-controls').classList.toggle('focusing',!wide);
- box.hidden=!wide; if(!wide)return;
  let visible=0;const used=new Set();const roots=[...state.index.keys()].filter(id=>!state.parent.get(id));
  const grid=el('div','landscape-grid');
  function renderNode(id,depth){
@@ -261,14 +268,14 @@ function renderLandscape(){
   const row=el('div','landscape-row');
   if(kids.length){const toggle=el('button','landscape-toggle',opened?'−':'+');toggle.type='button';toggle.setAttribute('aria-label',(opened?'Collapse ':'Expand ')+title(n));toggle.setAttribute('aria-expanded',String(opened));toggle.title=opened?'Collapse this branch':'Expand this branch';toggle.onclick=()=>toggleLandscape(id);row.append(toggle)}
   else row.append(el('span','landscape-leaf','·'));
-  const pick=el('button','landscape-pick');pick.type='button';pick.title='Read this question';pick.append(el('span','landscape-label',title(n)));if(depth===0||state.index.size>40)pick.append(el('span','landscape-id',id));pick.onclick=()=>{select(id);$('detail').scrollIntoView({behavior:'auto',block:'start'})};row.append(pick);
+  const pick=el('button','landscape-pick');pick.type='button';pick.title='Inspect this question';pick.append(el('span','landscape-label',title(n)));if(depth===0||state.index.size>40)pick.append(el('span','landscape-id',id));pick.onclick=()=>{if(kids.length)state.expanded.add(id);select(id)};row.append(pick);
   if(kids.length){const count=el('span','landscape-child-count',String(kids.length));count.title=kids.length+' direct children';row.append(count)}
   if(readerFor(id)?.interested)row.append(el('span','landscape-saved','★'));
   entry.append(row);
   if(opened&&kids.length){const children=el('div','landscape-children');for(const child of kids){const c=renderNode(child,depth+1);if(c)children.append(c)}entry.append(children)}
   return entry;
  }
- box.append(el('p','landscape-help','Expand several branches to see them together. Select a question to read its details below; your map stays open.'));
+ 
  if(roots.length===1&&state.children.get(roots[0])?.length){
   const id=roots[0],rootNode=renderNode(id,0);
   const rootSection=el('section','landscape-root');
@@ -280,13 +287,10 @@ function renderLandscape(){
  }else{
   for(const id of roots){const section=el('section','landscape-branch');const n=renderNode(id,0);if(n)section.append(n);grid.append(section)}
  }
- box.append(grid);$('landscape-count').textContent=visible+' / '+state.index.size+' visible';
+ box.append(grid);$('expand-all').textContent=[...state.children].filter(([,kids])=>kids.length).every(([id])=>state.expanded.has(id))?'Show less':'Show all';
 }
 
-function render(){renderDetail();renderOutline();renderGraph();renderLandscape();$('back').disabled=!state.parent.get(state.selected)}
-function renderOutline(){const q=$('filter').value.toLowerCase().trim(),box=$('outline');clear(box);$('count').textContent=state.index.size+' nodes · '+(state.tree?.kind||'investigation');if(!state.tree)return;const match=id=>{const n=state.index.get(id);return(title(n)+' '+id).toLowerCase().includes(q)||state.children.get(id).some(match)};let done=new Set();function branch(id,parent,depth){if(done.has(id)||depth>120)return;done.add(id);if(q&&!match(id))return;const n=state.index.get(id);const wrap=el('div',depth?'tree-line':'branch');const row=el('div','rowbtn'+(id===state.selected?' selected':'')+(readerFor(id)?.interested?' reader-marked':''));const children=state.children.get(id);const toggle=el('button','twisty',children.length?(state.collapsed.has(id)&&!q?'▸':'▾'):'·');toggle.type='button';toggle.setAttribute('aria-label','Expand or collapse');toggle.onclick=()=>{state.collapsed.has(id)?state.collapsed.delete(id):state.collapsed.add(id);renderOutline()};row.append(toggle);const btn=el('button','rowbtn node-title');btn.style.padding='0';btn.append(el('span','',title(n)));btn.append(el('div','nodeid',id));btn.onclick=()=>select(id);row.append(btn);if(readerFor(id)?.interested){const star=el('button','reader-outline-star','★');star.type='button';star.title='Remove explicit interest';star.setAttribute('aria-label','Remove interest from '+title(n));star.onclick=()=>readerToggle(id);row.append(star)}else if(readerFor(id)?.note){row.append(el('span','reader-note-indicator','✎'))}wrap.append(row);parent.append(wrap);if((!state.collapsed.has(id)||q)&&children.length){for(const child of children)branch(child,wrap,depth+1)}}for(const [id] of state.index)if(!state.parent.get(id))branch(id,box,0);}
-function graphNodes(){const id=state.selected;if(!id)return[];const path=ancestry(id);const p=state.parent.get(id);if($('layoutMode').value==='path')return path.map(x=>[x]);const siblings=p?state.children.get(p):[id];const children=state.children.get(id)||[];const levels=[];if(path.length>1)levels.push(path.slice(0,-1).slice(-2));levels.push(siblings);if(children.length)levels.push(children);if(!children.length){const next=state.children.get(p||id)||[];if(next.length&&levels.length===1)levels.push(next)}return levels}
-function renderGraph(){const box=$('canvas');clear(box);if(!state.tree){box.append(el('p','empty','Load a tree to view it.'));return}const path=ancestry(state.selected);clear($('breadcrumb'));$('breadcrumb').append(el('span','',path.map(id=>title(state.index.get(id))).join('  ›  ')));const levels=graphNodes();const row=el('div','colnodes');levels.forEach((level,i)=>{const column=el('div','level');const hdr=i===levels.length-1&&level.some(x=>state.parent.get(x)===state.selected)?'What does this lead to?':i===0&&levels.length>2?'Where did this come from?':level.includes(state.selected)?'Current question and alternatives':'Related questions';column.append(el('h3','',hdr));for(const id of level){const n=state.index.get(id);const b=el('button','tile'+(id===state.selected?' active':'')+(readerFor(id)?.interested?' reader-marked':''));b.type='button';b.append(el('span','pill',id));b.append(document.createTextNode(title(n)));const cc=state.children.get(id).length;if(cc)b.append(el('span','hint',cc+' further question'+(cc===1?'':'s')));if(readerFor(id)?.interested)b.append(el('span','reader-note-indicator','★ Interested'));else if(readerFor(id)?.note)b.append(el('span','reader-note-indicator','✎ Note'));b.onclick=()=>select(id);column.append(b)}row.append(column);if(i<levels.length-1)row.append(el('span','arrow','→'))});box.append(row);}
+function render(){renderLandscape();renderDetail()}
 // A Kami "state" opening action is known to accept a Google Drive file ID.
 // Printed page numbers are NOT PDF page indexes; do not invent a page anchor.
 function driveFileId(href){
@@ -556,12 +560,8 @@ $('loadForm').addEventListener('submit',async e=>{e.preventDefault();try{await l
 $('choices').addEventListener('change',async e=>{try{const view=state.views?.find(v=>v.id===e.target.value);if(view)await loadMapped(state.repo,view);else await loadPath(state.repo,e.target.value);$('library-dialog').hidden=true;window.scrollTo(0,0)}catch(err){setStatus(err.message,true)}});
 $('local').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!isTree(d))throw Error('This JSON has no recognized nodes collection');state.url=null;openTree(d,null,f.name,{type:'local',file:f.name,size:f.size,title:d.title||f.name});$('library-dialog').hidden=true;setStatus('Loaded local '+f.name+' · '+state.index.size+' nodes. For book references, import reference_guide.json too.')}catch(err){setStatus(err.message,true)}});
 $('addRef').onclick=()=>$('localRef').click();$('localRef').onchange=async e=>{try{const f=e.target.files?.[0];if(!f)return;state.guide=JSON.parse(await f.text());render();setStatus('Loaded local reference guide '+f.name)}catch(err){setStatus(err.message,true)}};
-$('filter').addEventListener('input',renderOutline);$('layoutMode').onchange=renderGraph;
-$('landscape-mode').onclick=()=>setLandscapeMode('landscape');
-$('focus-mode').onclick=()=>setLandscapeMode('focus');
-$('expand-all').onclick=()=>allLandscape(true);
-$('collapse-all').onclick=()=>allLandscape(false);
-$('library-open').onclick=()=>{$('library-dialog').hidden=false};$('library-close').onclick=()=>{$('library-dialog').hidden=true};$('library-dialog').addEventListener('click',e=>{if(e.target===$('library-dialog'))$('library-dialog').hidden=true});$('root').onclick=()=>{if(state.tree)select(state.tree.root&&state.index.has(state.tree.root)?state.tree.root:[...state.index.keys()][0])};$('back').onclick=()=>{const p=state.parent.get(state.selected);if(p)select(p)};$('fit').onclick=()=>{$('view').scrollLeft=0;$('view').scrollTop=0};
-window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('reader-dialog').hidden){$('reader-dialog').hidden=true;return}if(e.key==='Escape'&&!$('library-dialog').hidden){$('library-dialog').hidden=true;return}if(e.target.matches('input,textarea,select'))return;if(e.key==='Escape'&&state.tree)$('root').click();if(e.key==='Backspace'&&state.tree){e.preventDefault();$('back').click()}});
+$('expand-all').onclick=allLandscape;
+$('library-open').onclick=()=>{$('library-dialog').hidden=false};$('library-close').onclick=()=>{$('library-dialog').hidden=true};$('library-dialog').addEventListener('click',e=>{if(e.target===$('library-dialog'))$('library-dialog').hidden=true});
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('reader-dialog').hidden){$('reader-dialog').hidden=true;return}if(e.key==='Escape'&&!$('library-dialog').hidden){$('library-dialog').hidden=true;return}if(e.target.matches('input,textarea,select'))return;if(e.key==='Escape'&&state.detailOpen){closeDetail();return}});
 const params=new URLSearchParams(location.search);const source=params.get('repo')||params.get('url')||'https://github.com/JadanPoll/Kami_Uploads_RSM_Tree';$('source').value=source;loadSource(source).then(()=>{const match=location.hash.match(/^#node=(.+)$/);if(match&&state.index.has(decodeURIComponent(match[1])))select(decodeURIComponent(match[1]))}).catch(err=>setStatus(err.message,true))
 </script></body></html>
