@@ -247,6 +247,11 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .case-overview{border-left:3px solid #9fbdd6;background:#f5f9fc;padding:10px 12px;font-size:13px;line-height:1.5}
 .case-factor-paths{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .case-factor-link{font-size:11px;padding:5px 7px;min-height:30px;color:#285d85;border:1px solid #d5e5f0;background:#f4fafe;border-radius:8px;text-align:left}
+
+.case-book-section{border-bottom:1px solid #e8eff5;padding:8px 0}
+.case-book-section:last-child{border-bottom:0}
+.case-book-section>p:first-child{font-size:12px;font-weight:600;line-height:1.4;margin:4px 0}
+.case-book-section .case-source-status{margin:4px 0!important}
 </style></head>
 <body>
 <header class="top">
@@ -679,6 +684,36 @@ function renderDetail(){
    coverageBody.append(section);
   }
   coverage.append(coverageBody);box.append(coverage);
+  if(state.tree.book_landscaplets?.length){
+   const nav=el('details','details-fold');let total=0;
+   const navBody=el('div','fold-body'),srcById=new Map((state.tree.sources||[]).map(x=>[x.id,x]));
+   for(const book of state.tree.book_landscaplets){
+    const sections=(book.sections||[]).filter(x=>!lens||(x.views||[]).includes(lens.id));
+    if(!sections.length)continue;total+=sections.length;
+    const bookFold=el('details','case-route'),src=srcById.get(book.source_id);
+    bookFold.append(el('summary','',(src?.title||book.source_id)+' · '+sections.length+' sections'));
+    const list=el('div','case-route-body');
+    if(src?.url)list.append(link(src.url,'Open book'));
+    for(const section of sections){
+     const entry=el('div','case-book-section'),line=el('p','','Ch/part '+section.ref+' · '+section.title);
+     entry.append(line);
+     const page=section.printed_page_start;
+     if(page!=null)entry.append(el('p','case-source-status','Starts on printed page '+page+' · table-of-contents locator'));
+     else entry.append(el('p','case-source-status','Major part · start page not verified'));
+     const links=el('div','case-factor-paths');
+     for(const id of section.case_ids||[]){
+      const related=state.index.get(id);if(!related)continue;
+      const btn=el('button','case-factor-link','Research: '+title(related));btn.type='button';btn.onclick=()=>select(id);links.append(btn);
+     }
+     if(links.childElementCount)entry.append(links);
+     list.append(entry);
+    }
+    bookFold.append(list);navBody.append(bookFold);
+   }
+   nav.append(el('summary','','Book chapter highways · '+total+' relevant sections'));
+   navBody.append(el('p','case-source-status','Chapter entries are retrieval paths, not completed technical analyses. The research links identify the narrower sections actually examined.'));
+   nav.append(navBody);box.append(nav);
+  }
   if(factorization.competence_probe&&(!lens||lens.id==='make')){
    const probe=factorization.competence_probe,p=el('details','details-fold');
    p.append(el('summary','',probe.title));
