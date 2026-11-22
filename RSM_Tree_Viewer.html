@@ -226,6 +226,14 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .case-comparison .fold-body li{margin:5px 0}
 .case-related-link{border:1px solid #d2e2f0;background:#f4f9fd;text-align:left;padding:8px;border-radius:9px;font-size:12px}
 .case-evidence-status{display:block;margin:8px 0;color:#6a8398}
+
+.case-source-status{font-size:11px!important;color:#72859a!important;margin:5px 0 10px!important;line-height:1.4!important}
+.case-route{background:#f8fbfe;border:1px solid #e4edf4;border-radius:10px;margin:8px 0;overflow:hidden}
+.case-route>summary{font-size:12px;line-height:1.4;padding:9px 11px;color:#2c5879}
+.case-route-body{padding:4px 10px 10px}.case-route-body .ref{margin:6px 0}
+.case-related{display:grid;gap:6px}
+.case-related-entry{margin:8px 0;border-bottom:1px solid #edf2f6;padding-bottom:8px}
+.case-related-entry p{font-size:12px;margin:5px 0;color:#516e84}
 </style></head>
 <body>
 <header class="top">
@@ -550,6 +558,8 @@ function renderDetail(){
  box.append(el('h2','',title(n)));
  if(n.why_ask||n.why||n.description)box.append(el('p','',n.why_ask||n.why||n.description));
  if(n.actor)box.append(el('div','case-byline',n.actor+(n.evidence_status?' · '+n.evidence_status:'')));
+ if(n.status&&/^(?:candidate|provisional|active_question|pending_investigation|not investigated)/.test(n.status))
+  box.append(el('p','case-source-status','Question or proposed investigation · no established finding yet'));
  function fieldSection(label,value){
   if(value==null||value===''||(Array.isArray(value)&&!value.length))return;
   const section=el('div','case-section');section.append(el('h3','',label));
@@ -578,6 +588,7 @@ function renderDetail(){
   fold.append(list);box.append(fold);
  }
  if(n.transferable_insight)fieldSection('Transferable insight',n.transferable_insight);
+ fieldSection('Distinctions',n.distinctions);
  const comparison=(state.tree.mechanism_comparison?.id===n.comparison_id)?state.tree.mechanism_comparison:null;
  if(comparison){
   const fold=el('details','details-fold case-comparison');
@@ -616,9 +627,26 @@ function renderDetail(){
    const src=refsById.get(id),row=el('div','case-source');
    row.append(src?.url?link(src.url,src.title||id):el('span','',src?.title||id));
    if(src?.scope)row.append(el('p','muted',src.scope));
+    if(src?.role)row.append(el('p','muted',src.role));
    section.append(row);
   }
   box.append(section);
+ }
+ const assigned=(state.tree.reading_route||[]).filter(route=>
+  (state.tree.sources||[]).some(src=>src.id===route.source_id&&(src.linked_nodes||[]).includes(n.id)));
+ if(assigned.length){
+  const fold=el('details','details-fold');fold.append(el('summary','','Suggested source sections'));
+  const body=el('div','fold-body');
+  for(const route of assigned){
+   const source=refsById.get(route.source_id),group=el('div','case-source');
+   group.append(source?.url?link(source.url,source.title||route.source_id):el('strong','',source?.title||route.source_id));
+   group.append(el('p','case-source-status',route.page_numbering||'Page numbering not specified'));
+   for(const range of route.ranges||[])group.append(el('p','',range.section+' · '+range.start+'–'+range.end));
+   if(route.purpose)group.append(el('p','muted',route.purpose));
+   body.append(group);
+  }
+  body.append(el('p','case-source-status','Reading assignments are not completed investigations.'));
+  fold.append(body);box.append(fold);
  }
  const relatedProjects=(state.tree.projects||[]).filter(p=>(p.case_ids||[]).includes(n.id));
  if(relatedProjects.length){
@@ -655,13 +683,34 @@ function renderDetail(){
   for(const r of state.guide.cross_source_routes||[])if((r.node_ids||[]).includes(n.id))routes.push(r);
  }
  if(sections.length||routes.length){
-  const fold=el('details','details-fold');fold.append(el('summary','','Books & sources'));
+  const fold=el('details','details-fold');fold.append(el('summary','',routes.length?'Reading routes · '+routes.length+' connected':'Books & sources'));
   const body=el('div','fold-body');
   for(const section of sections){body.append(el('h4','',section.label));for(const ref of section.refs)entryRow(body,ref,sources)}
   for(const route of routes){
-   body.append(el('h4','',route.question||route.id));
-   for(const ref of route.references||[])entryRow(body,{...ref,source_id:ref.source_id||'OSTEP'},sources);
-   for(const ref of route.cross_book_references||[])entryRow(body,ref,sources);
+   const routeFold=el('details','case-route'),count=(route.references||[]).length+(route.cross_book_references||[]).length;
+   routeFold.append(el('summary','',route.question||route.id));
+   const routeBody=el('div','case-route-body');
+   if(count)routeBody.append(el('p','case-source-status',count+' source sections · candidate reading, not completed research'));
+   for(const ref of route.references||[])entryRow(routeBody,{...ref,source_id:ref.source_id||'OSTEP'},sources);
+   for(const ref of route.cross_book_references||[])entryRow(routeBody,ref,sources);
+   routeFold.append(routeBody);body.append(routeFold);
+  }
+  fold.append(body);box.append(fold);
+ }
+ const linkedCases=n.fieldwork_case_ids||[];
+ if(linkedCases.length&&state.views?.some(view=>view.id==='human-ai-fieldwork')){
+  const fold=el('details','details-fold');fold.append(el('summary','','Related fieldwork · '+linkedCases.length+' cases'));
+  const body=el('div','fold-body case-related');
+  for(const id of linkedCases){
+   const b=el('button','case-related-link',id.replace(/^FW-/,'').replaceAll('-',' '));
+   b.type='button';b.title='Open case '+id;
+   b.onclick=async()=>{
+    const view=state.views?.find(v=>v.id==='human-ai-fieldwork');
+    if(!view||!state.repo)return;
+    try{await loadMapped(state.repo,view);$('choices').value=view.id;if(state.index.has(id))select(id);activity('Opened source-linked fieldwork '+id)}
+    catch(err){setStatus('Could not open fieldwork: '+err.message,true)}
+   };
+   body.append(b);
   }
   fold.append(body);box.append(fold);
  }
@@ -672,7 +721,9 @@ function renderDetail(){
   const body=el('div','fold-body');
   for(const r of relations){
    const other=r.from===n.id?r.to:r.from;if(!state.index.has(other))continue;
-   const b=el('button','next-card',title(state.index.get(other)));b.type='button';b.onclick=()=>select(other);body.append(b);
+   const item=el('div','case-related-entry'),b=el('button','case-related-link',title(state.index.get(other)));b.type='button';b.onclick=()=>select(other);item.append(b);
+    if(r.reason||r.why)item.append(el('p','',r.reason||r.why));
+    body.append(item);
   }
   fold.append(body);box.append(fold);
  }
