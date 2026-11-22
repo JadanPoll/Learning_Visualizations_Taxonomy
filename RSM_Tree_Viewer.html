@@ -75,12 +75,17 @@ button{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:tra
 .journey-content .details-fold[open]>summary::after{content:'⌃'}
 .journey-content .fold-body{padding:0 16px 16px}
 .journey-content .ref{margin:9px 0;background:#f9fbfd}
-.reader-actions{margin:18px 0 0;gap:9px}
-.reader-actions button{border-radius:13px;min-height:46px;padding:10px 16px;font-size:15px;font-weight:650}
+.reader-actions{margin:12px 0 0;gap:8px}
+.reader-actions button{border-radius:13px;min-height:40px;padding:7px 10px;font-size:15px;font-weight:650}
 .reader-star{background:#fff;border:1px solid #dce5ee;color:#4a6681}
+.reader-actions{display:inline-flex;vertical-align:middle}.reader-note-box{display:inline-flex;vertical-align:middle;margin:12px 0 0 7px}
+.reader-note-box .note-compose,.reader-note-box .note-preview{display:block}
+.reader-note-box:has(.note-compose:not([hidden])){display:block;width:100%;margin-left:0}
+.icon-action{display:inline-grid!important;place-items:center;width:42px;height:42px;min-width:42px;padding:5px!important;font-size:21px!important;line-height:1;border-radius:11px!important}
+.icon-action:focus-visible{outline:3px solid #8fbee4;outline-offset:2px}
 .reader-star.on{background:#fff1ca;color:#865b17}
-.reader-note-box{margin:11px 0 4px;padding:0;border:0;background:transparent}
-.reader-note-box .note-show{display:block;border:1px solid #dce5ee;background:white;border-radius:13px;font-weight:630;font-size:15px;padding:11px 16px;min-height:46px}
+.reader-note-box{margin:0;padding:0;border:0;background:transparent}
+.reader-note-box .note-show{display:block;border:1px solid #dce5ee;background:white;border-radius:13px;font-weight:630;font-size:17px;padding:7px;min-height:40px}
 .reader-note-box .note-preview{background:#fffae8;color:#715927;padding:12px 14px;border-radius:12px;white-space:pre-wrap;margin-top:8px;font-size:14px}
 .reader-note-box .note-compose{margin-top:12px;padding:15px;background:#fff;border:1px solid #dce5ee;border-radius:14px}
 .reader-note-box .note-compose[hidden]{display:none}
@@ -125,7 +130,8 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .explore-workspace,.explore-workspace:has(>.journey-content:not([hidden])){position:relative;flex:1 1 auto;display:block;min-height:0;height:auto}
 #canvas.atlas-viewport{position:absolute;inset:0;margin:0;padding:0;overflow:hidden;touch-action:none;cursor:grab;user-select:none;background-color:#f4f8fc;background-image:radial-gradient(#cfdae6 1px,transparent 1px);background-size:22px 22px;overscroll-behavior:contain}
 #canvas.atlas-viewport.dragging{cursor:grabbing}
-.atlas-world{position:absolute;left:0;top:0;transform-origin:0 0;overflow:visible;contain:layout style}
+.atlas-world{position:absolute;left:0;top:0;transform-origin:0 0;overflow:visible;contain:layout style;touch-action:none}
+#canvas.atlas-viewport *,#canvas.atlas-viewport button{touch-action:none}
 .atlas-region{position:absolute;background:#fff;border:2px solid #d3e2ef;border-radius:21px;box-shadow:0 9px 30px #26496710;overflow:hidden}
 .atlas-region::before{content:'';position:absolute;left:0;top:0;bottom:0;width:7px;background:#b4d7ee}
 .atlas-region-heading{position:absolute;left:20px;top:17px;right:20px;min-height:90px;display:flex;align-items:flex-start;gap:11px}
@@ -641,18 +647,24 @@ function readerToggle(id){
 }
 function renderReaderDetail(box,n){
  const wrap=el('div','reader-actions'),prior=readerFor(n.id);
- const star=el('button','reader-star'+(prior?.interested?' on':''),prior?.interested?'★ Interested':'☆ Save interest');
- star.type='button';star.setAttribute('aria-pressed',String(!!prior?.interested));star.onclick=()=>readerToggle(n.id);
+ const star=el('button','reader-star icon-action'+(prior?.interested?' on':''),prior?.interested?'★':'☆');
+ star.type='button';star.setAttribute('aria-pressed',String(!!prior?.interested));
+ star.title=prior?.interested?'Remove saved interest':'Save interest';
+ star.setAttribute('aria-label',star.title);star.onclick=()=>readerToggle(n.id);
  wrap.append(star);box.append(wrap);
  const panel=el('div','reader-note-box');
- const toggle=el('button','note-show',(prior?.note?'✎ Edit note':'＋ Add note'));toggle.type='button';
+ const toggle=el('button','note-show icon-action',prior?.note?'✎':'✎');toggle.type='button';
+ toggle.title=prior?.note?'Edit note':'Add note';toggle.setAttribute('aria-label',toggle.title);
+ toggle.setAttribute('aria-expanded','false');
  const compose=el('div','note-compose');compose.hidden=true;
  const label=el('label','','Your note'),note=el('textarea');note.id='reader-note-input';note.maxLength=16000;
  note.placeholder='Why is this interesting? What might you explore next?';
  label.htmlFor=note.id;note.value=prior?.note||'';
- const save=el('button','primary','Save note');save.type='button';save.onclick=()=>readerSave(n.id,!!readerFor(n.id)?.interested,note.value.trim());
+ const save=el('button','primary icon-action','✓');save.type='button';
+ save.title='Save note';save.setAttribute('aria-label','Save note');
+ save.onclick=()=>readerSave(n.id,!!readerFor(n.id)?.interested,note.value.trim());
  compose.append(label,note,save);
- toggle.onclick=()=>{compose.hidden=!compose.hidden;if(!compose.hidden)note.focus()};
+ toggle.onclick=()=>{compose.hidden=!compose.hidden;toggle.setAttribute('aria-expanded',String(!compose.hidden));if(!compose.hidden)note.focus()};
  panel.append(toggle);
  if(prior?.note)panel.append(el('div','note-preview',prior.note));
  panel.append(compose);box.append(panel);
@@ -763,7 +775,7 @@ atlasCanvas.addEventListener('wheel',e=>{
 atlasCanvas.addEventListener('pointerdown',e=>{
  if(e.pointerType==='mouse'&&e.button!==0)return;
  const a=state.atlas;
- const p={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:false};
+ const p={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:false,kind:e.pointerType};
  a.pointers.set(e.pointerId,p);
  if(a.pointers.size===2){
   const pts=[...a.pointers.values()],dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y;
@@ -772,7 +784,7 @@ atlasCanvas.addEventListener('pointerdown',e=>{
   a.gesture={distance:Math.max(1,Math.hypot(dx,dy)),z:a.z,worldX:(mx-a.x)/a.z,worldY:(my-a.y)/a.z};
  }
 });
-atlasCanvas.addEventListener('pointermove',e=>{
+window.addEventListener('pointermove',e=>{
  const a=state.atlas,p=a.pointers.get(e.pointerId);
  if(!p||!a.ready)return;
  const oldX=p.x,oldY=p.y;p.x=e.clientX;p.y=e.clientY;
@@ -786,7 +798,6 @@ atlasCanvas.addEventListener('pointermove',e=>{
   a.dragged=true;atlasCanvas.classList.add('dragging');scheduleAtlasFrame();return;
  }
  if(!p.moved)return;
- if(!atlasCanvas.hasPointerCapture(e.pointerId))try{atlasCanvas.setPointerCapture(e.pointerId)}catch{}
  a.x+=e.clientX-oldX;a.y+=e.clientY-oldY;
  a.dragged=true;atlasCanvas.classList.add('dragging');scheduleAtlasFrame();
 });
@@ -794,12 +805,12 @@ function endAtlasPointer(e){
  const a=state.atlas,p=a.pointers.get(e.pointerId);
  if(!p)return;
  a.pointers.delete(e.pointerId);a.gesture=null;
- if(a.dragged||p.moved){a.suppressClickUntil=Date.now()+180;saveAtlas()}
- if(a.pointers.size===0){a.dragged=false;atlasCanvas.classList.remove('dragging')}
+ if(a.dragged||p.moved){a.suppressClickUntil=Date.now()+260;queueAtlasSave()}
+ if(a.pointers.size===0){a.dragged=false;atlasCanvas.classList.remove('dragging');if(p.moved)activity('Map moved')}
+ if(e.type==='pointercancel')activity('Swipe interrupted by the browser','error','Pointer cancelled: '+p.kind+' · id '+e.pointerId);
 }
-atlasCanvas.addEventListener('pointerup',endAtlasPointer);
-atlasCanvas.addEventListener('pointercancel',endAtlasPointer);
-atlasCanvas.addEventListener('lostpointercapture',endAtlasPointer);
+window.addEventListener('pointerup',endAtlasPointer);
+window.addEventListener('pointercancel',endAtlasPointer);
 atlasCanvas.addEventListener('click',e=>{
  if(Date.now()<(state.atlas.suppressClickUntil||0)){e.preventDefault();e.stopPropagation()}
 },true);
