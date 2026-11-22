@@ -541,6 +541,112 @@ function glossaryScore(record,query){
  if(linked.some(t=>[t.label,...(t.aliases||[])].some(v=>v.toLowerCase()===whole)))score+=10;
  return score;
 }
+
+function curiosityStem(token){
+ if(token.endsWith('ies')&&token.length>4)return token.slice(0,-3)+'y';
+ if(token.endsWith('ing')&&token.length>6)return token.slice(0,-3);
+ if(token.endsWith('ed')&&token.length>5)return token.slice(0,-2);
+ if(token.endsWith('s')&&token.length>4)return token.slice(0,-1);
+ return token;
+}
+function curiosityMatches(entry,query){return glossaryScore(entry,query)>0}
+function glossaryTermMatches(term,query){
+ const words=glossaryTokens([term.label,...(term.aliases||[]),term.category].join(' '));
+ return glossaryTokens(query).every(token=>glossaryWordMatch(token,words));
+}
+function glossaryLinkedRecords(termId){
+ const d=state.curiosityData||{};
+ const questions=(d.curiosity_atlas?.entries||[]).filter(x=>(x.term_ids||[]).includes(termId));
+ const technical=[...(d.nodes||[]),...(d.question_nodes||[]),...(d.fieldwork_nodes||[])]
+  .filter(x=>(x.term_ids||[]).includes(termId));
+ return {questions,technical};
+}
+function openGlossaryTerm(id){
+ if(!state.termById.has(id))return;
+ state.glossaryMode='terms';state.glossarySelected=id;
+ renderCuriosityIndex();
+ const url=new URL(location.href);url.searchParams.set('term',id);
+ try{history.replaceState(null,'',url.toString())}catch{}
+}
+function renderGlossaryBrowser(){
+ const results=$('curiosity-results'),families=$('curiosity-family-filters');families.hidden=true;
+ const glossary=state.glossary,query=state.curiositySearch.trim();
+ if(!glossary){results.append(el('p','curiosity-empty','No glossary is available for this collection. Questions remain searchable.'));return}
+ if(state.glossarySelected){
+  const term=state.termById.get(state.glossarySelected);
+  if(term){
+   const back=el('button','glossary-back','← All vocabulary');back.type='button';
+   back.onclick=()=>{
+    state.glossarySelected=null;
+    const url=new URL(location.href);url.searchParams.delete('term');
+    try{history.replaceState(null,'',url.toString())}catch{}
+    renderCuriosityIndex();
+   };
+   results.append(back);
+   const section=el('section','glossary-term-detail');
+   section.append(el('h3','',term.label));
+   if(term.aliases?.length)section.append(el('p','muted','Also called: '+term.aliases.join(' · ')));
+   section.append(el('p','muted',term.category+' · '+term.id));
+   const linked=glossaryLinkedRecords(term.id);
+   if(linked.questions.length){
+    section.append(el('h4','','Questions using this concept ('+linked.questions.length+')'));
+    const grid=el('div','curiosity-card-grid');
+    for(const q of linked.questions){
+     const b=el('button','curiosity-card',q.question);b.type='button';
+     b.onclick=()=>openCuriosityEntry(q.id);grid.append(b);
+    }
+    section.append(grid);
+   }
+   if(linked.technical.length){
+    section.append(el('h4','','Technical investigations ('+linked.technical.length+')'));
+    const grid=el('div','glossary-term-list');
+    for(const n of linked.technical.slice(0,30)){
+     const b=el('button','glossary-term-button',n.question||n.title||n.id);b.type='button';
+     b.onclick=()=>openResearchTarget(n.id);grid.append(b);
+    }
+    section.append(grid);
+   }
+   const related=(term.related_ids||[]).map(id=>state.termById.get(id)).filter(Boolean);
+   if(related.length){
+    section.append(el('h4','','Related concepts (not synonyms)'));
+    const grid=el('div','glossary-term-list');
+    for(const t of related){
+     const b=el('button','glossary-term-button',t.label);b.type='button';
+     b.onclick=()=>openGlossaryTerm(t.id);grid.append(b);
+    }
+    section.append(grid);
+   }
+   if(!linked.questions.length&&!linked.technical.length)section.append(
+    el('p','muted','Vocabulary discovery only: this concept has no mapped question yet.'));
+   results.append(section);
+   $('curiosity-match-count').textContent=linked.questions.length+
+    ' linked curiosities · '+linked.technical.length+' technical records';
+   return;
+  }
+  state.glossarySelected=null;
+ }
+ const matching=glossary.terms.filter(t=>glossaryTermMatches(t,query)),groups=new Map();
+ for(const term of matching){
+  const category=term.category||'Other';
+  if(!groups.has(category))groups.set(category,[]);
+  groups.get(category).push(term);
+ }
+ for(const [category,terms] of groups){
+  const section=el('details','glossary-category');
+  section.open=!!query||groups.size<=2;
+  section.append(el('summary','',category+' · '+terms.length));
+  const grid=el('div','glossary-term-list');
+  terms.sort((a,b)=>a.label.localeCompare(b.label));
+  for(const term of terms){
+   const b=el('button','glossary-term-button',term.label);b.type='button';
+   b.title=term.aliases?.length?'Also called '+term.aliases.join(', '):term.label;
+   b.onclick=()=>openGlossaryTerm(term.id);grid.append(b);
+  }
+  section.append(grid);results.append(section);
+ }
+ $('curiosity-match-count').textContent=matching.length+' vocabulary terms';
+ if(!matching.length)results.append(el('p','curiosity-empty','No matching term in this glossary.'));
+}
 function renderCuriosityIndex(){
  const data=state.curiosityData?.curiosity_atlas;
  if(!data)return;
