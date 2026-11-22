@@ -281,6 +281,23 @@
 
 **FKEN-16.4 — Interchange.** An exploratory encounter may generate an investigation; an investigation may reveal new domains, gas elements, question families, or opportunities for exploration.
 
+### FKEN-16A — Frustration-to-resource traversability
+
+**FKEN-16A.1 — Empirical goal.** An investigator should be able to begin with an authentic frustration, naive question, or intended accomplishment—without knowing the relevant author's vocabulary, book title, or source chapter—and navigate to consequentially relevant resources. In a bounded book collection, ask whether its genuinely useful passages can be reached through the available questions, sets/supersets, domainlets, and landscaplets, instead of requiring the investigator to already know where to look.
+
+**FKEN-16A.2 — Traversable intermediate choices.** At successive points of a question tree or activated landscape, the next branching choices should express meaningful distinctions that help orient the investigator: alternative mechanisms, functional requirements, constraints, failure modes, and broader question families. A relevant resource may appear in multiple pathways while retaining one canonical identity. A globally reachable catalog link is not evidence of useful *navigation*; the path itself should explain why the destination matters.
+
+**FKEN-16A.3 — Reachable endpoint.** Success is not merely encountering a book or a vaguely related heading. It is discovering a relevant, recoverable passage, worked implementation, person, or experiment with sufficient source location and explanation to decide whether to study or use it. Distinguish source relevance, evidenced applicability, and actual competence acquired through use.
+
+**FKEN-16A.4 — Two-sided coverage audit.** Sample (a) real frustrations and questions independently of the resource classifications, and (b) consequential source regions identified independently from the navigator. For each source region, construct plausible tasks that would make it useful, without supplying the source's own title or key terminology. Trace whether the interface can lead to it from plausible entry points. Audit both what questions retrieve and which valuable passages are never surfaced; a high link count alone establishes neither.
+
+**FKEN-16A.5 — Practical measurement.** On representative unfamiliar-user tasks, record whether an actually useful resource was reached, the relevance of the first candidates, wrong turns, backtracking, time or interaction cost, dependence on exact terminology, and whether the final source anchor can be opened. Compare with simple baselines such as full-text search, the book's table of contents, or direct expert guidance. Track misses and false positives separately; the best structure may vary by question.
+
+**FKEN-16A.6 — Limits and revision.** Do not demand that every node directly lead to every resource, or that all book passages have equal value. Scope the audit to the collection, meaningful resource regions, and intended question families. When a genuinely relevant resource is difficult to reach, investigate the obstruction: missing source coverage, missing everyday-language entry, misleading grouping, absent cross-branch relationship, or poor interface. Improve the smallest consequential bridge, landscaplet, or question family before multiplying permanent trees or generic links. Re-run representative routes after revisions.
+
+*Manufacturing example:* A user frustrated that a printed latch keeps breaking should be able to encounter alternative material/load-direction explanations (FFM anisotropy), elastic mechanism design (compliant flexures), cyclic failure analysis (fatigue), and different fabrication or joining approaches, with appropriately qualified links to the relevant chapters—not need to know any of those names in advance.
+
+
 ### FKEN-17 — Continuity and provenance
 
 **FKEN-17.1 — Recoverability.** Preserve enough source identity, location, and context to recover consequential encounters and previous investigations.
