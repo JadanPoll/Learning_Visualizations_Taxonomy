@@ -408,6 +408,41 @@ async function fetchJson(url){
 const api=(r,path='')=>`https://api.github.com/repos/${encodeURIComponent(r.owner)}/${encodeURIComponent(r.repo)}${path?'/'+path:''}`;
 const encodePath=p=>p.split('/').map(encodeURIComponent).join('/');
 async function readRepoFile(r,path){const url=`https://raw.githubusercontent.com/${encodeURIComponent(r.owner)}/${encodeURIComponent(r.repo)}/${encodeURIComponent(r.branch)}/${encodePath(path)}`;return fetchJson(path==='rsm-view.json'?url+'?fresh='+Date.now():url)}
+// A research family owns its records; the top-level atlas only composes them.
+// Only explicitly named, same-repository JSON files are read. No recursive
+// discovery, copied records, or new schema is required for older investigations.
+async function readResearchCorpus(r,path){
+ const data=await readRepoFile(r,path);
+ const includes=data.include_files;
+ if(!includes)return data;
+ if(!Array.isArray(includes)||includes.length>12||includes.some(p=>typeof p!=='string'||!p.endsWith('.json')||p.startsWith('/')||p.split('/').includes('..')))
+  throw Error('Invalid research include_files at '+path);
+ const base=path.includes('/')?path.slice(0,path.lastIndexOf('/')+1):'';
+ const parts=await Promise.all(includes.map(p=>readRepoFile(r,base+p)));
+ const assembled={...data};
+ for(const part of parts){
+  for(const key of ['sources','book_landscaplets','nodes','source_inspection_notes']){
+   if(part[key]!=null){
+    if(!Array.isArray(part[key]))throw Error('Expected array '+key+' in a research family');
+    assembled[key]=[...(assembled[key]||[]),...part[key]];
+   }
+  }
+  if(part.source_coverage){
+   for(const id of Object.keys(part.source_coverage))if(Object.prototype.hasOwnProperty.call(assembled.source_coverage||{},id))
+    throw Error('Duplicate coverage source '+id);
+   assembled.source_coverage={...(assembled.source_coverage||{}),...part.source_coverage};
+  }
+ }
+ for(const key of ['sources','book_landscaplets','nodes']){
+  const seen=new Set();
+  for(const item of assembled[key]||[]){
+   const id=key==='book_landscaplets'?item.source_id:item.id;
+   if(!id||seen.has(id))throw Error('Duplicate or missing '+key+' identity '+id);
+   seen.add(id);
+  }
+ }
+ return assembled;
+}
 function isTree(d){return d&&typeof d==='object'&&nodesOf(d).length>0}
 // A manifest describes *how to read* source JSON, without changing that JSON.
 // The output is a provisional navigation graph: nodes + typed links + provenance.
@@ -807,7 +842,7 @@ function updateLensSelector(){
 
 async function loadMapped(r,view){
  setStatus('Opening '+view.title+'…');
- const data=await readRepoFile(r,view.file);
+ const data=await readResearchCorpus(r,view.file);
  const hasAtlas=view.projection?.shape==='curiosities'&&!!data.curiosity_atlas;
  const glossary=hasAtlas?await loadDomainGlossary(r,view,data):null;
  const query=new URLSearchParams(location.search),wanted=query.get('view')||'';
@@ -864,7 +899,7 @@ async function loadMapped(r,view){
   (data.curiosity_atlas?.entries?.length||0)+' question entries':state.index.size+' navigable nodes')+(guide?' · reading guide connected':''));
 }
 
-async function loadPath(r,path){setStatus('Loading '+path+'…');const d=await readRepoFile(r,path);if(!isTree(d))throw Error(path+' does not contain a supported nodes collection');state.glossary=null;state.termById=new Map();state.glossarySelected=null;state.glossaryMode='questions';let guide=null;const dir=path.includes('/')?path.slice(0,path.lastIndexOf('/')+1):'';const ref=d.reference_guide_path||'reference_guide.json';const gp=ref.startsWith(dir)?ref:dir+ref;try{guide=await readRepoFile(r,gp)}catch{}openTree(d,guide,path,{type:'github',repo:r.owner+'/'+r.repo,branch:r.branch,file:path,title:d.title||path});state.url=repoUrl(r,path);state.repo=r;state.activeView=null;state.curiosityData=d.curiosity_atlas?d:null;state.curiosityEntry=null;showCuriosityIndex(false);updateLensSelector();const params=new URLSearchParams(location.search);params.set('repo',state.url);params.delete('view');try{history.replaceState(null,'','?'+params.toString())}catch{}setStatus(`Loaded ${path} · ${state.index.size} nodes`+(guide?' · reference guide connected':' · no accompanying reference guide'));}
+async function loadPath(r,path){setStatus('Loading '+path+'…');const d=await readResearchCorpus(r,path);if(!isTree(d))throw Error(path+' does not contain a supported nodes collection');state.glossary=null;state.termById=new Map();state.glossarySelected=null;state.glossaryMode='questions';let guide=null;const dir=path.includes('/')?path.slice(0,path.lastIndexOf('/')+1):'';const ref=d.reference_guide_path||'reference_guide.json';const gp=ref.startsWith(dir)?ref:dir+ref;try{guide=await readRepoFile(r,gp)}catch{}openTree(d,guide,path,{type:'github',repo:r.owner+'/'+r.repo,branch:r.branch,file:path,title:d.title||path});state.url=repoUrl(r,path);state.repo=r;state.activeView=null;state.curiosityData=d.curiosity_atlas?d:null;state.curiosityEntry=null;showCuriosityIndex(false);updateLensSelector();const params=new URLSearchParams(location.search);params.set('repo',state.url);params.delete('view');try{history.replaceState(null,'','?'+params.toString())}catch{}setStatus(`Loaded ${path} · ${state.index.size} nodes`+(guide?' · reference guide connected':' · no accompanying reference guide'));}
 // Manifest-first loading avoids rate-limited unauthenticated GitHub tree listing.
 async function tryManifest(r){
  const candidates=r.branch?[r.branch]:['main','master'];
