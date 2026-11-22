@@ -629,8 +629,8 @@ async function loadMapped(r,view){
  setStatus('Opening '+view.title+'…');
  const data=await readRepoFile(r,view.file);
  const hasAtlas=view.projection?.shape==='curiosities'&&!!data.curiosity_atlas;
- state.curiosityData=data.curiosity_atlas?data:null;
  const query=new URLSearchParams(location.search),wanted=query.get('view')||'';
+ const switching=!!state.activeView&&state.activeView.id!==view.id;
  const legacy={
   'os-questions':{kind:'questions'},'os-investigation':{kind:'set',id:'all'},
   'human-ai-questions':{kind:'questions'},'human-ai-investigation':{kind:'set',id:'all'},
@@ -638,7 +638,14 @@ async function loadMapped(r,view){
  };
  const oldManufacturing=wanted.startsWith('manufacturing-')&&wanted!=='manufacturing-curiosities'?
   {kind:'set',id:wanted==='manufacturing-investigation'?'all':wanted.slice('manufacturing-'.length)}:null;
- const selection=hasAtlas?(legacy[wanted]||oldManufacturing||
+ // URL selection belongs to the view named in the URL. A user choosing another
+ // library topic must not replay the previous topic's curiosity or set ID.
+ const aliases={'os-questions':'os-curiosities','os-investigation':'os-curiosities',
+  'human-ai-questions':'human-ai-curiosities','human-ai-investigation':'human-ai-curiosities',
+  'human-ai-fieldwork':'human-ai-curiosities'};
+ const urlBelongsToView=!wanted||wanted===view.id||aliases[wanted]===view.id||
+  (view.id==='manufacturing-curiosities'&&!!oldManufacturing);
+ const selection=hasAtlas&&urlBelongsToView?(legacy[wanted]||oldManufacturing||
   (query.get('set')?query.get('set')==='questions'?{kind:'questions'}:{kind:'set',id:query.get('set')}:
   query.get('curiosity')?{kind:'question',id:query.get('curiosity')}:null)):null;
  const projected=hasAtlas?researchEntryProjection(data,selection,r,view):null;
@@ -649,6 +656,7 @@ async function loadMapped(r,view){
   const guidePath=view.reference_file||data.reference_guide_path;
   if(guidePath)try{guide=guidePath===view.file?data:await readRepoFile(r,guidePath)}catch{}
  }
+ state.curiosityData=data.curiosity_atlas?data:null;
  state.curiosityEntry=hasAtlas?selection:null;
  openTree(tree,guide,projected?.title||view.title,{type:'github',repo:r.owner+'/'+r.repo,
   branch:r.branch,file:view.file,view_id:projected?.originViewId||view.id,title:projected?.title||view.title});
@@ -659,7 +667,7 @@ async function loadMapped(r,view){
  params.set('view',view.id);
  if(selection?.kind==='question')params.set('curiosity',selection.id);else params.delete('curiosity');
  if(selection?.kind==='set'||selection?.kind==='questions')params.set('set',selection.kind==='questions'?'questions':selection.id);else params.delete('set');
- try{history.replaceState(null,'','?'+params.toString()+(location.hash||''))}catch{}
+ try{history.replaceState(null,'','?'+params.toString()+(switching?'':location.hash||''))}catch{}
  $('choices').value=view.id;
  setStatus('Opened '+(projected?.title||view.title)+' · '+(hasAtlas&&!selection?
   (data.curiosity_atlas?.entries?.length||0)+' question entries':state.index.size+' navigable nodes')+(guide?' · reading guide connected':''));
