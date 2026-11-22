@@ -428,7 +428,7 @@ function mappedView(data,view,r){const spec=view.projection||{},shape=spec.shape
 }
 function globMatch(pattern,path){const parts=pattern.split(/(\*\*|\*)/),re='^'+parts.map(x=>x==='**'?'.*':x==='*'?'[^/]*':x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('')+'$';return new RegExp(re).test(path)}
 async function discover(r){const data=await fetchJson(api(r,'git/trees/'+encodeURIComponent(r.branch)+'?recursive=1'));if(data.truncated)throw Error('Repository listing truncated; open a specific JSON file instead');return (data.tree||[]).filter(x=>x.type==='blob').map(x=>x.path)}
-function viewList(manifest,paths){if(manifest.mapping_version!=='0.1'||!Array.isArray(manifest.views))throw Error('Unsupported mapping manifest');const views=[];for(const template of manifest.views){if(template.file){if(paths.includes(template.file))views.push(template);continue}if(template.glob){for(const file of paths.filter(p=>globMatch(template.glob,p)&&!(template.exclude||[]).some(ex=>globMatch(ex,p)))){const name=simpleLabel(file.endsWith('/domain.json')?file.split('/').slice(-2,-1)[0]:file);views.push({...template,id:template.id+':'+file,title:template.title+' · '+name,file})}}}return views}
+function viewList(manifest,paths){if(manifest.mapping_version!=='0.1'||!Array.isArray(manifest.views))throw Error('Unsupported mapping manifest');const views=[];for(const template of manifest.views){if(template.file){if(!paths||paths.includes(template.file))views.push(template);continue}if(template.glob){for(const file of paths.filter(p=>globMatch(template.glob,p)&&!(template.exclude||[]).some(ex=>globMatch(ex,p)))){const name=simpleLabel(file.endsWith('/domain.json')?file.split('/').slice(-2,-1)[0]:file);views.push({...template,id:template.id+':'+file,title:template.title+' · '+name,file})}}}return views}
 
 /* The entry layer is purposely ordinary language. A selected entry generates a
    temporary technical hierarchy from canonical studies and sourced bridges. */
@@ -655,10 +655,65 @@ async function loadMapped(r,view){
 }
 
 async function loadPath(r,path){setStatus('Loading '+path+'…');const d=await readRepoFile(r,path);if(!isTree(d))throw Error(path+' does not contain a supported nodes collection');let guide=null;const dir=path.includes('/')?path.slice(0,path.lastIndexOf('/')+1):'';const ref=d.reference_guide_path||'reference_guide.json';const gp=ref.startsWith(dir)?ref:dir+ref;try{guide=await readRepoFile(r,gp)}catch{}openTree(d,guide,path,{type:'github',repo:r.owner+'/'+r.repo,branch:r.branch,file:path,title:d.title||path});state.url=repoUrl(r,path);state.repo=r;state.activeView=null;state.curiosityData=d.curiosity_atlas?d:null;state.curiosityEntry=null;showCuriosityIndex(false);updateLensSelector();const params=new URLSearchParams(location.search);params.set('repo',state.url);params.delete('view');try{history.replaceState(null,'','?'+params.toString())}catch{}setStatus(`Loaded ${path} · ${state.index.size} nodes`+(guide?' · reference guide connected':' · no accompanying reference guide'));}
-async function loadSource(raw){setStatus('Opening '+raw+'…');const r=parseGithub(raw);if(r.directUrl){const d=await fetchJson(r.directUrl);if(!isTree(d))throw Error('JSON has no nodes');state.repo=null;state.views=null;state.curiosityData=null;state.curiosityEntry=null;openTree(d,null,r.directUrl,{type:'url',url:r.directUrl,title:d.title||r.directUrl});state.activeView=null;showCuriosityIndex(false);updateLensSelector();setStatus('Loaded remote JSON');return}if(!r.branch){const metadata=await fetchJson(api(r));r.branch=metadata.default_branch||'main'}state.repo=r;state.views=null;state.activeView=null;
- if(r.path&&r.path.endsWith('.json')&&!r.path.endsWith('rsm-view.json')){setChoices([],false);await loadPath(r,r.path);return}
- const paths=await discover(r);if(paths.includes('rsm-view.json')){const manifest=await readRepoFile(r,'rsm-view.json'),views=viewList(manifest,paths);const filtered=r.path?views.filter(v=>v.file.startsWith(r.path.replace(/\/$/,'')+'/')):views;state.views=filtered.length?filtered:views;if(!state.views.length)throw Error('Mapping manifest has no files to display');setChoices(state.views,true);const wanted=new URLSearchParams(location.search).get('view');const selected=state.views.find(v=>v.id===wanted)||(wanted?.startsWith('manufacturing-')?state.views.find(v=>v.id==='manufacturing-curiosities'):null)||state.views[0];$('choices').value=selected.id;await loadMapped(r,selected);return}
- let found=paths.filter(p=>/\/(question_tree|investigation)\.json$/i.test('/'+p));if(!found.length)throw Error('No rsm-view.json mapping or recognized question_tree.json / investigation.json found');found.sort((a,b)=>a.includes('question_tree')?-1:b.includes('question_tree')?1:a.localeCompare(b));const filtered=r.path?found.filter(p=>p.startsWith(r.path.replace(/\/$/,'')+'/')):found;if(filtered.length)found=filtered;setChoices(found,false);await loadPath(r,found[0]);}
+// Manifest-first loading avoids rate-limited unauthenticated GitHub tree listing.
+async function tryManifest(r){
+ const candidates=r.branch?[r.branch]:['main','master'];
+ for(const branch of candidates){
+  try{
+   const manifest=await readRepoFile({...r,branch},'rsm-view.json');
+   if(manifest?.mapping_version==='0.1'&&Array.isArray(manifest.views)){
+    r.branch=branch;return manifest;
+   }
+   throw Error('Unsupported rsm-view.json mapping manifest');
+  }catch(err){if(!/^HTTP 404\b/.test(err.message))throw err}
+ }
+ return null;
+}
+async function loadSource(raw){
+ setStatus('Opening '+raw+'…');const r=parseGithub(raw);
+ if(r.directUrl){
+  const d=await fetchJson(r.directUrl);if(!isTree(d))throw Error('JSON has no nodes');
+  state.repo=null;state.views=null;state.curiosityData=null;state.curiosityEntry=null;
+  openTree(d,null,r.directUrl,{type:'url',url:r.directUrl,title:d.title||r.directUrl});
+  state.activeView=null;showCuriosityIndex(false);updateLensSelector();setStatus('Loaded remote JSON');return;
+ }
+ const manifest=await tryManifest(r);
+ if(r.path&&r.path.endsWith('.json')&&!r.path.endsWith('rsm-view.json')){
+  if(!r.branch)throw Error('Unable to infer branch; provide an explicit GitHub /blob/main/ URL or direct JSON URL');
+  setChoices([],false);await loadPath(r,r.path);return;
+ }
+ if(manifest){
+  let views;
+  if(manifest.views.some(v=>v.glob)){
+   try{views=viewList(manifest,await discover(r))}
+   catch(err){
+    activity('Repository listing unavailable; loading explicit manifest files','error',err.message);
+    views=viewList({...manifest,views:manifest.views.filter(v=>v.file)},[]);
+   }
+  }else views=viewList(manifest,null);
+  const filtered=r.path?views.filter(v=>v.file.startsWith(r.path.replace(/\/$/,'')+'/')):views;
+  state.repo=r;state.views=filtered.length?filtered:views;state.activeView=null;
+  if(!state.views.length)throw Error('Mapping manifest has no files to display');
+  setChoices(state.views,true);
+  const wanted=new URLSearchParams(location.search).get('view');
+  const aliases={'os-questions':'os-curiosities','os-investigation':'os-curiosities',
+   'human-ai-questions':'human-ai-curiosities','human-ai-investigation':'human-ai-curiosities',
+   'human-ai-fieldwork':'human-ai-curiosities'};
+  const alias=wanted?.startsWith('manufacturing-')?'manufacturing-curiosities':aliases[wanted];
+  const selected=state.views.find(v=>v.id===wanted)||state.views.find(v=>v.id===alias)||state.views[0];
+  $('choices').value=selected.id;await loadMapped(r,selected);return;
+ }
+ // Generic older repositories without an explicit mapping retain discovery fallback.
+ if(!r.branch){const metadata=await fetchJson(api(r));r.branch=metadata.default_branch||'main'}
+ state.repo=r;state.views=null;state.activeView=null;
+ const paths=await discover(r);
+ let found=paths.filter(p=>/\/(question_tree|investigation)\.json$/i.test('/'+p));
+ if(!found.length)throw Error('No rsm-view.json mapping or recognized question_tree.json / investigation.json found');
+ found.sort((a,b)=>a.includes('question_tree')?-1:b.includes('question_tree')?1:a.localeCompare(b));
+ const filtered=r.path?found.filter(p=>p.startsWith(r.path.replace(/\/$/,'')+'/')):found;
+ if(filtered.length)found=filtered;
+ setChoices(found,false);await loadPath(r,found[0]);
+}
 function openTree(d,guide,source,origin=null){state.currentSource=origin||{type:'local',file:source||'unspecified',title:source||'Local JSON'};state.tree=d;state.guide=guide;state.selected=null;state.detailOpen=false;state.index=new Map();state.children=new Map();state.parent=new Map();const nodes=nodesOf(d);for(let i=0;i<nodes.length;i++){const n=nodes[i];const id=String(n.id||'node-'+i);n.id=id;state.index.set(id,n);state.children.set(id,[])}for(const n of nodes){const raw=n.parent_id??n.parent??null;const p=raw==null?null:String(raw);if(p&&p!==n.id&&state.index.has(p)){state.parent.set(n.id,p);state.children.get(p).push(n.id)}else state.parent.set(n.id,null)}let first=String(d.root||'');if(!state.index.has(first))first=nodes.find(n=>state.parent.get(n.id)===null)?.id||nodes[0].id;state.selected=first;restoreAtlas();$('sourceMeta').textContent=source||'Local JSON';$('collection-title').textContent=d.title||source||'Explore';render()}
 function ancestry(id){const out=[],visited=new Set();let x=id;while(x&&state.index.has(x)&&!visited.has(x)){out.unshift(x);visited.add(x);x=state.parent.get(x)}return out}
 function select(id){
