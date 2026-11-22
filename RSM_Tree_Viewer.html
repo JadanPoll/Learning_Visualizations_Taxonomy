@@ -282,6 +282,10 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .curiosity-group>p{font-size:12px;color:#678094;margin:0 0 11px}
 .curiosity-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr));gap:9px}
 .curiosity-card{display:flex;align-items:center;text-align:left;padding:14px 15px;min-height:83px;border:1px solid #d5e3ed;background:#fff;border-radius:13px;box-shadow:0 2px 8px #2446620b;line-height:1.35;font-size:15px;font-weight:590;color:#244b69}
+.curiosity-set-card{display:flex;flex-direction:column;align-items:flex-start;gap:6px;background:#edf5fb;border-color:#bdd7e7}
+.curiosity-set-card strong{font-size:14px;line-height:1.35;color:#254e6e}
+.curiosity-set-card span{font-size:12px;font-weight:400;line-height:1.45;color:#58738a}
+.curiosity-set-group{margin-bottom:23px;padding-bottom:15px;border-bottom:1px solid #d4e4ef}
 .curiosity-card:hover,.curiosity-card:focus-visible{border-color:#72a8cd;background:#edf7ff;outline-offset:2px}
 .curiosity-index .curiosity-empty{padding:22px 8px;color:#4d6d86;font-size:13px}
 @media(min-width:900px){#curiosity-index{right:355px}}
@@ -431,7 +435,7 @@ function makeCuriosityProjection(data,entry){
  const canonical=new Map((data.nodes||[]).map(n=>[n.id,n])),nodes=[],edges=[];
  const rootId=entry?.id||'MFG-CURI-HOME';
  nodes.push({id:rootId,parent_id:null,kind:entry?'curiosity_entry':'curiosity_home',
-  question:entry?.question||'Choose a curiosity',why:entry?.context||catalogue.purpose||'Start from an everyday question.',
+  question:entry?.question||'Explore manufacturing questions',why:entry?.context||catalogue.purpose||'Start from an everyday question.',
   status:'navigation_question'});
  const used=new Set([rootId]),sourceIds=new Set((data.sources||[]).map(s=>s.id));
  if(entry){
@@ -459,7 +463,7 @@ function makeCuriosityProjection(data,entry){
    }
   }
  }
- return {...data,id:'curiosity:'+rootId,title:entry?'Investigating · '+entry.question:'Curiosities · Manufacturing',
+ return {...data,id:'curiosity:'+rootId,title:entry?'Investigating · '+entry.question:'Manufacturing · Explore questions',
   root:rootId,kind:'curiosity_projection',nodes,canonical_nodes:data.nodes,
   landscape_lens:null,curiosity_entry:entry||null,connections:edges,edges};
 }
@@ -481,13 +485,36 @@ function renderCuriosityIndex(){
  const data=state.curiosityData?.curiosity_atlas;
  if(!data)return;
  const families=$('curiosity-family-filters'),results=$('curiosity-results');clear(families);clear(results);
- for(const family of [{id:'all',label:'All questions'},...(data.families||[])]){
+ for(const family of [{id:'all',label:'All entries'},...(data.families||[])]){
   const btn=el('button','',family.label);btn.type='button';
   btn.setAttribute('aria-pressed',String(state.curiosityFamily===family.id));
   btn.onclick=()=>{state.curiosityFamily=family.id;renderCuriosityIndex()};
   families.append(btn);
  }
- let shown=0;
+ let shown=0,shownSets=0;
+ // A larger investigation is simply an entry scoped to a set of technical questions.
+ // Reuse the five existing lens projections; never clone their records or sources.
+ if(state.curiosityFamily==='all'){
+  const views=new Set((state.views||[]).map(v=>v.id));
+  const scopes=(state.curiosityData?.landscape_views||[]).filter(scope=>
+   views.has('manufacturing-'+scope.id)&&
+   curiosityMatches({question:scope.title,context:scope.rationale,aliases:[scope.short_label||'',scope.id,'investigation']},state.curiositySearch));
+  if(scopes.length){
+   shownSets=scopes.length;
+   const section=el('section','curiosity-group curiosity-set-group');
+   section.append(el('h3','','Explore a larger question set'));
+   section.append(el('p','','Follow an entire family of technical questions, alternatives, and evidence.'));
+   const grid=el('div','curiosity-card-grid');
+   for(const scope of scopes){
+    const card=el('button','curiosity-card curiosity-set-card');card.type='button';
+    card.append(el('strong','',scope.title));
+    card.append(el('span','',scope.rationale));
+    card.onclick=()=>openQuestionSet(scope.id);
+    grid.append(card);
+   }
+   section.append(grid);results.append(section);
+  }
+ }
  for(const family of data.families||[]){
   if(state.curiosityFamily!=='all'&&state.curiosityFamily!==family.id)continue;
   const entries=(data.entries||[]).filter(e=>e.family_id===family.id&&curiosityMatches(e,state.curiositySearch));
@@ -503,8 +530,8 @@ function renderCuriosityIndex(){
   }
   section.append(grid);results.append(section);
  }
- $('curiosity-match-count').textContent=shown+' of '+(data.entries||[]).length+' questions';
- if(!shown)results.append(el('p','curiosity-empty','No matching question in this source collection. Try a simpler phrase or another category.'));
+ $('curiosity-match-count').textContent=shown+' specific questions'+(state.curiosityFamily==='all'?' · '+shownSets+' larger sets':'');
+ if(!shown&&!shownSets)results.append(el('p','curiosity-empty','No matching question in this source collection. Try a simpler phrase or another category.'));
 }
 function showCuriosityIndex(open){
  const pane=$('curiosity-index'),btn=$('atlas-curiosities');
@@ -513,6 +540,15 @@ function showCuriosityIndex(open){
  btn.textContent=open?'Back to investigation':'Browse questions';
  btn.setAttribute('aria-expanded',String(open));
  if(open&&state.curiosityData){closeDetail();renderCuriosityIndex()}
+}
+async function openQuestionSet(lensId){
+ const view=state.views?.find(v=>v.id==='manufacturing-'+lensId);
+ if(!view||!state.repo){setStatus('Question set is unavailable: '+lensId,true);return}
+ try{
+  await loadMapped(state.repo,view);
+  $('choices').value=view.id;
+  activity('Exploring question set '+(view.short_title||view.title));
+ }catch(err){setStatus('Could not open question set: '+err.message,true)}
 }
 function openCuriosityEntry(id){
  const data=state.curiosityData,entry=data?.curiosity_atlas?.entries?.find(e=>e.id===id);
