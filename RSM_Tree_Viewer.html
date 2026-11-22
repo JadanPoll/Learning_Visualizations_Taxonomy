@@ -278,6 +278,29 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .manufacturing-start-list{display:grid;gap:6px;margin-top:8px}
 .manufacturing-start-list button{font-size:12px;padding:9px 11px;line-height:1.4;min-height:42px}
 .manufacturing-starters{margin:8px 0 13px}
+
+/* Curiosity entrance: conventional vertical scrolling instead of canvas panning. */
+#atlas-curiosities[hidden],#curiosity-index[hidden]{display:none!important}
+#atlas-curiosities{font-size:12px;font-weight:680;min-width:79px}
+.curiosity-index{position:absolute;z-index:12;inset:0;background:#f7fafe;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:0 16px 34px}
+.curiosity-index-heading{position:sticky;z-index:2;top:0;background:#f7fafe;padding:18px 5px 10px;border-bottom:1px solid #d8e5ef}
+.curiosity-index-heading h2{font-size:21px;margin:0 0 6px;color:#1e4967}
+.curiosity-index-heading>p{font-size:12px;color:#587188;line-height:1.45;margin:0 0 11px}
+#curiosity-search{display:block;width:100%;max-width:740px;min-height:43px;border:1px solid #bed4e6;background:#fff;border-radius:11px;padding:10px 13px;font-size:15px;color:#244f6d}
+#curiosity-family-filters{display:flex;gap:6px;overflow-x:auto;padding:10px 0 4px;scrollbar-width:thin}
+#curiosity-family-filters button{flex-shrink:0;border:1px solid #d3e1ec;border-radius:20px;background:#fff;color:#385f7e;padding:7px 12px;font-size:12px}
+#curiosity-family-filters button[aria-pressed="true"]{background:#dfeffb;border-color:#78a4c3;color:#163d5a;font-weight:700}
+#curiosity-match-count{font-size:11px!important;color:#6a8498!important;margin:4px 0 0!important}
+.curiosity-results{padding:6px 5px 18px;max-width:980px;margin:0 auto}
+.curiosity-group{margin:12px 0 20px}
+.curiosity-group h3{font-size:15px;color:#285471;margin:0 0 4px}
+.curiosity-group>p{font-size:12px;color:#678094;margin:0 0 11px}
+.curiosity-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr));gap:9px}
+.curiosity-card{display:flex;align-items:center;text-align:left;padding:14px 15px;min-height:83px;border:1px solid #d5e3ed;background:#fff;border-radius:13px;box-shadow:0 2px 8px #2446620b;line-height:1.35;font-size:15px;font-weight:590;color:#244b69}
+.curiosity-card:hover,.curiosity-card:focus-visible{border-color:#72a8cd;background:#edf7ff;outline-offset:2px}
+.curiosity-index .curiosity-empty{padding:22px 8px;color:#4d6d86;font-size:13px}
+@media(min-width:900px){#curiosity-index{right:355px}}
+@media(max-width:700px){.curiosity-index{padding:0 11px 25px}.curiosity-index-heading{padding-top:11px}.curiosity-index-heading h2{font-size:18px}.curiosity-card-grid{grid-template-columns:1fr}.curiosity-card{min-height:64px;font-size:14px}#atlas-curiosities{font-size:11px;min-width:69px;padding:5px 6px}}
 </style></head>
 <body>
 <header class="top">
@@ -290,6 +313,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
     <div class="atlas-heading"><h2 id="collection-title">Your question landscape</h2><p>Drag or scroll to pan · Pinch or use +/− to zoom · Select to inspect</p></div>
     <nav class="atlas-toolbar" aria-label="Map navigation">
       <select id="atlas-lens" class="hidden" aria-label="Manufacturing investigation viewpoint" title="Choose the manufacturing question to navigate"></select>
+      <button id="atlas-curiosities" type="button" hidden title="Browse ordinary questions">Curiosities</button>
       <button id="atlas-about" type="button" aria-label="About this investigation" title="About this investigation">ⓘ</button>
       <button id="atlas-out" type="button" aria-label="Zoom out">−</button>
       <button id="atlas-in" type="button" aria-label="Zoom in">+</button>
@@ -298,6 +322,16 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   </div>
   <div class="explore-workspace">
     <div id="canvas" class="landscape-canvas atlas-viewport" aria-label="Knowledge landscape map"></div>
+    <section id="curiosity-index" class="curiosity-index" aria-label="Manufacturing curiosity encyclopedia" hidden>
+      <div class="curiosity-index-heading">
+        <h2>What are you curious about?</h2>
+        <p>Start with an ordinary question. Open it to explore the underlying mechanisms, alternatives, and source evidence.</p>
+        <input id="curiosity-search" type="search" autocomplete="off" spellcheck="false" placeholder="Search a question, problem, or idea" aria-label="Search manufacturing curiosities">
+        <nav id="curiosity-family-filters" aria-label="Curiosity families"></nav>
+        <p id="curiosity-match-count" aria-live="polite"></p>
+      </div>
+      <div id="curiosity-results" class="curiosity-results"></div>
+    </section>
     <aside class="atlas-inspector-rail" aria-label="Question inspector">
       <div id="inspector-empty" class="atlas-inspector-empty"><strong>Explore the map</strong><span>Select a question to read its evidence and notes without moving the landscape.</span></div>
       <section id="detail" class="detail journey-content" aria-label="Selected question details" hidden></section>
@@ -337,7 +371,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
-const state={tree:null,guide:null,selected:null,detailOpen:false,atlas:{x:0,y:0,z:1,ready:false,layout:null,saved:null,pointers:new Map(),gesture:null},url:null,repo:null,ref:null,files:[],views:null,activeView:null,currentSource:null,index:new Map(),children:new Map(),parent:new Map()};
+const state={tree:null,guide:null,selected:null,detailOpen:false,curiosityData:null,curiosityEntry:null,curiosityFamily:'all',curiositySearch:'',atlas:{x:0,y:0,z:1,ready:false,layout:null,saved:null,pointers:new Map(),gesture:null},url:null,repo:null,ref:null,files:[],views:null,activeView:null,currentSource:null,index:new Map(),children:new Map(),parent:new Map()};
 function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=String(text);return e}
 function clear(node){node.replaceChildren()}
 function setStatus(s,error=false){
