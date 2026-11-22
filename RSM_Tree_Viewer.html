@@ -385,7 +385,7 @@ async function fetchJson(url){
 }
 const api=(r,path='')=>`https://api.github.com/repos/${encodeURIComponent(r.owner)}/${encodeURIComponent(r.repo)}${path?'/'+path:''}`;
 const encodePath=p=>p.split('/').map(encodeURIComponent).join('/');
-async function readRepoFile(r,path){return fetchJson(`https://raw.githubusercontent.com/${encodeURIComponent(r.owner)}/${encodeURIComponent(r.repo)}/${encodeURIComponent(r.branch)}/${encodePath(path)}`)}
+async function readRepoFile(r,path){const url=`https://raw.githubusercontent.com/${encodeURIComponent(r.owner)}/${encodeURIComponent(r.repo)}/${encodeURIComponent(r.branch)}/${encodePath(path)}`;return fetchJson(path==='rsm-view.json'?url+'?fresh='+Date.now():url)}
 function isTree(d){return d&&typeof d==='object'&&nodesOf(d).length>0}
 // A manifest describes *how to read* source JSON, without changing that JSON.
 // The output is a provisional navigation graph: nodes + typed links + provenance.
