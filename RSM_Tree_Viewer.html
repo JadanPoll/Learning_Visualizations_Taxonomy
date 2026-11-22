@@ -159,6 +159,8 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
  .atlas-toolbar #atlas-fit{font-size:11px;padding:5px 7px}
 }
 
+.atlas-inspector-empty[hidden]{display:none}
+.detail-locate{display:inline-flex;align-items:center;min-height:33px;padding:6px 10px;margin:0 0 8px;border:1px solid #cfdeea;border-radius:9px;background:#f2f8fd;color:#315d7b;font-size:12px;font-weight:600}
 /* Persistent inspection rail: opening a question cannot cover or resize the map. */
 @media(min-width:900px){
  .explore-workspace,.explore-workspace:has(>.journey-content:not([hidden])){display:grid;grid-template-columns:minmax(0,1fr) minmax(310px,355px);grid-template-rows:minmax(0,1fr)}
@@ -300,7 +302,7 @@ function updateSelection(){
   if(n.matches('button'))n.setAttribute('aria-pressed',String(selected));
  }
 }
-function atlasStoreKey(){return 'knowledgeTreeAtlasV1:'+readerSourceKey(state.currentSource)}
+function atlasStoreKey(){return 'knowledgeTreeAtlasV2:'+readerSourceKey(state.currentSource)}
 function saveAtlas(){
  const a=state.atlas;
  try{localStorage.setItem(atlasStoreKey(),JSON.stringify({x:a.x,y:a.y,z:a.z}))}catch{}
@@ -348,15 +350,18 @@ function applyAtlas(){
  const a=state.atlas,box=atlasViewport(),world=box.querySelector('.atlas-world');
  if(!world)return;
  world.style.transform='translate('+a.x+'px,'+a.y+'px) scale('+a.z+')';
- const level=a.z<.62?'overview':a.z<.97?'near':'detail';
+ const level=a.z<.46?'overview':'detail';
  box.dataset.level=level;
+ if(level!=='overview')return;
  for(const {region,el} of a.overviewLabels||[]){
   const x=a.x+region.x*a.z,y=a.y+region.y*a.z;
-  const width=Math.max(50,Math.min(220,region.w*a.z-10));
-  const height=Math.max(35,Math.min(120,region.h*a.z-9));
+  const width=Math.min(200,Math.max(38,region.w*a.z-12));
+  // Bound screen-space labels to the unscaled region's grid cell.
+  const height=Math.min(65,Math.max(18,(region.h+90)*a.z-12));
   el.style.left=(x+region.w*a.z/2-width/2)+'px';
-  el.style.top=(y+Math.min(22,region.h*a.z*.12))+'px';
+  el.style.top=(y+Math.min(11,region.h*a.z*.08))+'px';
   el.style.width=width+'px';el.style.height=height+'px';
+  el.classList.toggle('compact',height<43||width<95);
  }
 }
 function fitAtlas(persist=true){
@@ -365,26 +370,26 @@ function fitAtlas(persist=true){
  a.x=(box.clientWidth-l.width*a.z)/2;a.y=(box.clientHeight-l.height*a.z)/2;
  applyAtlas();if(persist)saveAtlas();
 }
-function zoomAtlas(scale,localX=null,localY=null){
+function zoomAtlas(scale,localX=null,localY=null,persist=true){
  const a=state.atlas,box=atlasViewport();if(!a.layout)return;
  const px=localX??box.clientWidth/2,py=localY??box.clientHeight/2;
  const nx=Math.max(.09,Math.min(2.4,scale));
  const wx=(px-a.x)/a.z,wy=(py-a.y)/a.z;
  a.x=px-wx*nx;a.y=py-wy*nx;a.z=nx;
- applyAtlas();saveAtlas();
+ scheduleAtlasFrame();if(persist)saveAtlas();
 }
 function zoomToRegion(id){
  const region=state.atlas.layout?.regions.find(r=>r.id===id);if(!region)return;
  const box=atlasViewport(),a=state.atlas;
- const newScale=Math.max(.7,Math.min(1.25,(box.clientWidth-35)/region.w,(box.clientHeight-55)/Math.min(region.h,700)));
+ const newScale=Math.max(.09,Math.min(1.15,(box.clientWidth-38)/region.w,(box.clientHeight-48)/Math.min(region.h,750)));
  a.z=newScale;a.x=(box.clientWidth-region.w*a.z)/2-region.x*a.z;
- a.y=45-region.y*a.z;applyAtlas();saveAtlas();
+ a.y=34-region.y*a.z;applyAtlas();saveAtlas();
 }
 function focusAtlasNode(id){
  const pos=state.atlas.layout?.positions.get(id);if(!pos)return;
  const box=atlasViewport(),a=state.atlas;
- a.z=Math.max(1,a.z);
- a.x=box.clientWidth*.48-pos.x*a.z;a.y=box.clientHeight*.40-pos.y*a.z;
+ a.z=Math.max(.78,a.z);
+ a.x=box.clientWidth*.49-pos.x*a.z;a.y=box.clientHeight*.44-pos.y*a.z;
  applyAtlas();saveAtlas();
 }
 function renderLandscape(){
@@ -397,9 +402,8 @@ function renderLandscape(){
   section.style.width=region.w+'px';section.style.height=region.h+'px';section.dataset.nodeId=region.id;
   const head=el('div','atlas-region-heading'),name=el('button','atlas-region-title',title(state.index.get(region.id)));
   name.type='button';name.onclick=()=>select(region.id);
-  const actions=el('div','atlas-region-actions'),count=el('span','',region.descendants.length+' nearby'),visit=el('button','','Explore');
-  visit.type='button';visit.onclick=()=>zoomToRegion(region.id);
-  actions.append(count,visit);head.append(name,actions);section.append(head);
+  const actions=el('div','atlas-region-actions'),count=el('span','',region.descendants.length+' nearby');
+  actions.append(count);head.append(name,actions);section.append(head);
   for(const item of region.descendants){
    const node=state.index.get(item.id);
    const button=el('button','atlas-item'+(item.depth>1?' is-deep':''));
@@ -413,8 +417,9 @@ function renderLandscape(){
   world.append(section);
   const summary=el('button','atlas-overview-card');
   summary.type='button';summary.append(el('strong','',title(state.index.get(region.id))));
-  summary.append(el('small','',region.descendants.length+' nearby · Explore'));
-  summary.onclick=()=>zoomToRegion(region.id);
+  summary.append(el('small','',region.descendants.length+' nearby'));
+  summary.title='Inspect '+title(state.index.get(region.id));
+  summary.onclick=()=>select(region.id);
   labels.append(summary);a.overviewLabels.push({region,el:summary});
  }
  box.append(world,labels);
@@ -470,6 +475,9 @@ function renderDetail(){
  const n=state.index.get(state.selected);
  if(!n)return;
  const dismiss=el('button','detail-dismiss','×');dismiss.type='button';dismiss.title='Close details';dismiss.setAttribute('aria-label','Close details');dismiss.onclick=closeDetail;box.append(dismiss);
+ if(state.atlas.layout?.positions.has(n.id)){
+  const locate=el('button','detail-locate','Locate on map');locate.type='button';locate.onclick=()=>focusAtlasNode(n.id);box.append(locate);
+ }
  const marker=el('span','chip',(n.kind||'Question').replace(/_/g,' '));box.append(marker);
  box.append(el('h2','',title(n)));
  if(n.why_ask||n.why||n.description)box.append(el('p','',n.why_ask||n.why||n.description));
@@ -554,7 +562,7 @@ function renderDetail(){
   const body=el('div','fold-body');
   for(const r of relations){
    const other=r.from===n.id?r.to:r.from;if(!state.index.has(other))continue;
-   const b=el('button','next-card',title(state.index.get(other)));b.type='button';b.onclick=()=>{focusAtlasNode(other);select(other)};body.append(b);
+   const b=el('button','next-card',title(state.index.get(other)));b.type='button';b.onclick=()=>select(other);body.append(b);
   }
   fold.append(body);box.append(fold);
  }
@@ -649,7 +657,7 @@ function renderReaderDetail(box,n){
 function readerJump(entry){
  const key=readerSourceKey(entry.origin);
  if(key===readerSourceKey(state.currentSource)&&state.index.has(entry.node_id)){
-  $('reader-dialog').hidden=true;focusAtlasNode(entry.node_id);select(entry.node_id);return;
+  $('reader-dialog').hidden=true;select(entry.node_id);return;
  }
  if(entry.origin.type==='local'){readerMessage('Open the matching local JSON file, then select this saved item.',true);return}
  const href=new URL(location.href);
