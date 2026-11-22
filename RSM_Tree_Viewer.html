@@ -264,6 +264,16 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
  #atlas-lens{flex:1;max-width:none;min-width:0}
  body:has(#detail:not([hidden])) .activity-pane{top:166px}
 }
+
+.manufacturing-navigation{margin:14px 0}
+.nav-choice{margin:8px 0;border-radius:10px;border:1px solid #cedfea;background:#f8fbfe;overflow:hidden}
+.nav-choice>summary{padding:11px;font-size:13px;font-weight:600;line-height:1.4;cursor:pointer;list-style:disclosure-closed}
+.nav-choice .case-route-body{padding:0 11px 11px}
+.nav-check{font-size:12px;line-height:1.45;font-weight:600;color:#235879;margin:6px 0}
+.nav-rationale{font-size:12px;line-height:1.5;margin:6px 0}
+.case-route-resource{border-left:2px solid #ccddeb;margin:7px 0;padding:4px 9px}
+.case-route-resource a,.case-route-resource strong{font-size:12px;line-height:1.4}
+.case-route-resource .case-source-status{margin:4px 0!important}
 </style></head>
 <body>
 <header class="top">
@@ -601,6 +611,31 @@ function entryRow(parent,ref,sources){
  }else if(src?.url)row.append(link(src.url,'Open original in Drive'));
  parent.append(row);
 }
+
+async function openManufacturingTarget(id){
+ if(state.index.has(id)){select(id);return}
+ const candidate=(state.views||[]).filter(v=>v.shared_reader_id==='manufacturing').find(v=>{
+  if(!v.projection?.lens)return false;
+  const lens=(state.tree?.landscape_views||[]).find(x=>x.id===v.projection.lens);
+  return !!lens?.node_ids?.includes(id);
+ })||(state.views||[]).find(v=>v.id==='manufacturing-investigation');
+ if(!candidate||!state.repo){setStatus('Related research item is not available in this view: '+id,true);return}
+ try{
+  await loadMapped(state.repo,candidate);
+  $('choices').value=candidate.id;
+  if(!state.index.has(id))throw Error('The destination node is absent: '+id);
+  select(id);
+  activity('Opened linked research '+id);
+ }catch(err){setStatus('Could not navigate to research: '+err.message,true)}
+}
+function makeManufacturingSource(sourceById,sourceId,label,pageInfo,qualifier){
+ const src=sourceById.get(sourceId),item=el('div','case-route-resource');
+ item.append(src?.url?link(src.url,label||src.title||sourceId):el('strong','',label||src?.title||sourceId));
+ if(pageInfo)item.append(el('p','case-source-status',pageInfo));
+ if(qualifier)item.append(el('p','case-source-status',qualifier));
+ return item;
+}
+
 function renderDetail(){
  const box=$('detail');clear(box);
  box.hidden=!state.detailOpen;
@@ -647,6 +682,55 @@ function renderDetail(){
  }
  if(n.transferable_insight)fieldSection('Transferable insight',n.transferable_insight);
  fieldSection('Distinctions',n.distinctions);
+ if(n.kind==='frustration_entry')box.append(el('p','case-source-status','Question-navigation entry · the branches below are alternatives to investigate, not a diagnosis.'));
+ const navigation=(state.tree.navigation_bridges||[]).find(route=>route.entry_node_id===n.id);
+ if(navigation?.choices?.length){
+  const panel=el('section','case-section manufacturing-navigation');
+  panel.append(el('h3','','What would distinguish the possible causes or routes?'));
+  const bookMap=new Map((state.tree.sources||[]).map(x=>[x.id,x]));
+  const chapterMap=new Map((state.tree.book_landscaplets||[]).flatMap(b=>(b.sections||[]).map(x=>[b.source_id+'|'+x.ref,x])));
+  for(const choice of navigation.choices){
+   const fold=el('details','case-route nav-choice');
+   fold.append(el('summary','',choice.label));
+   const body=el('div','case-route-body');
+   if(choice.distinguishing_question)body.append(el('p','nav-check','Check: '+choice.distinguishing_question));
+   if(choice.why)body.append(el('p','nav-rationale',choice.why));
+   const targets=el('div','case-factor-paths');
+   for(const id of choice.targets||[]){
+    const related=nodesOf(state.tree).find(x=>x.id===id);
+    if(!related)continue;
+    const btn=el('button','case-factor-link','Inspect mechanism: '+title(related));btn.type='button';btn.onclick=()=>openManufacturingTarget(id);targets.append(btn);
+   }
+   if(targets.childElementCount)body.append(targets);
+   if(choice.section_targets?.length){
+    body.append(el('h4','','Relevant source passages'));
+    for(const loc of choice.section_targets){
+     const chapter=chapterMap.get(loc.source_id+'|'+loc.ref);
+     const src=bookMap.get(loc.source_id);
+     const resource=makeManufacturingSource(bookMap,loc.source_id,src?.title||loc.source_id,loc.why,loc.level==='inspected'?'Source passage examined':chapter?'Chapter locator; not yet examined':'Source status requires verification');
+     body.append(resource);
+    }
+   }
+   fold.append(body);panel.append(fold);
+  }
+  box.append(panel);
+ }
+ if(state.tree.book_landscaplets?.length&&n.id!==state.tree.root&&!navigation){
+  const routes=(state.tree.book_landscaplets||[]).flatMap(book=>(book.sections||[])
+    .filter(sec=>(sec.entry_node_ids||[]).includes(n.id))
+    .map(sec=>({book,sec})));
+  if(routes.length){
+   const fold=el('details','details-fold');
+   fold.append(el('summary','','Source routes for this question · '+routes.length));
+   const body=el('div','fold-body'),bookMap=new Map((state.tree.sources||[]).map(x=>[x.id,x]));
+   for(const {book,sec} of routes){
+    const loc='Ch/part '+sec.ref+(sec.printed_page_start!=null?' · printed p. '+sec.printed_page_start:' · starting page unverified');
+    const entry=makeManufacturingSource(bookMap,book.source_id,bookMap.get(book.source_id)?.title||book.source_id,loc,'TOC-level route · '+sec.use_when);
+    body.append(entry);
+   }
+   fold.append(body);box.append(fold);
+  }
+ }
  if(n.source_sections?.length){
   const fold=el('details','details-fold');fold.append(el('summary','','Source locations · '+n.source_sections.length));
   const body=el('div','fold-body');
