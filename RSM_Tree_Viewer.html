@@ -543,7 +543,7 @@ function showCuriosityIndex(open){
  btn.hidden=open&&state.activeView?.projection?.shape==='curiosities'&&!state.curiosityEntry;
  btn.textContent=open?'Back to investigation':'Browse questions';
  btn.setAttribute('aria-expanded',String(open));
- if(open&&state.curiosityData){closeDetail();renderCuriosityIndex()}
+ if(open&&state.curiosityData)renderCuriosityIndex()
 }
 async function openQuestionSet(lensId){
  const view=state.views?.find(v=>v.id==='manufacturing-'+lensId);
