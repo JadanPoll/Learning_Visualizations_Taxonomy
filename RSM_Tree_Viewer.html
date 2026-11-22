@@ -448,6 +448,60 @@ async function readResearchCorpus(r,path){
  }
  return assembled;
 }
+// A family question panel reuses one shared question atlas but reads only
+// that family's research records. No GitHub directory enumeration is involved.
+async function readMappedCorpus(r,view){
+ if(!view.atlas_file)return readResearchCorpus(r,view.file);
+ const [family,atlas]=await Promise.all([
+  readResearchCorpus(r,view.file),readRepoFile(r,view.atlas_file)
+ ]);
+ if(!atlas.curiosity_atlas||!Array.isArray(family.question_ids))
+  throw Error('Family view requires shared questions and its own question_ids');
+ const sourceIds=new Set((family.sources||[]).map(s=>s.id));
+ const shared=(atlas.nodes||[]).filter(n=>!n.parent_id||n.id==='MATH-CROSS').map(n=>({
+  ...n,source_sections:(n.source_sections||[]).filter(s=>sourceIds.has(s.source_id))
+ }));
+ const local=(family.nodes||[]).map((n,i)=>({
+  ...n,source_location:n.source_location||{url:repoUrl(r,view.file),pointer:'/nodes/'+i}
+ }));
+ const nodes=[...shared,...local],nodeIds=new Set(nodes.map(n=>n.id));
+ const choicesByBridge=new Map();
+ for(const bridge of atlas.navigation_bridges||[]){
+  const choices=(bridge.choices||[]).map(choice=>{
+   const targets=(choice.targets||[]).filter(id=>nodeIds.has(id)&&local.some(n=>n.id===id));
+   if(!targets.length)return null;
+   return {...choice,targets,
+    section_targets:(choice.section_targets||[]).filter(s=>sourceIds.has(s.source_id)),
+    candidate_source_ids:(choice.candidate_source_ids||[]).filter(id=>sourceIds.has(id))};
+  }).filter(Boolean);
+  if(choices.length)choicesByBridge.set(bridge.id,{...bridge,choices});
+ }
+ const entryById=new Map((atlas.curiosity_atlas.entries||[]).map(e=>[e.id,e]));
+ const entries=family.question_ids.map(id=>{
+  const entry=entryById.get(id);
+  if(!entry)throw Error('Unknown family question ID '+id);
+  const bridge_ids=(entry.bridge_ids||[]).filter(id=>choicesByBridge.has(id));
+  if(!bridge_ids.length)throw Error('Family question has no local technical route: '+id);
+  return {...entry,bridge_ids};
+ });
+ if(new Set(family.question_ids).size!==entries.length)
+  throw Error('Repeated question ID in '+view.file);
+ const familyIds=new Set(entries.map(e=>e.family_id));
+ const families=(atlas.curiosity_atlas.families||[]).filter(f=>familyIds.has(f.id));
+ const rootId=shared.find(n=>!n.parent_id)?.id||nodes[0]?.id;
+ if(!rootId)throw Error('Family has no research nodes');
+ const lens={id:'family',title:'Explore all '+(view.short_title||family.title),
+  rationale:'Browse this family’s mechanisms and book evidence together.',
+  root_id:rootId,node_ids:nodes.map(n=>n.id),
+  parent_overrides:Object.fromEntries(nodes.filter(n=>n.id!==rootId).map(n=>
+   [n.id,nodeIds.has(n.parent_id)?n.parent_id:rootId]))};
+ return {...family,id:atlas.id,root:rootId,glossary_path:atlas.glossary_path,
+  glossary_candidate_path:atlas.glossary_candidate_path,
+  curiosity_atlas:{...atlas.curiosity_atlas,families,entries},
+  navigation_bridges:[...choicesByBridge.values()],
+  landscape_views:[lens],nodes,
+  relations:(atlas.relations||[]).filter(e=>nodeIds.has(e.from)&&nodeIds.has(e.to))};
+}
 function isTree(d){return d&&typeof d==='object'&&nodesOf(d).length>0}
 // A manifest describes *how to read* source JSON, without changing that JSON.
 // The output is a provisional navigation graph: nodes + typed links + provenance.
@@ -752,6 +806,21 @@ function renderCuriosityIndex(){
   }
   section.append(grid);results.append(section);
  }
+ if(state.activeView?.atlas_file){
+  const globalView=state.views?.find(v=>v.file===state.activeView.atlas_file&&v.projection?.shape==='curiosities');
+  if(globalView){
+   const footer=el('p','curiosity-scope-footer');
+   footer.append('Focused on this family. For additional mechanisms from other mathematical fields, ');
+   const linkButton=el('button','glossary-back','Explore all mathematics');
+   linkButton.type='button';
+   linkButton.onclick=async()=>{
+    try{await loadMapped(state.repo,globalView)}
+    catch(error){setStatus('Cannot open complete mathematics atlas: '+error.message,true)}
+   };
+   footer.append(linkButton);
+   results.append(footer);
+  }
+ }
  $('curiosity-match-count').textContent=shown+' specific questions'+(state.curiosityFamily==='all'?' · '+shownSets+' larger sets':'');
  if(!shown&&!shownSets)results.append(el('p','curiosity-empty','No matching question. Try a technical term in Vocabulary, an alternate phrase, or another category.'));
 }
@@ -847,15 +916,33 @@ function updateLensSelector(){
 
 async function loadMapped(r,view){
  setStatus('Opening '+view.title+'…');
- const data=await readResearchCorpus(r,view.file);
+ const data=await readMappedCorpus(r,view);
  const hasAtlas=view.projection?.shape==='curiosities'&&!!data.curiosity_atlas;
  let glossary=hasAtlas?await loadDomainGlossary(r,view,data):null;
  // Previous independent-vocabulary term URLs still work without burdening
  // the default search index with every unused seed term.
+ if(view.atlas_file&&glossary){
+  const usedIds=new Set();
+  const scan=(item)=>{
+   if(Array.isArray(item)){item.forEach(scan);return}
+   if(item&&typeof item==='object')for(const [key,value] of Object.entries(item)){
+    if(key==='term_ids'&&Array.isArray(value))value.forEach(id=>usedIds.add(id));
+    else if(key!=='related_ids')scan(value);
+   }
+  };
+  scan(data.curiosity_atlas?.entries||[]);
+  scan(data.navigation_bridges||[]);
+  scan(data.nodes||[]);
+  const selected=glossary.terms.filter(t=>usedIds.has(t.id));
+  const localIds=new Set(selected.map(t=>t.id));
+  glossary={...glossary,terms:selected.map(t=>({...t,
+   related_ids:(t.related_ids||[]).filter(id=>localIds.has(id))}))};
+ }
  const requestedTerm=new URLSearchParams(location.search).get('term');
  if(hasAtlas&&glossary&&requestedTerm&&!glossary.terms.some(t=>t.id===requestedTerm)&&data.glossary_candidate_path){
   try{
-   const folder=view.file.slice(0,view.file.lastIndexOf('/')+1);
+   const baseFile=view.atlas_file||view.file;
+   const folder=baseFile.slice(0,baseFile.lastIndexOf('/')+1);
    const pool=await readRepoFile(r,folder+data.glossary_candidate_path);
    const seed=pool.terms?.find(t=>t.id===requestedTerm);
    if(seed)glossary={...glossary,terms:[...glossary.terms,seed]};
