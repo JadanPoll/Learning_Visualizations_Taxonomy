@@ -243,6 +243,10 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .case-factor:last-child{border-bottom:none}
 .case-factor strong{display:block;font-size:13px;line-height:1.4;color:#204966}
 .case-factor p{font-size:12px;line-height:1.5;margin:5px 0}
+
+.case-overview{border-left:3px solid #9fbdd6;background:#f5f9fc;padding:10px 12px;font-size:13px;line-height:1.5}
+.case-factor-paths{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.case-factor-link{font-size:11px;padding:5px 7px;min-height:30px;color:#285d85;border:1px solid #d5e5f0;background:#f4fafe;border-radius:8px;text-align:left}
 </style></head>
 <body>
 <header class="top">
@@ -639,16 +643,22 @@ function renderDetail(){
   }
   fold.append(body);box.append(fold);
  }
- if(n.id==='MFG-ROOT'&&state.tree.book_factorization){
-  const factorization=state.tree.book_factorization;
+ if((n.id==='MFG-ROOT'||(state.tree.landscape_lens&&n.id===state.tree.root))&&state.tree.book_factorization){
+  const factorization=state.tree.book_factorization,lens=state.tree.landscape_lens;
+  if(lens?.rationale)box.append(el('p','case-overview',lens.rationale));
+  const relevant=(factorization.factors||[]).filter(f=>!lens||(lens.factor_ids||[]).includes(f.id));
   const fold=el('details','details-fold');fold.open=true;
-  fold.append(el('summary','','Seven manufacturing factors'));
+  fold.append(el('summary','',relevant.length+' reusable manufacturing factors'));
   const body=el('div','fold-body');
-  for(const factor of factorization.factors||[]){
+  for(const factor of relevant){
    const entry=el('div','case-factor');
-   entry.append(el('strong','',factor.question));
-   entry.append(el('p','',factor.practical_effect));
-   const tags=el('p','case-source-status',(factor.options||[]).join(' · '));entry.append(tags);
+   entry.append(el('strong','',factor.question),el('p','',factor.practical_effect),el('p','case-source-status',(factor.options||[]).join(' · ')));
+   const paths=el('div','case-factor-paths');
+   for(const id of factor.cases||[]){
+    if(!state.index.has(id))continue;
+    const btn=el('button','case-factor-link',title(state.index.get(id)));btn.type='button';btn.onclick=()=>select(id);paths.append(btn);
+   }
+   if(paths.childElementCount)entry.append(paths);
    body.append(entry);
   }
   fold.append(body);box.append(fold);
@@ -656,15 +666,22 @@ function renderDetail(){
   const content=el('div','fold-body');
   for(const item of factorization.cross_book_insights||[]){
    const block=el('div','case-factor');
-   block.append(el('strong','',item.claim));
-   block.append(el('p','',item.reason));
-   block.append(el('p','case-source-status',item.status));
+   block.append(el('strong','',item.claim),el('p','',item.reason),el('p','case-source-status',item.status));
    content.append(block);
   }
   insights.append(content);box.append(insights);
-  if(factorization.competence_probe){
-   const probe=factorization.competence_probe;
-   const p=el('details','details-fold');p.append(el('summary','',probe.title));
+  const coverage=el('details','details-fold');coverage.append(el('summary','','Five books · what we have and have not inspected'));
+  const coverageBody=el('div','fold-body'),sourceMap=new Map((state.tree.sources||[]).map(x=>[x.id,x]));
+  for(const item of factorization.source_coverage||[]){
+   const src=sourceMap.get(item.source_id),section=el('div','case-factor');
+   section.append(src?.url?link(src.url,src.title||item.source_id):el('strong','',src?.title||item.source_id));
+   section.append(el('p','',item.inspected),el('p','case-source-status','Not yet factored: '+item.candidate),el('p','case-source-status',item.coverage));
+   coverageBody.append(section);
+  }
+  coverage.append(coverageBody);box.append(coverage);
+  if(factorization.competence_probe&&(!lens||lens.id==='make')){
+   const probe=factorization.competence_probe,p=el('details','details-fold');
+   p.append(el('summary','',probe.title));
    const sub=el('div','fold-body');sub.append(el('p','',probe.task));
    const list=el('ul');for(const o of probe.observables||[])list.append(el('li','',o));
    sub.append(list,el('p','',probe.decision));p.append(sub);box.append(p);
@@ -794,6 +811,30 @@ function renderDetail(){
    body.append(b);
   }
   fold.append(body);box.append(fold);
+ }
+ if(state.activeView?.shared_reader_id==='manufacturing'&&state.views?.length){
+  const available=state.views.filter(v=>{
+   if(v.id===state.activeView.id||v.shared_reader_id!=='manufacturing')return false;
+   if(!v.projection?.lens)return true;
+   const lens=(state.tree.landscape_views||[]).find(l=>l.id===v.projection.lens);
+   return !!lens?.node_ids?.includes(n.id);
+  });
+  if(available.length){
+   const fold=el('details','details-fold');fold.append(el('summary','','Explore the same idea through another question'));
+   const body=el('div','fold-body case-related');
+   for(const view of available){
+    const btn=el('button','case-related-link',view.short_title||view.title);
+    btn.type='button';btn.onclick=async()=>{
+     try{
+      await loadMapped(state.repo,view);$('choices').value=view.id;
+      if(state.index.has(n.id))select(n.id);
+      activity('Opened another view of '+title(n));
+     }catch(err){setStatus('Could not switch view: '+err.message,true)}
+    };
+    body.append(btn);
+   }
+   fold.append(body);box.append(fold);
+  }
  }
  const relations=(state.tree.connections||state.tree.relations||state.tree.edges||[]).filter(r=>
   (r.from===n.id||r.to===n.id)&&(r.type||r.relationship)!=='contains');
