@@ -248,11 +248,6 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .case-factor-paths{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .case-factor-link{font-size:11px;padding:5px 7px;min-height:30px;color:#285d85;border:1px solid #d5e5f0;background:#f4fafe;border-radius:8px;text-align:left}
 
-.case-book-section{border-bottom:1px solid #e8eff5;padding:8px 0}
-.case-book-section:last-child{border-bottom:0}
-.case-book-section>p:first-child{font-size:12px;font-weight:600;line-height:1.4;margin:4px 0}
-.case-book-section .case-source-status{margin:4px 0!important}
-
 /* The new goal selector must never crowd out the map heading on small screens. */
 .landscape-heading .atlas-heading{flex:1;min-width:0}
 .landscape-heading .atlas-heading h2{max-width:100%;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
@@ -265,19 +260,9 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
  body:has(#detail:not([hidden])) .activity-pane{top:166px}
 }
 
-.manufacturing-navigation{margin:14px 0}
-.nav-choice{margin:8px 0;border-radius:10px;border:1px solid #cedfea;background:#f8fbfe;overflow:hidden}
-.nav-choice>summary{padding:11px;font-size:13px;font-weight:600;line-height:1.4;cursor:pointer;list-style:disclosure-closed}
-.nav-choice .case-route-body{padding:0 11px 11px}
-.nav-check{font-size:12px;line-height:1.45;font-weight:600;color:#235879;margin:6px 0}
-.nav-rationale{font-size:12px;line-height:1.5;margin:6px 0}
 .case-route-resource{border-left:2px solid #ccddeb;margin:7px 0;padding:4px 9px}
 .case-route-resource a,.case-route-resource strong{font-size:12px;line-height:1.4}
 .case-route-resource .case-source-status{margin:4px 0!important}
-
-.manufacturing-start-list{display:grid;gap:6px;margin-top:8px}
-.manufacturing-start-list button{font-size:12px;padding:9px 11px;line-height:1.4;min-height:42px}
-.manufacturing-starters{margin:8px 0 13px}
 
 /* Curiosity entrance: conventional vertical scrolling instead of canvas panning. */
 #atlas-curiosities[hidden],#curiosity-index[hidden]{display:none!important}
@@ -324,8 +309,8 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
     <div id="canvas" class="landscape-canvas atlas-viewport" aria-label="Knowledge landscape map"></div>
     <section id="curiosity-index" class="curiosity-index" aria-label="Manufacturing curiosity encyclopedia" hidden>
       <div class="curiosity-index-heading">
-        <h2>What are you curious about?</h2>
-        <p>Start with an ordinary question. Open it to explore the underlying mechanisms, alternatives, and source evidence.</p>
+        <h2>What do you want to understand?</h2>
+        <p>Choose an everyday question or a larger set of questions. Both open technical knowledge and book evidence.</p>
         <input id="curiosity-search" type="search" autocomplete="off" spellcheck="false" placeholder="Search a question, problem, or idea" aria-label="Search manufacturing curiosities">
         <nav id="curiosity-family-filters" aria-label="Curiosity families"></nav>
         <p id="curiosity-match-count" aria-live="polite"></p>
@@ -522,10 +507,10 @@ function renderCuriosityIndex(){
  if(!shown)results.append(el('p','curiosity-empty','No matching question in this source collection. Try a simpler phrase or another category.'));
 }
 function showCuriosityIndex(open){
- const pane=$('curiosity-index');
+ const pane=$('curiosity-index'),btn=$('atlas-curiosities');
  pane.hidden=!open;
- const btn=$('atlas-curiosities');
- btn.textContent=open?'Return to map':'Browse questions';
+ btn.hidden=open&&state.activeView?.projection?.shape==='curiosities'&&!state.curiosityEntry;
+ btn.textContent=open?'Back to investigation':'Browse questions';
  btn.setAttribute('aria-expanded',String(open));
  if(open&&state.curiosityData){closeDetail();renderCuriosityIndex()}
 }
@@ -541,7 +526,8 @@ function openCuriosityEntry(id){
  openTree(tree,null,entry.question,origin);
  state.activeView=view;updateLensSelector();showCuriosityIndex(false);
  if(view)$('choices').value=view.id;
- const params=new URLSearchParams(location.search);params.set('curiosity',entry.id);
+ const params=new URLSearchParams(location.search);
+ params.set('view','manufacturing-curiosities');params.set('curiosity',entry.id);
  try{history.replaceState(null,'','?'+params.toString())}catch{}
  setStatus('Investigating '+entry.question+' · '+(tree.nodes.length-1)+' technical nodes');
  activity('Opened curiosity '+entry.id);
@@ -550,21 +536,22 @@ function openCuriosityEntry(id){
 function setChoices(choices,mapped){state.files=choices;clear($('choices'));for(const v of choices){const opt=el('option','',mapped?v.title:v);opt.value=mapped?v.id:v;$('choices').append(opt)}$('choices').classList.toggle('hidden',choices.length<2)}
 function updateLensSelector(){
  const selector=$('atlas-lens'),group=state.activeView?.shared_reader_id;
+ const isManufacturing=group==='manufacturing';
  const options=group?(state.views||[]).filter(v=>v.shared_reader_id===group):[];
  clear(selector);
  for(const v of options){
   const opt=el('option','',v.short_title||v.title);opt.value=v.id;selector.append(opt);
  }
- selector.classList.toggle('hidden',options.length<2);
+ selector.classList.toggle('hidden',isManufacturing||options.length<2);
  if(state.activeView)selector.value=state.activeView.id;
- const isManufacturing=group==='manufacturing'&&!state.curiosityData?.curiosity_atlas?.entries?.length&&!!state.tree?.navigation_bridges?.length&&state.activeView?.projection?.shape!=='curiosities';
  const curiosityAvailable=group==='manufacturing'&&!!state.curiosityData?.curiosity_atlas?.entries?.length;
  const curiosities=$('atlas-curiosities');
  curiosities.hidden=!curiosityAvailable;
- if(curiosityAvailable)curiosities.textContent=state.activeView?.projection?.shape==='curiosities'?'Browse questions':'Curiosities';
+ if(curiosityAvailable)curiosities.textContent='Browse questions';
  const rootButton=$('atlas-about');
- rootButton.textContent=isManufacturing?'Problems':'ⓘ';
- rootButton.title=isManufacturing?'Find a starting frustration or question':'About this investigation';
+ rootButton.hidden=isManufacturing;
+ rootButton.textContent='ⓘ';
+ rootButton.title='About this investigation';
  rootButton.setAttribute('aria-label',rootButton.title);
 }
 async function loadMapped(r,view){
@@ -843,20 +830,6 @@ function renderDetail(){
  if(n.kind==='technical_branch'){
   box.append(el('p','case-source-status','Conditional mechanism · investigate whether this explanation fits the observed failure or desired behavior.'));
  }
- if(state.tree.navigation_bridges?.length&&n.id===state.tree.root){
-  const starters=(state.tree.navigation_bridges||[]).filter(item=>state.index.has(item.entry_node_id));
-  if(starters.length){
-   const start=el('section','case-section manufacturing-starters');
-   start.append(el('h3','','Start with what you are trying to do—or what is going wrong'));
-   start.append(el('p','case-source-status','Pick a situation below. The next choices distinguish possible causes and link to actual book passages.'));
-   const menu=el('div','manufacturing-start-list');
-   for(const route of starters){
-    const node=state.index.get(route.entry_node_id),btn=el('button','case-related-link',title(node));
-    btn.type='button';btn.onclick=()=>select(node.id);menu.append(btn);
-   }
-   start.append(menu);box.append(start);
-  }
- }
  if(n.status&&/^(?:candidate|provisional|active_question|pending_investigation|not investigated)/.test(n.status))
   box.append(el('p','case-source-status','Question or proposed investigation · no established finding yet'));
  function fieldSection(label,value){
@@ -910,40 +883,7 @@ function renderDetail(){
    box.append(sec);
   }
  }
- if(n.kind==='frustration_entry')box.append(el('p','case-source-status','Question-navigation entry · the branches below are alternatives to investigate, not a diagnosis.'));
- const navigation=(state.tree.navigation_bridges||[]).find(route=>route.entry_node_id===n.id);
- if(navigation?.choices?.length){
-  const panel=el('section','case-section manufacturing-navigation');
-  panel.append(el('h3','','What would distinguish the possible causes or routes?'));
-  const bookMap=new Map((state.tree.sources||[]).map(x=>[x.id,x]));
-  const chapterMap=new Map((state.tree.book_landscaplets||[]).flatMap(b=>(b.sections||[]).map(x=>[b.source_id+'|'+x.ref,x])));
-  for(const choice of navigation.choices){
-   const fold=el('details','case-route nav-choice');
-   fold.append(el('summary','',choice.label));
-   const body=el('div','case-route-body');
-   if(choice.distinguishing_question)body.append(el('p','nav-check','Check: '+choice.distinguishing_question));
-   if(choice.why)body.append(el('p','nav-rationale',choice.why));
-   const targets=el('div','case-factor-paths');
-   for(const id of choice.targets||[]){
-    const related=(state.tree.canonical_nodes||nodesOf(state.tree)).find(x=>x.id===id);
-    if(!related)continue;
-    const btn=el('button','case-factor-link','Inspect mechanism: '+title(related));btn.type='button';btn.onclick=()=>openManufacturingTarget(id);targets.append(btn);
-   }
-   if(targets.childElementCount)body.append(targets);
-   if(choice.section_targets?.length){
-    body.append(el('h4','','Relevant source passages'));
-    for(const loc of choice.section_targets){
-     const chapter=chapterMap.get(loc.source_id+'|'+loc.ref);
-     const src=bookMap.get(loc.source_id);
-     const resource=makeManufacturingSource(bookMap,loc.source_id,src?.title||loc.source_id,loc.why,loc.level==='inspected'?'Source passage examined':chapter?'Chapter locator; not yet examined':'Source status requires verification');
-     body.append(resource);
-    }
-   }
-   fold.append(body);panel.append(fold);
-  }
-  box.append(panel);
- }
- if(state.tree.book_landscaplets?.length&&n.id!==state.tree.root&&!navigation){
+ if(state.tree.book_landscaplets?.length&&n.id!==state.tree.root){
   const routes=(state.tree.book_landscaplets||[]).flatMap(book=>(book.sections||[])
     .filter(sec=>(sec.entry_node_ids||[]).includes(n.id))
     .map(sec=>({book,sec})));
@@ -1008,36 +948,6 @@ function renderDetail(){
    coverageBody.append(section);
   }
   coverage.append(coverageBody);box.append(coverage);
-  if(state.tree.book_landscaplets?.length){
-   const nav=el('details','details-fold');let total=0;
-   const navBody=el('div','fold-body'),srcById=new Map((state.tree.sources||[]).map(x=>[x.id,x]));
-   for(const book of state.tree.book_landscaplets){
-    const sections=(book.sections||[]).filter(x=>!lens||(x.views||[]).includes(lens.id));
-    if(!sections.length)continue;total+=sections.length;
-    const bookFold=el('details','case-route'),src=srcById.get(book.source_id);
-    bookFold.append(el('summary','',(src?.title||book.source_id)+' · '+sections.length+' sections'));
-    const list=el('div','case-route-body');
-    if(src?.url)list.append(link(src.url,'Open book'));
-    for(const section of sections){
-     const entry=el('div','case-book-section'),line=el('p','','Ch/part '+section.ref+' · '+section.title);
-     entry.append(line);
-     const page=section.printed_page_start;
-     if(page!=null)entry.append(el('p','case-source-status','Starts on printed page '+page+' · table-of-contents locator'));
-     else entry.append(el('p','case-source-status','Major part · start page not verified'));
-     const links=el('div','case-factor-paths');
-     for(const id of section.case_ids||[]){
-      const related=state.index.get(id);if(!related)continue;
-      const btn=el('button','case-factor-link','Research: '+title(related));btn.type='button';btn.onclick=()=>select(id);links.append(btn);
-     }
-     if(links.childElementCount)entry.append(links);
-     list.append(entry);
-    }
-    bookFold.append(list);navBody.append(bookFold);
-   }
-   nav.append(el('summary','','Book chapter highways · '+total+' relevant sections'));
-   navBody.append(el('p','case-source-status','Chapter entries are retrieval paths, not completed technical analyses. The research links identify the narrower sections actually examined.'));
-   nav.append(navBody);box.append(nav);
-  }
   if(factorization.competence_probe&&(!lens||lens.id==='make')){
    const probe=factorization.competence_probe,p=el('details','details-fold');
    p.append(el('summary','',probe.title));
@@ -1078,9 +988,10 @@ function renderDetail(){
  const notes=(state.tree.evidence_notes||[]).filter(e=>e.node_id===n.id);
  for(const e of notes){fieldSection('Evidence',e.observation);fieldSection('Interpretation',e.interpretation)}
  const refsById=new Map([...(state.tree.sources||[]),...(state.guide?.related_sources||[])].map(x=>[x.id,x]));
- if(n.source_ids?.length&&n.kind!=='technical_branch'){
+ const extraSources=(n.source_ids||[]).filter(id=>!(n.source_sections||[]).some(s=>s.source_id===id));
+ if(extraSources.length&&n.kind!=='technical_branch'){
   const section=el('div','case-section');section.append(el('h3','','Sources'));
-  for(const id of n.source_ids){
+  for(const id of extraSources){
    const src=refsById.get(id),row=el('div','case-source');
    row.append(src?.url?link(src.url,src.title||id):el('span','',src?.title||id));
    if(src?.scope)row.append(el('p','muted',src.scope));
@@ -1475,15 +1386,9 @@ $('atlas-lens').addEventListener('change',async e=>{
  catch(err){setStatus('Cannot change investigation view: '+err.message,true);updateLensSelector()}
 });
 $('atlas-about').onclick=()=>{if(state.tree?.root&&state.index.has(state.tree.root))select(state.tree.root)};
-$('atlas-curiosities').onclick=async()=>{
- if(state.activeView?.projection?.shape==='curiosities'){
-  showCuriosityIndex($('curiosity-index').hidden);
-  return;
- }
- const view=state.views?.find(v=>v.id==='manufacturing-curiosities');
- if(!view||!state.repo)return;
- try{await loadMapped(state.repo,view);$('choices').value=view.id;activity('Opened curiosity encyclopedia')}
- catch(err){setStatus('Could not open curiosities: '+err.message,true)}
+$('atlas-curiosities').onclick=()=>{
+ if(!state.curiosityData?.curiosity_atlas)return;
+ showCuriosityIndex($('curiosity-index').hidden);
 };
 $('curiosity-search').addEventListener('input',e=>{
  state.curiositySearch=e.target.value;
