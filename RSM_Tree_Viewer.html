@@ -438,6 +438,105 @@ function mappedView(data,view,r){const spec=view.projection||{},shape=spec.shape
 function globMatch(pattern,path){const parts=pattern.split(/(\*\*|\*)/),re='^'+parts.map(x=>x==='**'?'.*':x==='*'?'[^/]*':x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('')+'$';return new RegExp(re).test(path)}
 async function discover(r){const data=await fetchJson(api(r,'git/trees/'+encodeURIComponent(r.branch)+'?recursive=1'));if(data.truncated)throw Error('Repository listing truncated; open a specific JSON file instead');return (data.tree||[]).filter(x=>x.type==='blob').map(x=>x.path)}
 function viewList(manifest,paths){if(manifest.mapping_version!=='0.1'||!Array.isArray(manifest.views))throw Error('Unsupported mapping manifest');const views=[];for(const template of manifest.views){if(template.file){if(paths.includes(template.file))views.push(template);continue}if(template.glob){for(const file of paths.filter(p=>globMatch(template.glob,p)&&!(template.exclude||[]).some(ex=>globMatch(ex,p)))){const name=simpleLabel(file.endsWith('/domain.json')?file.split('/').slice(-2,-1)[0]:file);views.push({...template,id:template.id+':'+file,title:template.title+' · '+name,file})}}}return views}
+
+/* The entry layer is purposely ordinary language. A selected entry generates a
+   temporary technical hierarchy from canonical studies and sourced bridges. */
+function makeCuriosityProjection(data,entry){
+ const catalogue=data.curiosity_atlas||{},bridges=new Map((data.navigation_bridges||[]).map(b=>[b.id,b]));
+ const canonical=new Map((data.nodes||[]).map(n=>[n.id,n])),nodes=[],edges=[];
+ const rootId=entry?.id||'MFG-CURI-HOME';
+ nodes.push({id:rootId,parent_id:null,kind:entry?'curiosity_entry':'curiosity_home',
+  question:entry?.question||'Choose a curiosity',why:entry?.context||catalogue.purpose||'Start from an everyday question.',
+  status:'navigation_question'});
+ const used=new Set([rootId]),sourceIds=new Set((data.sources||[]).map(s=>s.id));
+ if(entry){
+  for(const bridgeId of entry.bridge_ids||[]){
+   const bridge=bridges.get(bridgeId);
+   if(!bridge)throw Error('Curiosity refers to missing navigation bridge '+bridgeId);
+   for(const [i,choice] of (bridge.choices||[]).entries()){
+    const branchId=entry.id+':'+bridgeId+':'+i;
+    const sourceRefs=choice.section_targets||[];
+    for(const loc of sourceRefs)if(!sourceIds.has(loc.source_id))throw Error('Unresolved source '+loc.source_id);
+    const uniqueSources=[...new Set(sourceRefs.map(x=>x.source_id))];
+    nodes.push({id:branchId,parent_id:rootId,kind:'technical_branch',
+     question:choice.technical_title||choice.label,why:choice.distinguishing_question,
+     mechanism_explanation:choice.why,curiosity_refs:sourceRefs,curiosity_targets:choice.targets||[],
+     source_ids:uniqueSources,status:'conditional_mechanism'});
+    edges.push({from:rootId,to:branchId,type:'investigate',reason:choice.distinguishing_question||''});
+    for(const studyId of choice.targets||[]){
+     const existing=canonical.get(studyId);
+     if(!existing)throw Error('Unresolved technical case '+studyId);
+     if(used.has(studyId)){edges.push({from:branchId,to:studyId,type:'related_mechanism',reason:choice.why||''});continue}
+     nodes.push({...existing,parent_id:branchId});
+     used.add(studyId);
+     edges.push({from:branchId,to:studyId,type:'explained_by',reason:choice.why||''});
+    }
+   }
+  }
+ }
+ return {...data,id:'curiosity:'+rootId,title:entry?'Investigating · '+entry.question:'Curiosities · Manufacturing',
+  root:rootId,kind:'curiosity_projection',nodes,canonical_nodes:data.nodes,
+  landscape_lens:null,curiosity_entry:entry||null,connections:edges,edges};
+}
+function curiosityMatches(entry,query){
+ const terms=query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+ if(!terms.length)return true;
+ const words=[entry.question,entry.context,...(entry.aliases||[])].join(' ').toLowerCase();
+ return terms.every(t=>words.includes(t));
+}
+function renderCuriosityIndex(){
+ const data=state.curiosityData?.curiosity_atlas;
+ if(!data)return;
+ const families=$('curiosity-family-filters'),results=$('curiosity-results');clear(families);clear(results);
+ for(const family of [{id:'all',label:'All questions'},...(data.families||[])]){
+  const btn=el('button','',family.label);btn.type='button';
+  btn.setAttribute('aria-pressed',String(state.curiosityFamily===family.id));
+  btn.onclick=()=>{state.curiosityFamily=family.id;renderCuriosityIndex()};
+  families.append(btn);
+ }
+ let shown=0;
+ for(const family of data.families||[]){
+  if(state.curiosityFamily!=='all'&&state.curiosityFamily!==family.id)continue;
+  const entries=(data.entries||[]).filter(e=>e.family_id===family.id&&curiosityMatches(e,state.curiositySearch));
+  if(!entries.length)continue;
+  shown+=entries.length;
+  const section=el('section','curiosity-group');
+  section.append(el('h3','',family.label));
+  if(family.description)section.append(el('p','',family.description));
+  const grid=el('div','curiosity-card-grid');
+  for(const entry of entries){
+   const card=el('button','curiosity-card',entry.question);card.type='button';
+   card.onclick=()=>openCuriosityEntry(entry.id);grid.append(card);
+  }
+  section.append(grid);results.append(section);
+ }
+ $('curiosity-match-count').textContent=shown+' of '+(data.entries||[]).length+' questions';
+ if(!shown)results.append(el('p','curiosity-empty','No matching question in this source collection. Try a simpler phrase or another category.'));
+}
+function showCuriosityIndex(open){
+ const pane=$('curiosity-index');
+ pane.hidden=!open;
+ const btn=$('atlas-curiosities');
+ btn.textContent=open?'Return to map':'Browse questions';
+ btn.setAttribute('aria-expanded',String(open));
+ if(open&&state.curiosityData){closeDetail();renderCuriosityIndex()}
+}
+function openCuriosityEntry(id){
+ const data=state.curiosityData,entry=data?.curiosity_atlas?.entries?.find(e=>e.id===id);
+ if(!entry){setStatus('Curiosity entry not found: '+id,true);return}
+ const tree=makeCuriosityProjection(data,entry);
+ state.curiosityEntry=entry;
+ const view=state.views?.find(v=>v.id==='manufacturing-curiosities')||state.activeView;
+ const origin=state.currentSource;
+ openTree(tree,null,entry.question,origin);
+ state.activeView=view;updateLensSelector();showCuriosityIndex(false);
+ if(view)$('choices').value=view.id;
+ const params=new URLSearchParams(location.search);params.set('curiosity',entry.id);
+ try{history.replaceState(null,'','?'+params.toString())}catch{}
+ setStatus('Investigating '+entry.question+' · '+(tree.nodes.length-1)+' technical nodes');
+ activity('Opened curiosity '+entry.id);
+}
+
 function setChoices(choices,mapped){state.files=choices;clear($('choices'));for(const v of choices){const opt=el('option','',mapped?v.title:v);opt.value=mapped?v.id:v;$('choices').append(opt)}$('choices').classList.toggle('hidden',choices.length<2)}
 function updateLensSelector(){
  const selector=$('atlas-lens'),group=state.activeView?.shared_reader_id;
