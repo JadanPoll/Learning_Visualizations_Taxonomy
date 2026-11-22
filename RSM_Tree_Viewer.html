@@ -274,6 +274,10 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .case-route-resource{border-left:2px solid #ccddeb;margin:7px 0;padding:4px 9px}
 .case-route-resource a,.case-route-resource strong{font-size:12px;line-height:1.4}
 .case-route-resource .case-source-status{margin:4px 0!important}
+
+.manufacturing-start-list{display:grid;gap:6px;margin-top:8px}
+.manufacturing-start-list button{font-size:12px;padding:9px 11px;line-height:1.4;min-height:42px}
+.manufacturing-starters{margin:8px 0 13px}
 </style></head>
 <body>
 <header class="top">
@@ -382,7 +386,7 @@ function mappedView(data,view,r){const spec=view.projection||{},shape=spec.shape
   }
   const relations=field(data,spec.relations||'connections')||field(data,'relations')||[];
   for(const e of relations)if(e.from&&e.to&&(!allowed||(allowed.has(e.from)&&allowed.has(e.to))))edges.push({from:e.from,to:e.to,type:e.relationship||e.type||'related',reason:e.why||''});
-  return {...data,schema:'rsm-navigation/v0.1',id:view.id,title:lens?.title||data.title||view.title,kind:data.kind||'mapped_tree',nodes,edges,connections:edges,landscape_lens:lens||null,root:lens?.root_id||data.root||nodes.find(n=>!n.parent_id)?.id||nodes[0]?.id};
+  return {...data,schema:'rsm-navigation/v0.1',id:view.id,title:lens?.title||data.title||view.title,kind:data.kind||'mapped_tree',nodes,canonical_nodes:lens?rawRows:undefined,edges,connections:edges,landscape_lens:lens||null,root:lens?.root_id||data.root||nodes.find(n=>!n.parent_id)?.id||nodes[0]?.id};
  }
  if(shape!=='record')throw Error('Unknown mapping shape: '+shape);
  const rootDef=spec.root||{};const rootLabel=field(data,rootDef.label_field)||rootDef.label||data.title||data.name||view.title;
@@ -410,6 +414,11 @@ function updateLensSelector(){
  }
  selector.classList.toggle('hidden',options.length<2);
  if(state.activeView)selector.value=state.activeView.id;
+ const isManufacturing=group==='manufacturing'&&!!state.tree?.navigation_bridges?.length;
+ const rootButton=$('atlas-about');
+ rootButton.textContent=isManufacturing?'?':'ⓘ';
+ rootButton.title=isManufacturing?'Find a starting frustration or question':'About this investigation';
+ rootButton.setAttribute('aria-label',rootButton.title);
 }
 async function loadMapped(r,view){setStatus('Opening '+view.title+'…');const data=await readRepoFile(r,view.file),tree=mappedView(data,view,r);if(!isTree(tree))throw Error('No navigable items in '+view.file);let guide=null;const guidePath=view.reference_file||data.reference_guide_path;if(guidePath)try{guide=await readRepoFile(r,guidePath)}catch{}
  openTree(tree,guide,view.title,{type:'github',repo:r.owner+'/'+r.repo,branch:r.branch,file:view.file,view_id:view.id,title:view.title});state.activeView=view;updateLensSelector();state.url=repoUrl(r,view.file);state.repo=r;const params=new URLSearchParams(location.search);params.set('repo',`https://github.com/${r.owner}/${r.repo}`);params.set('view',view.id);try{history.replaceState(null,'','?'+params.toString()+(location.hash||''))}catch{}setStatus('Opened '+view.title+' · '+state.index.size+' items'+(guide?' · reading guide connected':''));}
@@ -651,6 +660,20 @@ function renderDetail(){
  box.append(el('h2','',title(n)));
  if(n.why_ask||n.why||n.description)box.append(el('p','',n.why_ask||n.why||n.description));
  if(n.actor)box.append(el('div','case-byline',n.actor+(n.evidence_status?' · '+n.evidence_status:'')));
+ if(state.tree.navigation_bridges?.length&&n.id===state.tree.root){
+  const starters=(state.tree.navigation_bridges||[]).filter(item=>state.index.has(item.entry_node_id));
+  if(starters.length){
+   const start=el('section','case-section manufacturing-starters');
+   start.append(el('h3','','Start with what you are trying to do—or what is going wrong'));
+   start.append(el('p','case-source-status','Pick a situation below. The next choices distinguish possible causes and link to actual book passages.'));
+   const menu=el('div','manufacturing-start-list');
+   for(const route of starters){
+    const node=state.index.get(route.entry_node_id),btn=el('button','case-related-link',title(node));
+    btn.type='button';btn.onclick=()=>select(node.id);menu.append(btn);
+   }
+   start.append(menu);box.append(start);
+  }
+ }
  if(n.status&&/^(?:candidate|provisional|active_question|pending_investigation|not investigated)/.test(n.status))
   box.append(el('p','case-source-status','Question or proposed investigation · no established finding yet'));
  function fieldSection(label,value){
@@ -697,7 +720,7 @@ function renderDetail(){
    if(choice.why)body.append(el('p','nav-rationale',choice.why));
    const targets=el('div','case-factor-paths');
    for(const id of choice.targets||[]){
-    const related=nodesOf(state.tree).find(x=>x.id===id);
+    const related=(state.tree.canonical_nodes||nodesOf(state.tree)).find(x=>x.id===id);
     if(!related)continue;
     const btn=el('button','case-factor-link','Inspect mechanism: '+title(related));btn.type='button';btn.onclick=()=>openManufacturingTarget(id);targets.append(btn);
    }
