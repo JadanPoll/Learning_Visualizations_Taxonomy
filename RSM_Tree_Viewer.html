@@ -182,6 +182,31 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
  .atlas-inspector-empty{display:none}
  .atlas-inspector-rail>.journey-content:not([hidden]){position:fixed;z-index:45;left:0;right:0;top:auto;bottom:0;width:100%;max-height:min(52dvh,530px);overflow:auto;border-radius:19px 19px 0 0;padding:17px 20px max(24px,env(safe-area-inset-bottom));box-shadow:0 -12px 35px #142d4535}
 }
+
+/* PDFlets-inspired ambient activity: collapsed unless hovered, focused, pinned or in error. */
+.activity-pane{position:fixed;bottom:12px;left:12px;z-index:55;width:min(340px,calc(100vw - 24px));max-height:min(64dvh,470px);background:#fff;border:1px solid #ccdbe7;border-radius:12px;box-shadow:0 6px 26px #18375025;color:#23425b;padding:10px 12px;overflow:auto;transition:width .12s ease}
+.activity-pane.attention{border-color:#d18a67;background:#fffbf7}
+.activity-heading{display:flex;align-items:center;justify-content:space-between;gap:5px}
+#activity-toggle{display:flex;gap:7px;align-items:center;min-height:28px;padding:0;border:0;background:transparent;text-align:left;min-width:0;flex:1;color:inherit;font-size:12px}
+#activity-title{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:650}
+#activity-dot{font-size:12px;color:#3e9472}#activity-dot.error{color:#c66a35}
+.activity-controls{display:flex;gap:4px}
+.activity-controls button{min-height:28px;min-width:28px;padding:2px 6px;border-radius:7px;font-size:14px}
+.activity-body{font-size:12px;line-height:1.5}
+.activity-body p{overflow-wrap:anywhere}
+#activity-message{margin:8px 0}
+#activity-details{padding-top:7px;border-top:1px solid #e5edf3}
+#activity-details summary{font-size:12px;font-weight:600;cursor:pointer}
+#activity-entries{max-height:150px;overflow:auto;margin-top:7px}
+#activity-entries p{margin:5px 0;padding:3px 0}
+#activity-entries .activity-error{color:#a83b20}
+#activity-copy{margin-top:8px;font-size:12px;padding:6px 9px;min-height:34px}
+.activity-fallback{white-space:pre-wrap;overflow-wrap:anywhere;max-height:160px;overflow:auto;font-size:10px}
+.activity-pane.collapsed:not(:hover):not(:focus-within):not(.attention):not(.pinned){width:210px;height:40px;padding:5px 12px;overflow:hidden}
+.activity-pane.collapsed:not(:hover):not(:focus-within):not(.attention):not(.pinned) .activity-body,
+.activity-pane.collapsed:not(:hover):not(:focus-within):not(.attention):not(.pinned) .activity-controls{display:none}
+.activity-pane.collapsed:hover,.activity-pane.collapsed:focus-within{width:min(340px,calc(100vw - 24px));height:auto;max-height:64dvh}
+@media(max-width:899px){.activity-pane{bottom:calc(8px + env(safe-area-inset-bottom));left:8px}.activity-pane:not(.collapsed){max-height:36dvh}}
 </style></head>
 <body>
 <header class="top">
@@ -206,6 +231,17 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
     </aside>
   </div>
 </main>
+<aside id="activity-pane" class="activity-pane collapsed" aria-label="Recent actions and troubleshooting">
+  <div class="activity-heading">
+    <button id="activity-toggle" type="button" title="Show activity" aria-expanded="false"><span id="activity-dot" aria-hidden="true">●</span><strong id="activity-title">Ready</strong></button>
+    <div class="activity-controls"><button id="activity-pin" type="button" title="Keep activity expanded" aria-label="Pin activity pane" aria-pressed="false">♧</button><button id="activity-hide" type="button" title="Minimize activity" aria-label="Minimize activity">−</button></div>
+  </div>
+  <div class="activity-body">
+    <p id="activity-message">The atlas is ready.</p>
+    <details id="activity-details"><summary>Recent activity (<span id="activity-count">0</span>)</summary><div id="activity-entries" role="log" aria-label="Activity history"></div></details>
+    <button id="activity-copy" type="button" title="Copy recent activity and diagnostics">Copy diagnostics</button>
+  </div>
+</aside>
 <div id="library-dialog" class="reader-dialog" hidden><section role="dialog" aria-modal="true" aria-labelledby="library-title">
   <div class="reader-top"><div><h2 id="library-title">Your library</h2><p class="muted">Pick a topic or bring your own GitHub tree.</p></div><button id="library-close" type="button">Close</button></div>
   <form class="loader" id="loadForm"><label for="source" class="tiny">GitHub repository or JSON URL</label><input id="source" type="text" spellcheck="false" placeholder="https://github.com/…"><button type="submit" class="primary">Open</button>
@@ -231,7 +267,10 @@ const $=id=>document.getElementById(id);
 const state={tree:null,guide:null,selected:null,detailOpen:false,atlas:{x:0,y:0,z:1,ready:false,layout:null,saved:null,pointers:new Map(),gesture:null},url:null,repo:null,ref:null,files:[],views:null,activeView:null,currentSource:null,index:new Map(),children:new Map(),parent:new Map()};
 function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=String(text);return e}
 function clear(node){node.replaceChildren()}
-function setStatus(s,error=false){$('status').textContent=s;$('status').classList.toggle('err',!!error)}
+function setStatus(s,error=false){
+ $('status').textContent=s;$('status').classList.toggle('err',!!error);
+ if(s)activity(String(s),error?'error':'info');
+}
 function safeHref(u){try{const x=new URL(u);return /^https?:$/.test(x.protocol)?x.href:null}catch{return null}}
 function link(href,label){const e=el('a','',label),u=safeHref(href);if(u){e.href=u;e.target='_blank';e.rel='noopener noreferrer'}else e.textContent=label;return e}
 function title(n){return n.question||n.title||n.label||n.id||'Untitled node'}
@@ -294,6 +333,7 @@ function ancestry(id){const out=[],visited=new Set();let x=id;while(x&&state.ind
 function select(id){
  if(!state.index.has(id))return;
  state.selected=id;state.detailOpen=true;
+ activity('Inspecting '+title(state.index.get(id)));
  updateSelection();renderDetail();
  const u=new URL(location.href);u.hash='node='+encodeURIComponent(id);
  try{history.replaceState(null,'',u.toString())}catch{}
@@ -485,7 +525,7 @@ function renderDetail(){
  if(!n)return;
  const dismiss=el('button','detail-dismiss','×');dismiss.type='button';dismiss.title='Close details';dismiss.setAttribute('aria-label','Close details');dismiss.onclick=closeDetail;box.append(dismiss);
  if(state.atlas.layout?.positions.has(n.id)){
-  const locate=el('button','detail-locate','Locate on map');locate.type='button';locate.onclick=()=>focusAtlasNode(n.id);box.append(locate);
+  const locate=el('button','detail-locate','Locate on map');locate.type='button';locate.onclick=()=>{focusAtlasNode(n.id);activity('Located '+title(n))};box.append(locate);
  }
  const marker=el('span','chip',(n.kind||'Question').replace(/_/g,' '));box.append(marker);
  box.append(el('h2','',title(n)));
@@ -635,7 +675,12 @@ function readerSave(id,interest,note){
  const next=new Map(readerEntries),k=readerKey(state.currentSource,id),prior=next.get(k);
  const entry={...readerCapture(id),...prior,interested:interest,note,updated_at:new Date().toISOString()};
  if(!entry.interested&&!entry.note)next.delete(k);else next.set(k,entry);
- try{readerWrite(next);render();readerMessage('Saved to this browser. Export JSON to move to another device.')}
+ try{
+  readerWrite(next);render();
+  const changedNote=note!==(prior?.note||''),changedInterest=interest!==!!prior?.interested;
+  activity(changedNote?(note?'Note saved':'Note removed'):changedInterest?(interest?'Interest saved':'Interest removed'):'Saved');
+  readerMessage('Saved to this browser. Export JSON to move to another device.');
+ }
  catch(e){readerMessage('Unable to save: '+e.message,true)}
 }
 function readerMessage(message,error=false){
@@ -734,6 +779,84 @@ async function readerImport(file){
  readerWrite(next);render();readerList();
  readerMessage('Imported '+incoming.size+' records. '+overlap+' matching records were updated.');
 }
+
+const activityHistory=[];
+let activityPinned=false,activityAttention=false,activityLastDetail='';
+try{
+ const prior=JSON.parse(sessionStorage.getItem('knowledge-atlas-activity-v1')||'[]');
+ if(Array.isArray(prior))activityHistory.push(...prior.filter(x=>x&&typeof x.message==='string').slice(-35));
+ activityPinned=localStorage.getItem('knowledge-atlas-activity-pin')==='1';
+}catch{}
+function activitySync(){
+ const pane=$('activity-pane');
+ pane.classList.toggle('pinned',activityPinned);
+ pane.classList.toggle('attention',activityAttention);
+ pane.classList.toggle('collapsed',!activityPinned&&!activityAttention&&!pane.classList.contains('expanded'));
+ $('activity-toggle').setAttribute('aria-expanded',String(!pane.classList.contains('collapsed')));
+ $('activity-pin').setAttribute('aria-pressed',String(activityPinned));
+ $('activity-pin').textContent=activityPinned?'◆':'◇';
+}
+function activity(message,type='info',detail=''){
+ const clean=String(message||'').trim();if(!clean)return;
+ const last=activityHistory[activityHistory.length-1];
+ if(last&&last.message===clean&&last.type===type)return;
+ const now=new Date().toLocaleTimeString();
+ activityHistory.push({time:now,message:clean.slice(0,500),type,detail:String(detail||'').slice(0,3500)});
+ if(activityHistory.length>35)activityHistory.shift();
+ try{sessionStorage.setItem('knowledge-atlas-activity-v1',JSON.stringify(activityHistory))}catch{}
+ $('activity-count').textContent=String(activityHistory.length);
+ const list=$('activity-entries');clear(list);
+ for(const item of activityHistory.slice().reverse()){
+  const p=el('p',item.type==='error'?'activity-error':'');
+  p.textContent=item.time+' · '+item.message;list.append(p);
+ }
+ $('activity-title').textContent=type==='error'?'Needs attention':clean.length>32?clean.slice(0,29)+'…':clean;
+ $('activity-message').textContent=clean;
+ $('activity-dot').classList.toggle('error',type==='error');
+ if(detail)activityLastDetail=detail;
+ if(type==='error')activityAttention=true;
+ activitySync();
+}
+function atlasDiagnostics(){
+ const a=state.atlas||{},source=state.currentSource;
+ const summary=[
+  'Knowledge Atlas diagnostics',
+  'Source: '+JSON.stringify(source||null),
+  'Selected: '+(state.selected||'none'),
+  'Viewport: '+JSON.stringify({x:a.x,y:a.y,zoom:a.z,width:$('canvas').clientWidth,height:$('canvas').clientHeight}),
+  'Active pointers: '+(a.pointers?.size||0),
+  'Last details: '+(activityLastDetail||'none'),
+  '',
+  'Recent activity:'
+ ];
+ for(const item of activityHistory.slice(-20))summary.push(item.time+' ['+item.type+'] '+item.message+(item.detail?'\n'+item.detail:''));
+ return summary.join('\n');
+}
+$('activity-toggle').onclick=()=>{
+ const pane=$('activity-pane');
+ if(!pane.classList.contains('collapsed')&&!activityAttention&&!activityPinned)pane.classList.remove('expanded');
+ else pane.classList.add('expanded');
+ activityAttention=false;activitySync();
+};
+$('activity-hide').onclick=()=>{activityPinned=false;activityAttention=false;$('activity-pane').classList.remove('expanded');activitySync()};
+$('activity-pin').onclick=()=>{
+ activityPinned=!activityPinned;
+ if(activityPinned)$('activity-pane').classList.add('expanded');
+ try{localStorage.setItem('knowledge-atlas-activity-pin',activityPinned?'1':'0')}catch{}
+ activitySync();
+};
+$('activity-copy').onclick=async()=>{
+ const info=atlasDiagnostics();
+ try{await navigator.clipboard.writeText(info);activity('Diagnostics copied')}
+ catch(e){
+  activity('Copy unavailable — select the diagnostic text below','error',String(e));
+  const pre=el('pre','activity-fallback',info);$('activity-details').open=true;$('activity-entries').prepend(pre);
+ }
+};
+window.addEventListener('error',e=>activity('A browser error interrupted an action','error',String(e.message||'Error')+'\n'+(e.error?.stack||'')));
+window.addEventListener('unhandledrejection',e=>activity('An operation failed unexpectedly','error',String(e.reason?.stack||e.reason||'Unknown rejection')));
+activitySync();
+
 $('reader-open').onclick=readerOpen;
 $('reader-close').onclick=()=>{$('reader-dialog').hidden=true};
 $('reader-dialog').addEventListener('click',e=>{if(e.target===$('reader-dialog'))$('reader-dialog').hidden=true});
@@ -752,9 +875,9 @@ $('choices').addEventListener('change',async e=>{try{const view=state.views?.fin
 $('local').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!isTree(d))throw Error('This JSON has no recognized nodes collection');state.url=null;openTree(d,null,f.name,{type:'local',file:f.name,size:f.size,title:d.title||f.name});$('library-dialog').hidden=true;setStatus('Loaded local '+f.name+' · '+state.index.size+' nodes. For book references, import reference_guide.json too.')}catch(err){setStatus(err.message,true)}});
 $('addRef').onclick=()=>$('localRef').click();$('localRef').onchange=async e=>{try{const f=e.target.files?.[0];if(!f)return;state.guide=JSON.parse(await f.text());render();setStatus('Loaded local reference guide '+f.name)}catch(err){setStatus(err.message,true)}};
 // The canvas is a stable, pan-and-zoom viewport. Item selection itself does not move it.
-$('atlas-fit').onclick=()=>fitAtlas();
-$('atlas-in').onclick=()=>zoomAtlas(state.atlas.z*1.25);
-$('atlas-out').onclick=()=>zoomAtlas(state.atlas.z/1.25);
+$('atlas-fit').onclick=()=>{fitAtlas();activity('Overview restored')};
+$('atlas-in').onclick=()=>{zoomAtlas(state.atlas.z*1.25);activity('Zoomed in')};
+$('atlas-out').onclick=()=>{zoomAtlas(state.atlas.z/1.25);activity('Zoomed out')};
 const atlasCanvas=$('canvas');
 atlasCanvas.addEventListener('wheel',e=>{
  if(!state.atlas.ready)return;
