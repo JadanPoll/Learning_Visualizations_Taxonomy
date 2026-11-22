@@ -497,9 +497,7 @@ function renderCuriosityIndex(){
  // A larger investigation is simply an entry scoped to a set of technical questions.
  // Reuse the five existing lens projections; never clone their records or sources.
  if(state.curiosityFamily==='all'){
-  const views=new Set((state.views||[]).map(v=>v.id));
   const scopes=(state.curiosityData?.landscape_views||[]).filter(scope=>
-   views.has('manufacturing-'+scope.id)&&
    curiosityMatches({question:scope.title,context:scope.rationale,aliases:[scope.short_label||'',scope.id,'investigation']},state.curiositySearch));
   if(scopes.length){
    shownSets=scopes.length;
@@ -545,33 +543,52 @@ function showCuriosityIndex(open){
  btn.setAttribute('aria-expanded',String(open));
  if(open&&state.curiosityData)renderCuriosityIndex()
 }
-async function openQuestionSet(lensId){
- const view=state.views?.find(v=>v.id==='manufacturing-'+lensId);
- if(!view||!state.repo){setStatus('Question set is unavailable: '+lensId,true);return}
+
+/* Every manufacturing entry (one question, a set, or the legacy full landscape)
+   resolves through this function. The technical nodes always come from one corpus. */
+function manufacturingEntryProjection(data,selection,r,view){
+ if(!selection)return {tree:makeCuriosityProjection(data,null),title:view.title,originViewId:view.id};
+ if(selection.kind==='question'){
+  const entry=data.curiosity_atlas?.entries?.find(e=>e.id===selection.id);
+  if(!entry)throw Error('Unknown manufacturing question '+selection.id);
+  return {tree:makeCuriosityProjection(data,entry),title:entry.question,originViewId:view.id};
+ }
+ if(selection.kind!=='set')throw Error('Unknown manufacturing entry kind');
+ const scope=selection.id==='all'?null:(data.landscape_views||[]).find(x=>x.id===selection.id);
+ if(selection.id!=='all'&&!scope)throw Error('Unknown manufacturing question set '+selection.id);
+ // Generate the same scoped technical projection formerly described by five
+ // repetitive manifest entries. Preserve its technical IDs and old viewport key.
+ const mapped={...view,id:scope?'manufacturing-'+scope.id:'manufacturing-investigation',
+  title:scope?.title||'Manufacturing — Complete technical landscape',
+  projection:{shape:'flat',records:'nodes',
+   fields:{id:'id',label:'question',parent:'parent_id',description:'why'},
+   relations:'relations',...(scope?{lens:scope.id}:{exclude_kinds:['frustration_entry']})}};
+ return {tree:mappedView(data,mapped,r),title:mapped.title,originViewId:mapped.id};
+}
+function openManufacturingSelection(selection){
+ const data=state.curiosityData,view=state.views?.find(v=>v.id==='manufacturing-curiosities'),r=state.repo;
+ if(!data||!view||!r){setStatus('Manufacturing questions are unavailable',true);return}
  try{
-  await loadMapped(state.repo,view);
+  const projection=manufacturingEntryProjection(data,selection,r,view);
+  if(!isTree(projection.tree))throw Error('The selected entry has no technical nodes');
+  state.curiosityEntry=selection;
+  openTree(projection.tree,null,projection.title,{type:'github',repo:r.owner+'/'+r.repo,
+   branch:r.branch,file:view.file,view_id:projection.originViewId,title:projection.title});
+  state.activeView=view;state.url=repoUrl(r,view.file);
+  updateLensSelector();showCuriosityIndex(!selection);
   $('choices').value=view.id;
-  activity('Exploring question set '+(view.short_title||view.title));
- }catch(err){setStatus('Could not open question set: '+err.message,true)}
+  const url=new URL(location.href),params=url.searchParams;
+  params.set('view',view.id);
+  if(selection?.kind==='question')params.set('curiosity',selection.id);else params.delete('curiosity');
+  if(selection?.kind==='set')params.set('set',selection.id);else params.delete('set');
+  url.hash=''; // A prior node bookmark must not select an unrelated node on reload.
+  try{history.replaceState(null,'',url.toString())}catch{}
+  setStatus(selection?'Investigating '+projection.title+' · '+projection.tree.nodes.length+' technical nodes':'Browse manufacturing questions');
+  activity('Opened manufacturing '+(selection?selection.kind+' '+selection.id:'question browser'));
+ }catch(err){setStatus('Could not open this manufacturing entry: '+err.message,true)}
 }
-function openCuriosityEntry(id){
- const data=state.curiosityData,entry=data?.curiosity_atlas?.entries?.find(e=>e.id===id);
- if(!entry){setStatus('Curiosity entry not found: '+id,true);return}
- let tree;
- try{tree=makeCuriosityProjection(data,entry)}
- catch(err){setStatus('Could not build this investigation: '+err.message,true);return}
- state.curiosityEntry=entry;
- const view=state.views?.find(v=>v.id==='manufacturing-curiosities')||state.activeView;
- const origin=state.currentSource;
- openTree(tree,null,entry.question,origin);
- state.activeView=view;updateLensSelector();showCuriosityIndex(false);
- if(view)$('choices').value=view.id;
- const params=new URLSearchParams(location.search);
- params.set('view','manufacturing-curiosities');params.set('curiosity',entry.id);
- try{history.replaceState(null,'','?'+params.toString())}catch{}
- setStatus('Investigating '+entry.question+' · '+(tree.nodes.length-1)+' technical nodes');
- activity('Opened curiosity '+entry.id);
-}
+function openQuestionSet(lensId){openManufacturingSelection({kind:'set',id:lensId})}
+function openCuriosityEntry(id){openManufacturingSelection({kind:'question',id})}
 
 function setChoices(choices,mapped){state.files=choices;clear($('choices'));for(const v of choices){const opt=el('option','',mapped?v.title:v);opt.value=mapped?v.id:v;$('choices').append(opt)}$('choices').classList.toggle('hidden',choices.length<2)}
 function updateLensSelector(){
@@ -594,38 +611,53 @@ function updateLensSelector(){
  rootButton.title='About this investigation';
  rootButton.setAttribute('aria-label',rootButton.title);
 }
+
 async function loadMapped(r,view){
  setStatus('Opening '+view.title+'…');
- const data=await readRepoFile(r,view.file),isCuriosity=view.projection?.shape==='curiosities';
+ const data=await readRepoFile(r,view.file);
+ const manufacturing=view.shared_reader_id==='manufacturing'&&!!data.curiosity_atlas;
+ const canonical=manufacturing?(state.views||[]).find(v=>v.id==='manufacturing-curiosities')||view:view;
  state.curiosityData=data.curiosity_atlas?data:null;
- let entry=null;
- if(isCuriosity){
-  const wanted=new URLSearchParams(location.search).get('curiosity');
-  entry=data.curiosity_atlas?.entries?.find(e=>e.id===wanted)||null;
- }
- const tree=isCuriosity?makeCuriosityProjection(data,entry):mappedView(data,view,r);
+ const query=new URLSearchParams(location.search);
+ // Historical URLs such as ?view=manufacturing-make resolve without retaining
+ // duplicate view definitions in the manifest.
+ const rawView=query.get('view')||'';
+ const alias=view.id!=='manufacturing-curiosities'&&view.id.startsWith('manufacturing-')?
+  view.id:rawView.startsWith('manufacturing-')&&rawView!=='manufacturing-curiosities'?rawView:null;
+ const legacyId=alias?alias.slice('manufacturing-'.length):null;
+ const selection=manufacturing?
+  legacyId?{kind:'set',id:legacyId==='investigation'?'all':legacyId}:
+  query.get('set')?{kind:'set',id:query.get('set')}:
+  query.get('curiosity')?{kind:'question',id:query.get('curiosity')}:null:null;
+ const projected=manufacturing?manufacturingEntryProjection(data,selection,r,canonical):null;
+ const tree=projected?projected.tree:mappedView(data,view,r);
  if(!isTree(tree))throw Error('No navigable items in '+view.file);
  let guide=null;
- if(!isCuriosity){
+ if(!manufacturing){
   const guidePath=view.reference_file||data.reference_guide_path;
   if(guidePath)try{guide=await readRepoFile(r,guidePath)}catch{}
  }
- state.curiosityEntry=entry;
- openTree(tree,guide,view.title,{type:'github',repo:r.owner+'/'+r.repo,branch:r.branch,file:view.file,view_id:view.id,title:view.title});
- state.activeView=view;
+ state.curiosityEntry=manufacturing?selection:null;
+ openTree(tree,guide,projected?.title||view.title,{type:'github',repo:r.owner+'/'+r.repo,
+  branch:r.branch,file:view.file,view_id:projected?.originViewId||view.id,title:projected?.title||view.title});
+ state.activeView=canonical;
  state.url=repoUrl(r,view.file);state.repo=r;updateLensSelector();
- showCuriosityIndex(isCuriosity&&!entry);
+ showCuriosityIndex(manufacturing&&!selection);
  const params=new URLSearchParams(location.search);
  params.set('repo',`https://github.com/${r.owner}/${r.repo}`);
- params.set('view',view.id);
- if(entry)params.set('curiosity',entry.id);else params.delete('curiosity');
+ params.set('view',canonical.id);
+ if(selection?.kind==='question')params.set('curiosity',selection.id);else params.delete('curiosity');
+ if(selection?.kind==='set')params.set('set',selection.id);else params.delete('set');
  try{history.replaceState(null,'','?'+params.toString()+(location.hash||''))}catch{}
- setStatus('Opened '+view.title+' · '+(isCuriosity?(data.curiosity_atlas?.entries?.length||0)+' curiosity entries':state.index.size+' items')+(guide?' · reading guide connected':''));
+ if(manufacturing)$('choices').value=canonical.id;
+ setStatus('Opened '+(projected?.title||view.title)+' · '+(manufacturing&&!selection?
+  (data.curiosity_atlas?.entries?.length||0)+' question entries':state.index.size+' technical nodes')+(guide?' · reading guide connected':''));
 }
+
 async function loadPath(r,path){setStatus('Loading '+path+'…');const d=await readRepoFile(r,path);if(!isTree(d))throw Error(path+' does not contain a supported nodes collection');let guide=null;const dir=path.includes('/')?path.slice(0,path.lastIndexOf('/')+1):'';const ref=d.reference_guide_path||'reference_guide.json';const gp=ref.startsWith(dir)?ref:dir+ref;try{guide=await readRepoFile(r,gp)}catch{}openTree(d,guide,path,{type:'github',repo:r.owner+'/'+r.repo,branch:r.branch,file:path,title:d.title||path});state.url=repoUrl(r,path);state.repo=r;state.activeView=null;state.curiosityData=d.curiosity_atlas?d:null;state.curiosityEntry=null;showCuriosityIndex(false);updateLensSelector();const params=new URLSearchParams(location.search);params.set('repo',state.url);params.delete('view');try{history.replaceState(null,'','?'+params.toString())}catch{}setStatus(`Loaded ${path} · ${state.index.size} nodes`+(guide?' · reference guide connected':' · no accompanying reference guide'));}
 async function loadSource(raw){setStatus('Opening '+raw+'…');const r=parseGithub(raw);if(r.directUrl){const d=await fetchJson(r.directUrl);if(!isTree(d))throw Error('JSON has no nodes');state.repo=null;state.views=null;state.curiosityData=null;state.curiosityEntry=null;openTree(d,null,r.directUrl,{type:'url',url:r.directUrl,title:d.title||r.directUrl});state.activeView=null;showCuriosityIndex(false);updateLensSelector();setStatus('Loaded remote JSON');return}if(!r.branch){const metadata=await fetchJson(api(r));r.branch=metadata.default_branch||'main'}state.repo=r;state.views=null;state.activeView=null;
  if(r.path&&r.path.endsWith('.json')&&!r.path.endsWith('rsm-view.json')){setChoices([],false);await loadPath(r,r.path);return}
- const paths=await discover(r);if(paths.includes('rsm-view.json')){const manifest=await readRepoFile(r,'rsm-view.json'),views=viewList(manifest,paths);const filtered=r.path?views.filter(v=>v.file.startsWith(r.path.replace(/\/$/,'')+'/')):views;state.views=filtered.length?filtered:views;if(!state.views.length)throw Error('Mapping manifest has no files to display');setChoices(state.views,true);const wanted=new URLSearchParams(location.search).get('view');const selected=state.views.find(v=>v.id===wanted)||state.views[0];$('choices').value=selected.id;await loadMapped(r,selected);return}
+ const paths=await discover(r);if(paths.includes('rsm-view.json')){const manifest=await readRepoFile(r,'rsm-view.json'),views=viewList(manifest,paths);const filtered=r.path?views.filter(v=>v.file.startsWith(r.path.replace(/\/$/,'')+'/')):views;state.views=filtered.length?filtered:views;if(!state.views.length)throw Error('Mapping manifest has no files to display');setChoices(state.views,true);const wanted=new URLSearchParams(location.search).get('view');const selected=state.views.find(v=>v.id===wanted)||(wanted?.startsWith('manufacturing-')?state.views.find(v=>v.id==='manufacturing-curiosities'):null)||state.views[0];$('choices').value=selected.id;await loadMapped(r,selected);return}
  let found=paths.filter(p=>/\/(question_tree|investigation)\.json$/i.test('/'+p));if(!found.length)throw Error('No rsm-view.json mapping or recognized question_tree.json / investigation.json found');found.sort((a,b)=>a.includes('question_tree')?-1:b.includes('question_tree')?1:a.localeCompare(b));const filtered=r.path?found.filter(p=>p.startsWith(r.path.replace(/\/$/,'')+'/')):found;if(filtered.length)found=filtered;setChoices(found,false);await loadPath(r,found[0]);}
 function openTree(d,guide,source,origin=null){state.currentSource=origin||{type:'local',file:source||'unspecified',title:source||'Local JSON'};state.tree=d;state.guide=guide;state.selected=null;state.detailOpen=false;state.index=new Map();state.children=new Map();state.parent=new Map();const nodes=nodesOf(d);for(let i=0;i<nodes.length;i++){const n=nodes[i];const id=String(n.id||'node-'+i);n.id=id;state.index.set(id,n);state.children.set(id,[])}for(const n of nodes){const raw=n.parent_id??n.parent??null;const p=raw==null?null:String(raw);if(p&&p!==n.id&&state.index.has(p)){state.parent.set(n.id,p);state.children.get(p).push(n.id)}else state.parent.set(n.id,null)}let first=String(d.root||'');if(!state.index.has(first))first=nodes.find(n=>state.parent.get(n.id)===null)?.id||nodes[0].id;state.selected=first;restoreAtlas();$('sourceMeta').textContent=source||'Local JSON';$('collection-title').textContent=d.title||source||'Explore';render()}
 function ancestry(id){const out=[],visited=new Set();let x=id;while(x&&state.index.has(x)&&!visited.has(x)){out.unshift(x);visited.add(x);x=state.parent.get(x)}return out}
@@ -821,24 +853,19 @@ function entryRow(parent,ref,sources){
  parent.append(row);
 }
 
+
 async function openManufacturingTarget(id){
  if(state.index.has(id)){select(id);return}
- const views=(state.views||[]).filter(v=>v.shared_reader_id==='manufacturing'&&v.projection?.lens);
- const lenses=state.tree?.landscape_views||[],origin=state.selected;
- const containing=views.filter(v=>lenses.some(l=>l.id===v.projection.lens&&l.node_ids.includes(id)));
- // Keep the original question visible in the destination whenever a view supports both.
- const candidate=containing.find(v=>lenses.some(l=>l.id===v.projection.lens&&l.node_ids.includes(origin)))
-  ||containing.find(v=>v.id==='manufacturing-mechanisms')
-  ||containing[0]||(state.views||[]).find(v=>v.id==='manufacturing-investigation');
- if(!candidate||!state.repo){setStatus('Related research item is not available in this view: '+id,true);return}
- try{
-  await loadMapped(state.repo,candidate);
-  $('choices').value=candidate.id;
-  if(!state.index.has(id))throw Error('The destination node is absent: '+id);
-  select(id);
-  activity('Opened linked research '+id);
- }catch(err){setStatus('Could not navigate to research: '+err.message,true)}
+ const lenses=state.curiosityData?.landscape_views||[],origin=state.selected;
+ const containing=lenses.filter(l=>l.node_ids.includes(id));
+ const scope=containing.find(l=>l.node_ids.includes(origin))
+  ||containing.find(l=>l.id==='mechanisms')||containing[0];
+ if(!state.repo||!state.curiosityData){setStatus('Manufacturing source unavailable',true);return}
+ openManufacturingSelection({kind:'set',id:scope?.id||'all'});
+ if(state.index.has(id)){select(id);activity('Opened linked research '+id)}
+ else setStatus('The destination technical node is absent: '+id,true);
 }
+
 function makeManufacturingSource(sourceById,sourceId,label,pageInfo,qualifier){
  const src=sourceById.get(sourceId),item=el('div','case-route-resource');
  item.append(src?.url?link(src.url,label||src.title||sourceId):el('strong','',label||src?.title||sourceId));
@@ -1122,30 +1149,25 @@ function renderDetail(){
   }
   fold.append(body);box.append(fold);
  }
- if(state.activeView?.shared_reader_id==='manufacturing'&&state.views?.length){
-  const available=state.views.filter(v=>{
-   if(v.id===state.activeView.id||v.shared_reader_id!=='manufacturing')return false;
-   if(!v.projection?.lens)return true;
-   const lens=(state.tree.landscape_views||[]).find(l=>l.id===v.projection.lens);
-   return !!lens?.node_ids?.includes(n.id);
-  });
-  if(available.length){
-   const fold=el('details','details-fold');fold.append(el('summary','','Explore the same idea through another question'));
+
+ if(state.activeView?.shared_reader_id==='manufacturing'&&state.curiosityData?.landscape_views?.length){
+  const scopes=state.curiosityData.landscape_views.filter(scope=>scope.node_ids.includes(n.id));
+  if(scopes.length){
+   const fold=el('details','details-fold');
+   fold.append(el('summary','','Explore the same idea through another question'));
    const body=el('div','fold-body case-related');
-   for(const view of available){
-    const btn=el('button','case-related-link',view.short_title||view.title);
-    btn.type='button';btn.onclick=async()=>{
-     try{
-      await loadMapped(state.repo,view);$('choices').value=view.id;
-      if(state.index.has(n.id))select(n.id);
-      activity('Opened another view of '+title(n));
-     }catch(err){setStatus('Could not switch view: '+err.message,true)}
+   for(const scope of scopes){
+    const btn=el('button','case-related-link',scope.short_label||scope.title);
+    btn.type='button';btn.onclick=()=>{
+     openManufacturingSelection({kind:'set',id:scope.id});
+     if(state.index.has(n.id))select(n.id);
     };
     body.append(btn);
    }
    fold.append(body);box.append(fold);
   }
  }
+
  const relations=(state.tree.connections||state.tree.relations||state.tree.edges||[]).filter(r=>
   (r.from===n.id||r.to===n.id)&&(r.type||r.relationship)!=='contains');
  if(relations.length){
