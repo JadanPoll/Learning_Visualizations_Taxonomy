@@ -252,6 +252,18 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .case-book-section:last-child{border-bottom:0}
 .case-book-section>p:first-child{font-size:12px;font-weight:600;line-height:1.4;margin:4px 0}
 .case-book-section .case-source-status{margin:4px 0!important}
+
+/* The new goal selector must never crowd out the map heading on small screens. */
+.landscape-heading .atlas-heading{flex:1;min-width:0}
+.landscape-heading .atlas-heading h2{max-width:100%;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
+@media(max-width:700px){
+ .landscape-heading{flex-wrap:wrap;row-gap:5px}
+ .landscape-heading .atlas-heading{flex:0 0 100%}
+ .landscape-heading .atlas-heading p{display:none}
+ .atlas-toolbar{width:100%;justify-content:flex-end;min-width:0}
+ #atlas-lens{flex:1;max-width:none;min-width:0}
+ body:has(#detail:not([hidden])) .activity-pane{top:166px}
+}
 </style></head>
 <body>
 <header class="top">
