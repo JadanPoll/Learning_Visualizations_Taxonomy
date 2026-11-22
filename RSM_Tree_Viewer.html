@@ -623,11 +623,13 @@ function entryRow(parent,ref,sources){
 
 async function openManufacturingTarget(id){
  if(state.index.has(id)){select(id);return}
- const candidate=(state.views||[]).filter(v=>v.shared_reader_id==='manufacturing').find(v=>{
-  if(!v.projection?.lens)return false;
-  const lens=(state.tree?.landscape_views||[]).find(x=>x.id===v.projection.lens);
-  return !!lens?.node_ids?.includes(id);
- })||(state.views||[]).find(v=>v.id==='manufacturing-investigation');
+ const views=(state.views||[]).filter(v=>v.shared_reader_id==='manufacturing'&&v.projection?.lens);
+ const lenses=state.tree?.landscape_views||[],origin=state.selected;
+ const containing=views.filter(v=>lenses.some(l=>l.id===v.projection.lens&&l.node_ids.includes(id)));
+ // Keep the original question visible in the destination whenever a view supports both.
+ const candidate=containing.find(v=>lenses.some(l=>l.id===v.projection.lens&&l.node_ids.includes(origin)))
+  ||containing.find(v=>v.id==='manufacturing-mechanisms')
+  ||containing[0]||(state.views||[]).find(v=>v.id==='manufacturing-investigation');
  if(!candidate||!state.repo){setStatus('Related research item is not available in this view: '+id,true);return}
  try{
   await loadMapped(state.repo,candidate);
