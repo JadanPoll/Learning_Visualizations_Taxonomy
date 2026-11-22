@@ -409,8 +409,8 @@ function mappedView(data,view,r){const spec=view.projection||{},shape=spec.shape
   const rawRows=field(data,spec.records||'nodes');if(!Array.isArray(rawRows))throw Error('Flat view requires an array at '+(spec.records||'nodes'));
   const lens=spec.lens?(data.landscape_views||[]).find(x=>x.id===spec.lens):null;
   if(spec.lens&&!lens)throw Error('Unknown landscape view '+spec.lens);
-  const allowed=lens?new Set(lens.node_ids):null;
-  const ff=spec.fields||{},records=rawRows.map((row,i)=>({row,i})).filter(({row})=>!allowed||allowed.has(String(field(row,ff.id||'id'))));
+  const allowed=lens?new Set(lens.node_ids):null,excluded=new Set(spec.exclude_kinds||[]);
+  const ff=spec.fields||{},records=rawRows.map((row,i)=>({row,i})).filter(({row})=>(!allowed||allowed.has(String(field(row,ff.id||'id'))))&&!excluded.has(row.kind));
   if(lens&&records.length!==allowed.size)throw Error('Incomplete landscape: '+lens.id+' references absent nodes');
   for(const {row,i} of records){
    const id=String(field(row,ff.id||'id')||idPrefix+i);if(used.has(id))throw Error('Duplicate node ID '+id);used.add(id);
@@ -555,7 +555,7 @@ function updateLensSelector(){
  }
  selector.classList.toggle('hidden',options.length<2);
  if(state.activeView)selector.value=state.activeView.id;
- const isManufacturing=group==='manufacturing'&&!!state.tree?.navigation_bridges?.length&&state.activeView?.projection?.shape!=='curiosities';
+ const isManufacturing=group==='manufacturing'&&!state.curiosityData?.curiosity_atlas?.entries?.length&&!!state.tree?.navigation_bridges?.length&&state.activeView?.projection?.shape!=='curiosities';
  const curiosityAvailable=group==='manufacturing'&&!!state.curiosityData?.curiosity_atlas?.entries?.length;
  const curiosities=$('atlas-curiosities');
  curiosities.hidden=!curiosityAvailable;
