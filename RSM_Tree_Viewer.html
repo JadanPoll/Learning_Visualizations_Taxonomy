@@ -128,7 +128,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .atlas-toolbar button{min-height:36px;min-width:37px;font-size:16px;padding:6px 9px;border-radius:8px;border:1px solid #dde6ee;background:#fff;color:#315574}
 .atlas-toolbar #atlas-fit{font-size:12px;padding:6px 10px}
 #atlas-lens{max-width:175px;min-width:110px;min-height:36px;padding:5px 7px;border:1px solid #cbdce8;border-radius:8px;background:#fff;color:#2c5675;font-size:12px;font-weight:600}
-#atlas-about{font-size:17px;min-width:34px}
+#atlas-about{font-size:12px;min-width:34px;padding:6px 9px;font-weight:650}
 .explore-workspace,.explore-workspace:has(>.journey-content:not([hidden])){position:relative;flex:1 1 auto;display:block;min-height:0;height:auto}
 #canvas.atlas-viewport{position:absolute;inset:0;margin:0;padding:0;overflow:hidden;touch-action:none;cursor:grab;user-select:none;background-color:#f4f8fc;background-image:radial-gradient(#cfdae6 1px,transparent 1px);background-size:22px 22px;overscroll-behavior:contain}
 #canvas.atlas-viewport.dragging{cursor:grabbing}
@@ -165,7 +165,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
  .atlas-toolbar button{min-width:33px;padding:5px}
  .atlas-toolbar #atlas-fit{font-size:11px;padding:5px 7px}
 #atlas-lens{max-width:122px;min-width:88px;font-size:11px;padding:5px 3px}
-#atlas-about{min-width:30px;font-size:15px}
+#atlas-about{min-width:30px;font-size:11px;padding:5px 6px}
 }
 
 .atlas-inspector-empty[hidden]{display:none}
@@ -416,7 +416,7 @@ function updateLensSelector(){
  if(state.activeView)selector.value=state.activeView.id;
  const isManufacturing=group==='manufacturing'&&!!state.tree?.navigation_bridges?.length;
  const rootButton=$('atlas-about');
- rootButton.textContent=isManufacturing?'?':'ⓘ';
+ rootButton.textContent=isManufacturing?'Problems':'ⓘ';
  rootButton.title=isManufacturing?'Find a starting frustration or question':'About this investigation';
  rootButton.setAttribute('aria-label',rootButton.title);
 }
