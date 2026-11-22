@@ -466,7 +466,7 @@ function makeCuriosityProjection(data,entry){
    }
   }
  }
- return {...data,id:'curiosity:'+rootId,title:entry?'Investigating · '+entry.question:'Manufacturing · Explore questions',
+ return {...data,id:'curiosity:'+rootId,title:entry?'Investigating · '+entry.question:(data.title||'Research')+' · Explore questions',
   root:rootId,kind:'curiosity_projection',nodes,canonical_nodes:[...(data.nodes||[]),...(data.fieldwork_nodes||[])],
   landscape_lens:null,curiosity_entry:entry||null,connections:edges,edges};
 }
@@ -586,7 +586,7 @@ function openResearchSelection(selection){
   const projection=researchEntryProjection(data,selection,r,view);
   if(!isTree(projection.tree))throw Error('The selected entry has no navigable nodes');
   state.curiosityEntry=selection;
-  openTree(projection.tree,null,projection.title,{type:'github',repo:r.owner+'/'+r.repo,
+  openTree(projection.tree,projection.tree.routes?.length?projection.tree:null,projection.title,{type:'github',repo:r.owner+'/'+r.repo,
    branch:r.branch,file:view.file,view_id:projection.originViewId,title:projection.title});
   state.url=repoUrl(r,view.file);
   updateLensSelector();showCuriosityIndex(!selection);
@@ -644,7 +644,7 @@ async function loadMapped(r,view){
  const projected=hasAtlas?researchEntryProjection(data,selection,r,view):null;
  const tree=projected?projected.tree:mappedView(data,view,r);
  if(!isTree(tree))throw Error('No navigable items in '+view.file);
- let guide=null;
+ let guide=hasAtlas&&data.routes?.length?data:null;
  if(!hasAtlas){
   const guidePath=view.reference_file||data.reference_guide_path;
   if(guidePath)try{guide=guidePath===view.file?data:await readRepoFile(r,guidePath)}catch{}
@@ -996,6 +996,17 @@ function renderDetail(){
  }
  if(n.transferable_insight)fieldSection('Transferable insight',n.transferable_insight);
  fieldSection('Distinctions',n.distinctions);
+ if(n.technical_distinctions?.length){
+  const section=el('div','case-section');section.append(el('h3','','Mechanisms and discriminating observations'));
+  for(const item of n.technical_distinctions){
+   const block=el('div','case-factor');
+   block.append(el('strong','',item.contrast||'Mechanism'));
+   if(item.mechanism)block.append(el('p','',item.mechanism));
+   if(item.discriminating_observation)block.append(el('p','case-source-status','Check: '+item.discriminating_observation));
+   section.append(block);
+  }
+  box.append(section);
+ }
  if(n.kind==='technical_branch'){
   if(n.curiosity_targets?.length){
    const sec=el('section','case-section');sec.append(el('h3','','Underlying technical studies'));
@@ -1007,6 +1018,17 @@ function renderDetail(){
     btn.onclick=()=>openResearchTarget(id);buttons.append(btn);
    }
    if(buttons.childElementCount){sec.append(buttons);box.append(sec)}
+  }
+  if(n.source_ids?.length&&!n.curiosity_refs?.length){
+   const sec=el('section','case-section');sec.append(el('h3','','Sources to investigate'));
+   const byId=new Map((state.tree.sources||[]).map(x=>[x.id,x]));
+   for(const id of n.source_ids){
+    const src=byId.get(id),item=el('div','case-route-resource');
+    item.append(src?.url?link(src.url,src.title||id):el('strong','',src?.title||id));
+    item.append(el('p','case-source-status','Candidate reference; not an established conclusion'));
+    sec.append(item);
+   }
+   box.append(sec);
   }
   if(n.curiosity_refs?.length){
    const sec=el('section','case-section'),byId=new Map((state.tree.sources||[]).map(x=>[x.id,x]));
