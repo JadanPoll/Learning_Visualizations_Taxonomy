@@ -370,7 +370,8 @@ function scheduleAtlasFrame(){
 }
 function queueAtlasSave(){
  clearTimeout(atlasIdleSave);
- atlasIdleSave=setTimeout(()=>saveAtlas(),220);
+ const source=atlasStoreKey();
+ atlasIdleSave=setTimeout(()=>{if(source===atlasStoreKey())saveAtlas()},220);
 }
 function fitAtlas(persist=true){
  const a=state.atlas,l=a.layout,box=atlasViewport();if(!l||!box.clientWidth||!box.clientHeight)return;
@@ -428,7 +429,8 @@ function renderLandscape(){
   const saved=a.saved;
   if(saved&&Number.isFinite(saved.z)&&saved.z>=.09&&saved.z<=2.4&&Number.isFinite(saved.x)&&Number.isFinite(saved.y)){
    a.x=saved.x;a.y=saved.y;a.z=saved.z;
-  }else fitAtlas(false);
+  }else if(box.clientWidth&&box.clientHeight)fitAtlas(false);
+  else requestAnimationFrame(()=>{if(state.atlas===a&&box.isConnected)fitAtlas(false)});
   a.ready=true;
  }
  applyAtlas();a.viewportSize={w:box.clientWidth,h:box.clientHeight};updateSelection();
