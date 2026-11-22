@@ -920,18 +920,20 @@ function entryRow(parent,ref,sources){
 }
 
 
-async function openManufacturingTarget(id){
+function openResearchTarget(id){
  if(state.index.has(id)){select(id);return}
- const lenses=state.curiosityData?.landscape_views||[],origin=state.selected;
- const containing=lenses.filter(l=>l.node_ids.includes(id));
- const scope=containing.find(l=>l.node_ids.includes(origin))
-  ||containing.find(l=>l.id==='mechanisms')||containing[0];
- if(!state.repo||!state.curiosityData){setStatus('Manufacturing source unavailable',true);return}
- openManufacturingSelection({kind:'set',id:scope?.id||'all'});
+ const data=state.curiosityData,origin=state.selected;
+ if(!state.repo||!data){setStatus('Research source unavailable',true);return}
+ if(data.fieldwork_nodes?.some(x=>x.id===id))openResearchSelection({kind:'set',id:'fieldwork'});
+ else if(data.question_nodes?.some(x=>x.id===id))openResearchSelection({kind:'questions'});
+ else{
+  const containing=(data.landscape_views||[]).filter(l=>l.node_ids.includes(id));
+  const scope=containing.find(l=>l.node_ids.includes(origin))||containing[0];
+  openResearchSelection({kind:'set',id:scope?.id||'all'});
+ }
  if(state.index.has(id)){select(id);activity('Opened linked research '+id)}
- else setStatus('The destination technical node is absent: '+id,true);
+ else setStatus('Destination research record is absent: '+id,true);
 }
-
 function makeManufacturingSource(sourceById,sourceId,label,pageInfo,qualifier){
  const src=sourceById.get(sourceId),item=el('div','case-route-resource');
  item.append(src?.url?link(src.url,label||src.title||sourceId):el('strong','',label||src?.title||sourceId));
@@ -1002,7 +1004,7 @@ function renderDetail(){
     const related=state.index.get(id)||state.tree.canonical_nodes?.find(x=>x.id===id);
     if(!related)continue;
     const btn=el('button','case-factor-link',title(related));btn.type='button';
-    btn.onclick=()=>openManufacturingTarget(id);buttons.append(btn);
+    btn.onclick=()=>openResearchTarget(id);buttons.append(btn);
    }
    if(buttons.childElementCount){sec.append(buttons);box.append(sec)}
   }
@@ -1011,7 +1013,7 @@ function renderDetail(){
    sec.append(el('h3','','Source passages and candidate reading'));
    for(const loc of n.curiosity_refs){
     sec.append(makeManufacturingSource(byId,loc.source_id,byId.get(loc.source_id)?.title||loc.source_id,
-     loc.why,loc.level==='inspected'?'Selected source passage examined':'Table-of-contents candidate; technical section not yet investigated'));
+     loc.why,loc.level==='inspected'?'Selected source passage examined':loc.level==='toc_only'?'Chapter candidate; section not yet examined':'Source lead, not an established conclusion'));
    }
    box.append(sec);
   }
@@ -1199,24 +1201,19 @@ function renderDetail(){
   fold.append(body);box.append(fold);
  }
  const linkedCases=n.fieldwork_case_ids||[];
- if(linkedCases.length&&state.views?.some(view=>view.id==='human-ai-fieldwork')){
+ if(linkedCases.length&&state.curiosityData?.fieldwork_nodes?.length){
   const fold=el('details','details-fold');fold.append(el('summary','','Related fieldwork · '+linkedCases.length+' cases'));
   const body=el('div','fold-body case-related');
   for(const id of linkedCases){
    const b=el('button','case-related-link',id.replace(/^FW-/,'').replaceAll('-',' '));
    b.type='button';b.title='Open case '+id;
-   b.onclick=async()=>{
-    const view=state.views?.find(v=>v.id==='human-ai-fieldwork');
-    if(!view||!state.repo)return;
-    try{await loadMapped(state.repo,view);$('choices').value=view.id;if(state.index.has(id))select(id);activity('Opened source-linked fieldwork '+id)}
-    catch(err){setStatus('Could not open fieldwork: '+err.message,true)}
-   };
+   b.onclick=()=>openResearchTarget(id);
    body.append(b);
   }
   fold.append(body);box.append(fold);
  }
 
- if(state.activeView?.shared_reader_id==='manufacturing'&&state.curiosityData?.landscape_views?.length){
+ if(state.activeView?.projection?.shape==='curiosities'&&state.curiosityData?.landscape_views?.length){
   const scopes=state.curiosityData.landscape_views.filter(scope=>scope.node_ids.includes(n.id));
   if(scopes.length){
    const fold=el('details','details-fold');
@@ -1225,7 +1222,7 @@ function renderDetail(){
    for(const scope of scopes){
     const btn=el('button','case-related-link',scope.short_label||scope.title);
     btn.type='button';btn.onclick=()=>{
-     openManufacturingSelection({kind:'set',id:scope.id});
+     openResearchSelection({kind:'set',id:scope.id});
      if(state.index.has(n.id))select(n.id);
     };
     body.append(btn);
