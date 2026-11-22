@@ -127,6 +127,8 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .atlas-toolbar{display:flex;gap:4px;align-items:center;flex-shrink:0}
 .atlas-toolbar button{min-height:36px;min-width:37px;font-size:16px;padding:6px 9px;border-radius:8px;border:1px solid #dde6ee;background:#fff;color:#315574}
 .atlas-toolbar #atlas-fit{font-size:12px;padding:6px 10px}
+#atlas-lens{max-width:175px;min-width:110px;min-height:36px;padding:5px 7px;border:1px solid #cbdce8;border-radius:8px;background:#fff;color:#2c5675;font-size:12px;font-weight:600}
+#atlas-about{font-size:17px;min-width:34px}
 .explore-workspace,.explore-workspace:has(>.journey-content:not([hidden])){position:relative;flex:1 1 auto;display:block;min-height:0;height:auto}
 #canvas.atlas-viewport{position:absolute;inset:0;margin:0;padding:0;overflow:hidden;touch-action:none;cursor:grab;user-select:none;background-color:#f4f8fc;background-image:radial-gradient(#cfdae6 1px,transparent 1px);background-size:22px 22px;overscroll-behavior:contain}
 #canvas.atlas-viewport.dragging{cursor:grabbing}
@@ -162,6 +164,8 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
  .landscape-heading p{font-size:10px}
  .atlas-toolbar button{min-width:33px;padding:5px}
  .atlas-toolbar #atlas-fit{font-size:11px;padding:5px 7px}
+#atlas-lens{max-width:122px;min-width:88px;font-size:11px;padding:5px 3px}
+#atlas-about{min-width:30px;font-size:15px}
 }
 
 .atlas-inspector-empty[hidden]{display:none}
@@ -250,6 +254,8 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   <div class="landscape-heading">
     <div class="atlas-heading"><h2 id="collection-title">Your question landscape</h2><p>Drag or scroll to pan · Pinch or use +/− to zoom · Select to inspect</p></div>
     <nav class="atlas-toolbar" aria-label="Map navigation">
+      <select id="atlas-lens" class="hidden" aria-label="Manufacturing investigation viewpoint" title="Choose the manufacturing question to navigate"></select>
+      <button id="atlas-about" type="button" aria-label="About this investigation" title="About this investigation">ⓘ</button>
       <button id="atlas-out" type="button" aria-label="Zoom out">−</button>
       <button id="atlas-in" type="button" aria-label="Zoom in">+</button>
       <button id="atlas-fit" type="button">Overview</button>
@@ -331,10 +337,21 @@ function maybeLink(value,r){if(typeof value!=='string')return null;if(safeHref(v
 function mappedView(data,view,r){const spec=view.projection||{},shape=spec.shape||'flat',idPrefix=view.id+':',nodes=[],edges=[],used=new Set(),source=repoUrl(r,view.file);
  function add(item,parent,kind,pointer,key,label,description,url){let id=idPrefix+hashKey(key||pointer);while(used.has(id))id+='x';used.add(id);const node={...(item&&typeof item==='object'&&!Array.isArray(item)?item:{}),id,label:String(label||simpleLabel(key)),kind:kind||'item',parent_id:parent||null,description:description||'',source_location:{url:source,pointer}};if(url)node.url=url;nodes.push(node);if(parent)edges.push({from:parent,to:id,type:'contains'});return id}
  if(shape==='flat'){
-  const rows=field(data,spec.records||'nodes');if(!Array.isArray(rows))throw Error('Flat view requires an array at '+(spec.records||'nodes'));
-  const ff=spec.fields||{};for(const [i,row] of rows.entries()){const id=String(field(row,ff.id||'id')||idPrefix+i);if(used.has(id))throw Error('Duplicate node ID '+id);used.add(id);nodes.push({...row,id,kind:field(row,ff.kind)||spec.kind||row.kind||'question',label:field(row,ff.label||'question')||title(row),description:field(row,ff.description||'why_ask')||row.why||'',parent_id:field(row,ff.parent||'parent_id')??null,source_location:{url:source,pointer:'/'+(spec.records||'nodes')+'/'+i}})}
-  const relations=field(data,spec.relations||'connections')||field(data,'relations')||[];for(const e of relations)if(e.from&&e.to)edges.push({from:e.from,to:e.to,type:e.relationship||e.type||'related',reason:e.why||''});
-  return {...data,schema:'rsm-navigation/v0.1',id:view.id,title:data.title||view.title,kind:data.kind||'mapped_tree',nodes,edges,connections:edges,root:data.root||nodes.find(n=>!n.parent_id)?.id||nodes[0]?.id};
+  const rawRows=field(data,spec.records||'nodes');if(!Array.isArray(rawRows))throw Error('Flat view requires an array at '+(spec.records||'nodes'));
+  const lens=spec.lens?(data.landscape_views||[]).find(x=>x.id===spec.lens):null;
+  if(spec.lens&&!lens)throw Error('Unknown landscape view '+spec.lens);
+  const allowed=lens?new Set(lens.node_ids):null;
+  const ff=spec.fields||{},records=rawRows.map((row,i)=>({row,i})).filter(({row})=>!allowed||allowed.has(String(field(row,ff.id||'id'))));
+  if(lens&&records.length!==allowed.size)throw Error('Incomplete landscape: '+lens.id+' references absent nodes');
+  for(const {row,i} of records){
+   const id=String(field(row,ff.id||'id')||idPrefix+i);if(used.has(id))throw Error('Duplicate node ID '+id);used.add(id);
+   const parent=lens?(id===lens.root_id?null:lens.parent_overrides?.[id]):(field(row,ff.parent||'parent_id')??null);
+   if(lens&&id!==lens.root_id&&(!parent||!allowed.has(parent)))throw Error('Unconnected landscape node '+id);
+   nodes.push({...row,id,kind:field(row,ff.kind)||spec.kind||row.kind||'question',label:field(row,ff.label||'question')||title(row),description:field(row,ff.description||'why_ask')||row.why||'',parent_id:parent,source_location:{url:source,pointer:'/'+(spec.records||'nodes')+'/'+i}});
+  }
+  const relations=field(data,spec.relations||'connections')||field(data,'relations')||[];
+  for(const e of relations)if(e.from&&e.to&&(!allowed||(allowed.has(e.from)&&allowed.has(e.to))))edges.push({from:e.from,to:e.to,type:e.relationship||e.type||'related',reason:e.why||''});
+  return {...data,schema:'rsm-navigation/v0.1',id:view.id,title:lens?.title||data.title||view.title,kind:data.kind||'mapped_tree',nodes,edges,connections:edges,landscape_lens:lens||null,root:lens?.root_id||data.root||nodes.find(n=>!n.parent_id)?.id||nodes[0]?.id};
  }
  if(shape!=='record')throw Error('Unknown mapping shape: '+shape);
  const rootDef=spec.root||{};const rootLabel=field(data,rootDef.label_field)||rootDef.label||data.title||data.name||view.title;
@@ -379,7 +396,12 @@ function updateSelection(){
   if(n.matches('button'))n.setAttribute('aria-pressed',String(selected));
  }
 }
-function atlasStoreKey(){return 'knowledgeTreeAtlasV2:'+readerSourceKey(state.currentSource)}
+function atlasStoreKey(){
+ const o=state.currentSource;
+ if(o?.type==='github'&&o.file==='Investigations/manufacturing-orientation/investigation.json')
+  return 'knowledgeTreeAtlasV2:github:'+o.repo+'|'+o.file+'|'+(o.view_id||'manufacturing-investigation');
+ return 'knowledgeTreeAtlasV2:'+readerSourceKey(o);
+}
 function saveAtlas(){
  const a=state.atlas;
  try{localStorage.setItem(atlasStoreKey(),JSON.stringify({x:a.x,y:a.y,z:a.z}))}catch{}
@@ -790,7 +812,10 @@ const READER_STORE='knowledgeTreeReaderStateV1',READER_FORMAT='knowledge-tree-re
 let readerEntries=new Map(),readerStoreError='';
 function readerSourceKey(o){
  if(!o)return '';
- if(o.type==='github')return 'github:'+o.repo+'|'+(o.file||'')+'|'+(o.view_id||'');
+ if(o.type==='github'){
+  const identity=o.file==='Investigations/manufacturing-orientation/investigation.json'?'manufacturing-investigation':o.view_id||'';
+  return 'github:'+o.repo+'|'+(o.file||'')+'|'+identity;
+ }
  if(o.type==='url')return 'url:'+o.url;
  return 'local:'+(o.file||'')+':'+(o.size||0);
 }
