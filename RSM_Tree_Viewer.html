@@ -825,6 +825,14 @@ function renderDetail(){
  box.append(el('h2','',title(n)));
  if(n.why_ask||n.why||n.description)box.append(el('p','',n.why_ask||n.why||n.description));
  if(n.actor)box.append(el('div','case-byline',n.actor+(n.evidence_status?' · '+n.evidence_status:'')));
+ if(n.kind==='curiosity_entry'){
+  box.append(el('p','case-source-status','Everyday entry question · the mapped nodes below are technical explanations and competing routes, not an automatic diagnosis.'));
+  const browse=el('button','case-related-link','Browse other curiosities');
+  browse.type='button';browse.onclick=()=>showCuriosityIndex(true);box.append(browse);
+ }
+ if(n.kind==='technical_branch'){
+  box.append(el('p','case-source-status','Conditional mechanism · investigate whether this explanation fits the observed failure or desired behavior.'));
+ }
  if(state.tree.navigation_bridges?.length&&n.id===state.tree.root){
   const starters=(state.tree.navigation_bridges||[]).filter(item=>state.index.has(item.entry_node_id));
   if(starters.length){
@@ -870,6 +878,28 @@ function renderDetail(){
  }
  if(n.transferable_insight)fieldSection('Transferable insight',n.transferable_insight);
  fieldSection('Distinctions',n.distinctions);
+ if(n.kind==='technical_branch'){
+  if(n.curiosity_targets?.length){
+   const sec=el('section','case-section');sec.append(el('h3','','Underlying technical studies'));
+   const buttons=el('div','case-factor-paths');
+   for(const id of n.curiosity_targets){
+    const related=state.index.get(id)||state.tree.canonical_nodes?.find(x=>x.id===id);
+    if(!related)continue;
+    const btn=el('button','case-factor-link',title(related));btn.type='button';
+    btn.onclick=()=>openManufacturingTarget(id);buttons.append(btn);
+   }
+   if(buttons.childElementCount){sec.append(buttons);box.append(sec)}
+  }
+  if(n.curiosity_refs?.length){
+   const sec=el('section','case-section'),byId=new Map((state.tree.sources||[]).map(x=>[x.id,x]));
+   sec.append(el('h3','','Source passages and candidate reading'));
+   for(const loc of n.curiosity_refs){
+    sec.append(makeManufacturingSource(byId,loc.source_id,byId.get(loc.source_id)?.title||loc.source_id,
+     loc.why,loc.level==='inspected'?'Selected source passage examined':'Table-of-contents candidate; technical section not yet investigated'));
+   }
+   box.append(sec);
+  }
+ }
  if(n.kind==='frustration_entry')box.append(el('p','case-source-status','Question-navigation entry · the branches below are alternatives to investigate, not a diagnosis.'));
  const navigation=(state.tree.navigation_bridges||[]).find(route=>route.entry_node_id===n.id);
  if(navigation?.choices?.length){
@@ -1038,7 +1068,7 @@ function renderDetail(){
  const notes=(state.tree.evidence_notes||[]).filter(e=>e.node_id===n.id);
  for(const e of notes){fieldSection('Evidence',e.observation);fieldSection('Interpretation',e.interpretation)}
  const refsById=new Map([...(state.tree.sources||[]),...(state.guide?.related_sources||[])].map(x=>[x.id,x]));
- if(n.source_ids?.length){
+ if(n.source_ids?.length&&n.kind!=='technical_branch'){
   const section=el('div','case-section');section.append(el('h3','','Sources'));
   for(const id of n.source_ids){
    const src=refsById.get(id),row=el('div','case-source');
@@ -1435,6 +1465,20 @@ $('atlas-lens').addEventListener('change',async e=>{
  catch(err){setStatus('Cannot change investigation view: '+err.message,true);updateLensSelector()}
 });
 $('atlas-about').onclick=()=>{if(state.tree?.root&&state.index.has(state.tree.root))select(state.tree.root)};
+$('atlas-curiosities').onclick=async()=>{
+ if(state.activeView?.projection?.shape==='curiosities'){
+  showCuriosityIndex($('curiosity-index').hidden);
+  return;
+ }
+ const view=state.views?.find(v=>v.id==='manufacturing-curiosities');
+ if(!view||!state.repo)return;
+ try{await loadMapped(state.repo,view);$('choices').value=view.id;activity('Opened curiosity encyclopedia')}
+ catch(err){setStatus('Could not open curiosities: '+err.message,true)}
+};
+$('curiosity-search').addEventListener('input',e=>{
+ state.curiositySearch=e.target.value;
+ renderCuriosityIndex();
+});
 $('local').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!isTree(d))throw Error('This JSON has no recognized nodes collection');state.url=null;openTree(d,null,f.name,{type:'local',file:f.name,size:f.size,title:d.title||f.name});$('library-dialog').hidden=true;setStatus('Loaded local '+f.name+' · '+state.index.size+' nodes. For book references, import reference_guide.json too.')}catch(err){setStatus(err.message,true)}});
 $('addRef').onclick=()=>$('localRef').click();$('localRef').onchange=async e=>{try{const f=e.target.files?.[0];if(!f)return;state.guide=JSON.parse(await f.text());render();setStatus('Loaded local reference guide '+f.name)}catch(err){setStatus(err.message,true)}};
 // The canvas is a stable, pan-and-zoom viewport. Item selection itself does not move it.
