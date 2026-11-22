@@ -513,7 +513,12 @@ async function loadDomainGlossary(r,view,data){
  }
 }
 function glossaryIndex(glossary){
- return new Map((glossary?.terms||[]).map(term=>[term.id,term]));
+ const byId=new Map((glossary?.terms||[]).map(term=>[term.id,term]));
+ for(const [oldId,newId] of Object.entries(glossary?.redirects||{})){
+  const canonical=byId.get(newId);
+  if(canonical)byId.set(oldId,canonical);
+ }
+ return byId;
 }
 function glossaryTokens(s){
  return String(s||'').toLowerCase().match(/[a-z0-9]+/g)?.map(curiosityStem)||[];
@@ -760,6 +765,7 @@ function openResearchSelection(selection){
   const projection=researchEntryProjection(data,selection,r,view);
   if(!isTree(projection.tree))throw Error('The selected entry has no navigable nodes');
   state.curiosityEntry=selection;
+  if(selection){state.glossaryMode='questions';state.glossarySelected=null}
   openTree(projection.tree,projection.tree.routes?.length?projection.tree:null,projection.title,{type:'github',repo:r.owner+'/'+r.repo,
    branch:r.branch,file:view.file,view_id:projection.originViewId,title:projection.title});
   state.url=repoUrl(r,view.file);
@@ -1795,7 +1801,11 @@ $('curiosity-mode-terms').onclick=()=>{
 };
 $('curiosity-search').addEventListener('input',e=>{
  state.curiositySearch=e.target.value;
- if(state.glossaryMode==='terms')state.glossarySelected=null;
+ if(state.glossaryMode==='terms'){
+  state.glossarySelected=null;
+  const url=new URL(location.href);url.searchParams.delete('term');
+  try{history.replaceState(null,'',url.toString())}catch{}
+ }
  renderCuriosityIndex();
 });
 $('local').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!isTree(d))throw Error('This JSON has no recognized nodes collection');state.url=null;openTree(d,null,f.name,{type:'local',file:f.name,size:f.size,title:d.title||f.name});$('library-dialog').hidden=true;setStatus('Loaded local '+f.name+' · '+state.index.size+' nodes. For book references, import reference_guide.json too.')}catch(err){setStatus(err.message,true)}});
