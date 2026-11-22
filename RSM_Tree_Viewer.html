@@ -206,7 +206,11 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .activity-pane.collapsed:not(:hover):not(:focus-within):not(.attention):not(.pinned) .activity-body,
 .activity-pane.collapsed:not(:hover):not(:focus-within):not(.attention):not(.pinned) .activity-controls{display:none}
 .activity-pane.collapsed:hover,.activity-pane.collapsed:focus-within{width:min(340px,calc(100vw - 24px));height:auto;max-height:64dvh}
-@media(max-width:899px){.activity-pane{bottom:calc(8px + env(safe-area-inset-bottom));left:8px}.activity-pane:not(.collapsed){max-height:36dvh}}
+@media(max-width:899px){
+ .activity-pane{bottom:calc(8px + env(safe-area-inset-bottom));left:8px}
+ .activity-pane:not(.collapsed){max-height:36dvh}
+ body:has(#detail:not([hidden])) .activity-pane{bottom:auto;top:143px;max-height:30dvh}
+}
 </style></head>
 <body>
 <header class="top">
@@ -234,10 +238,10 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 <aside id="activity-pane" class="activity-pane collapsed" aria-label="Recent actions and troubleshooting">
   <div class="activity-heading">
     <button id="activity-toggle" type="button" title="Show activity" aria-expanded="false"><span id="activity-dot" aria-hidden="true">●</span><strong id="activity-title">Ready</strong></button>
-    <div class="activity-controls"><button id="activity-pin" type="button" title="Keep activity expanded" aria-label="Pin activity pane" aria-pressed="false">♧</button><button id="activity-hide" type="button" title="Minimize activity" aria-label="Minimize activity">−</button></div>
+    <div class="activity-controls"><button id="activity-pin" type="button" title="Keep activity expanded" aria-label="Pin activity pane" aria-pressed="false">📌</button><button id="activity-hide" type="button" title="Minimize activity" aria-label="Minimize activity">−</button></div>
   </div>
   <div class="activity-body">
-    <p id="activity-message">The atlas is ready.</p>
+    <p id="activity-message" role="status" aria-live="polite">The atlas is ready.</p>
     <details id="activity-details"><summary>Recent activity (<span id="activity-count">0</span>)</summary><div id="activity-entries" role="log" aria-label="Activity history"></div></details>
     <button id="activity-copy" type="button" title="Copy recent activity and diagnostics">Copy diagnostics</button>
   </div>
@@ -794,7 +798,7 @@ function activitySync(){
  pane.classList.toggle('collapsed',!activityPinned&&!activityAttention&&!pane.classList.contains('expanded'));
  $('activity-toggle').setAttribute('aria-expanded',String(!pane.classList.contains('collapsed')));
  $('activity-pin').setAttribute('aria-pressed',String(activityPinned));
- $('activity-pin').textContent=activityPinned?'◆':'◇';
+ $('activity-pin').textContent='📌';
 }
 function activity(message,type='info',detail=''){
  const clean=String(message||'').trim();if(!clean)return;
@@ -879,6 +883,10 @@ $('atlas-fit').onclick=()=>{fitAtlas();activity('Overview restored')};
 $('atlas-in').onclick=()=>{zoomAtlas(state.atlas.z*1.25);activity('Zoomed in')};
 $('atlas-out').onclick=()=>{zoomAtlas(state.atlas.z/1.25);activity('Zoomed out')};
 const atlasCanvas=$('canvas');
+atlasCanvas.addEventListener('touchmove',e=>{
+ // Prevent Safari's native page gesture from taking over an in-progress map swipe.
+ if(state.atlas.pointers.size&&e.cancelable)e.preventDefault();
+},{passive:false});
 atlasCanvas.addEventListener('wheel',e=>{
  if(!state.atlas.ready)return;
  e.preventDefault();
