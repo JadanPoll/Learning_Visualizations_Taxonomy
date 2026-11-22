@@ -364,6 +364,15 @@ function applyAtlas(){
   el.classList.toggle('compact',height<43||width<95);
  }
 }
+let atlasFrame=0,atlasIdleSave=0;
+function scheduleAtlasFrame(){
+ if(atlasFrame)return;
+ atlasFrame=requestAnimationFrame(()=>{atlasFrame=0;applyAtlas()});
+}
+function queueAtlasSave(){
+ clearTimeout(atlasIdleSave);
+ atlasIdleSave=setTimeout(()=>saveAtlas(),220);
+}
 function fitAtlas(persist=true){
  const a=state.atlas,l=a.layout,box=atlasViewport();if(!l||!box.clientWidth||!box.clientHeight)return;
  a.z=Math.max(.09,Math.min(1.1,(box.clientWidth-42)/l.width,(box.clientHeight-42)/l.height));
@@ -430,7 +439,7 @@ function renderLandscape(){
   }else fitAtlas(false);
   a.ready=true;
  }
- applyAtlas();updateSelection();
+ applyAtlas();a.viewportSize={w:box.clientWidth,h:box.clientHeight};updateSelection();
 }
 function render(){renderLandscape();renderDetail()}
 // A Kami "state" opening action is known to accept a Google Drive file ID.
@@ -744,9 +753,18 @@ const atlasCanvas=$('canvas');
 atlasCanvas.addEventListener('wheel',e=>{
  if(!state.atlas.ready)return;
  e.preventDefault();
- const rect=atlasCanvas.getBoundingClientRect();
- const factor=Math.exp(-Math.max(-160,Math.min(160,e.deltaY))*.0018);
- zoomAtlas(state.atlas.z*factor,e.clientX-rect.left,e.clientY-rect.top);
+ const a=state.atlas;
+ const unit=e.deltaMode===1?16:e.deltaMode===2?atlasCanvas.clientHeight:1;
+ // A trackpad scroll pans the map. Pinch-to-zoom (ctrl-wheel) changes scale deliberately.
+ if(e.ctrlKey){
+  const rect=atlasCanvas.getBoundingClientRect();
+  const factor=Math.exp(-Math.max(-110,Math.min(110,e.deltaY))*.009);
+  zoomAtlas(a.z*factor,e.clientX-rect.left,e.clientY-rect.top,false);
+ }else{
+  a.x-=e.deltaX*unit;a.y-=e.deltaY*unit;
+  scheduleAtlasFrame();
+ }
+ queueAtlasSave();
 },{passive:false});
 atlasCanvas.addEventListener('pointerdown',e=>{
  if(e.pointerType==='mouse'&&e.button!==0)return;
@@ -771,12 +789,12 @@ atlasCanvas.addEventListener('pointermove',e=>{
   const mx=(pts[0].x+pts[1].x)/2-rect.left,my=(pts[0].y+pts[1].y)/2-rect.top;
   a.z=Math.max(.09,Math.min(2.4,a.gesture.z*Math.hypot(dx,dy)/a.gesture.distance));
   a.x=mx-a.gesture.worldX*a.z;a.y=my-a.gesture.worldY*a.z;
-  a.dragged=true;atlasCanvas.classList.add('dragging');applyAtlas();return;
+  a.dragged=true;atlasCanvas.classList.add('dragging');scheduleAtlasFrame();return;
  }
  if(!p.moved)return;
  if(!atlasCanvas.hasPointerCapture(e.pointerId))try{atlasCanvas.setPointerCapture(e.pointerId)}catch{}
  a.x+=e.clientX-oldX;a.y+=e.clientY-oldY;
- a.dragged=true;atlasCanvas.classList.add('dragging');applyAtlas();
+ a.dragged=true;atlasCanvas.classList.add('dragging');scheduleAtlasFrame();
 });
 function endAtlasPointer(e){
  const a=state.atlas,p=a.pointers.get(e.pointerId);
@@ -791,7 +809,17 @@ atlasCanvas.addEventListener('lostpointercapture',endAtlasPointer);
 atlasCanvas.addEventListener('click',e=>{
  if(Date.now()<(state.atlas.suppressClickUntil||0)){e.preventDefault();e.stopPropagation()}
 },true);
-window.addEventListener('resize',()=>{if(state.atlas.ready)applyAtlas()});
+window.addEventListener('resize',()=>{
+ const a=state.atlas;if(!a.ready)return;
+ const w=atlasCanvas.clientWidth,h=atlasCanvas.clientHeight;
+ const last=a.viewportSize||{w,h};
+ if(w&&h&&last.w&&last.h){
+  const cx=(last.w*.5-a.x)/a.z,cy=(last.h*.5-a.y)/a.z;
+  a.x=w*.5-cx*a.z;a.y=h*.5-cy*a.z;
+ }
+ a.viewportSize={w,h};
+ scheduleAtlasFrame();queueAtlasSave();
+});
 $('library-open').onclick=()=>{$('library-dialog').hidden=false};$('library-close').onclick=()=>{$('library-dialog').hidden=true};$('library-dialog').addEventListener('click',e=>{if(e.target===$('library-dialog'))$('library-dialog').hidden=true});
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('reader-dialog').hidden){$('reader-dialog').hidden=true;return}if(e.key==='Escape'&&!$('library-dialog').hidden){$('library-dialog').hidden=true;return}if(e.target.matches('input,textarea,select'))return;if(e.key==='Escape'&&state.detailOpen){closeDetail();return}});
 const params=new URLSearchParams(location.search);const source=params.get('repo')||params.get('url')||'https://github.com/JadanPoll/Kami_Uploads_RSM_Tree';$('source').value=source;loadSource(source).then(()=>{const match=location.hash.match(/^#node=(.+)$/);if(match&&state.index.has(decodeURIComponent(match[1])))select(decodeURIComponent(match[1]))}).catch(err=>setStatus(err.message,true))
