@@ -478,11 +478,19 @@ function makeCuriosityProjection(data,entry){
   root:rootId,kind:'curiosity_projection',nodes,canonical_nodes:data.nodes,
   landscape_lens:null,curiosity_entry:entry||null,connections:edges,edges};
 }
+function curiosityStem(token){
+ if(token.endsWith('ies')&&token.length>4)return token.slice(0,-3)+'y';
+ if(token.endsWith('ing')&&token.length>6)return token.slice(0,-3);
+ if(token.endsWith('ed')&&token.length>5)return token.slice(0,-2);
+ if(token.endsWith('s')&&token.length>4)return token.slice(0,-1);
+ return token;
+}
 function curiosityMatches(entry,query){
- const terms=query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+ const tokenize=s=>String(s||'').toLowerCase().match(/[a-z0-9]+/g)?.map(curiosityStem)||[];
+ const terms=tokenize(query);
  if(!terms.length)return true;
- const words=[entry.question,entry.context,...(entry.aliases||[])].join(' ').toLowerCase();
- return terms.every(t=>words.includes(t));
+ const words=tokenize([entry.question,entry.context,...(entry.aliases||[])].join(' '));
+ return terms.every(t=>words.some(w=>w.includes(t)||t.length>=4&&t.includes(w)&&w.length>=4));
 }
 function renderCuriosityIndex(){
  const data=state.curiosityData?.curiosity_atlas;
@@ -861,7 +869,7 @@ function renderDetail(){
  }
  if(n.observed&&n.observed!==n.why_ask&&n.observed!==n.description)fieldSection('What happened',n.observed);
  if(n.failure_to_intervention)fieldSection('Failure and intervention',n.failure_to_intervention);
- if(n.mechanism_explanation)fieldSection('How it worked',n.mechanism_explanation);
+ if(n.mechanism_explanation)fieldSection(n.kind==='technical_branch'?'Mechanism and conditions to investigate':'How it worked',n.mechanism_explanation);
  else fieldSection('Mechanisms to investigate',n.mechanisms_to_investigate);
  if(n.observed_trace?.length){
   const fold=el('details','details-fold case-trace');
