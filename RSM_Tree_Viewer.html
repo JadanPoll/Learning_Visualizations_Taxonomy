@@ -435,11 +435,11 @@ function viewList(manifest,paths){if(manifest.mapping_version!=='0.1'||!Array.is
 function makeCuriosityProjection(data,entry){
  const catalogue=data.curiosity_atlas||{},bridges=new Map((data.navigation_bridges||[]).map(b=>[b.id,b]));
  const canonical=new Map((data.nodes||[]).map(n=>[n.id,n])),nodes=[],edges=[];
- const rootId=entry?.id||'MFG-CURI-HOME';
+ const rootId=entry?.id||(data.id||'research').toUpperCase()+'-CURI-HOME';
  nodes.push({id:rootId,parent_id:null,kind:entry?'curiosity_entry':'curiosity_home',
-  question:entry?.question||'Explore manufacturing questions',why:entry?.context||catalogue.purpose||'Start from an everyday question.',
+  question:entry?.question||'Explore research questions',why:entry?.context||catalogue.purpose||'Start from an everyday question.',
   status:'navigation_question'});
- const used=new Set([rootId]),sourceIds=new Set((data.sources||[]).map(s=>s.id));
+ const used=new Set([rootId]),sourceIds=new Set((data.sources||[]).map(s=>s.id)),caseNodes=new Map((data.fieldwork_nodes||[]).map(n=>[n.id,n]));
  if(entry){
   for(const bridgeId of entry.bridge_ids||[]){
    const bridge=bridges.get(bridgeId);
@@ -447,15 +447,16 @@ function makeCuriosityProjection(data,entry){
    for(const [i,choice] of (bridge.choices||[]).entries()){
     const branchId=entry.id+':'+bridgeId+':'+i;
     const sourceRefs=choice.section_targets||[];
+    const candidateSources=choice.candidate_source_ids||[];
     for(const loc of sourceRefs)if(!sourceIds.has(loc.source_id))throw Error('Unresolved source '+loc.source_id);
-    const uniqueSources=[...new Set(sourceRefs.map(x=>x.source_id))];
+    const uniqueSources=[...new Set([...sourceRefs.map(x=>x.source_id),...candidateSources])].filter(id=>sourceIds.has(id));
     nodes.push({id:branchId,parent_id:rootId,kind:'technical_branch',
      question:choice.technical_title||choice.label,why:choice.distinguishing_question,
      mechanism_explanation:choice.why,curiosity_refs:sourceRefs,curiosity_targets:choice.targets||[],
-     source_ids:uniqueSources,status:'conditional_mechanism'});
+     source_ids:uniqueSources,curiosity_case_ids:choice.case_ids||[],status:'conditional_mechanism'});
     edges.push({from:rootId,to:branchId,type:'investigate',reason:choice.distinguishing_question||''});
-    for(const studyId of choice.targets||[]){
-     const existing=canonical.get(studyId);
+    for(const studyId of [...(choice.targets||[]),...(choice.case_ids||[])]){
+     const existing=canonical.get(studyId)||caseNodes.get(studyId);
      if(!existing)throw Error('Unresolved technical case '+studyId);
      if(used.has(studyId)){edges.push({from:branchId,to:studyId,type:'related_mechanism',reason:choice.why||''});continue}
      nodes.push({...existing,parent_id:branchId});
@@ -466,7 +467,7 @@ function makeCuriosityProjection(data,entry){
   }
  }
  return {...data,id:'curiosity:'+rootId,title:entry?'Investigating · '+entry.question:'Manufacturing · Explore questions',
-  root:rootId,kind:'curiosity_projection',nodes,canonical_nodes:data.nodes,
+  root:rootId,kind:'curiosity_projection',nodes,canonical_nodes:[...(data.nodes||[]),...(data.fieldwork_nodes||[])],
   landscape_lens:null,curiosity_entry:entry||null,connections:edges,edges};
 }
 function curiosityStem(token){
@@ -497,7 +498,9 @@ function renderCuriosityIndex(){
  // A larger investigation is simply an entry scoped to a set of technical questions.
  // Reuse the five existing lens projections; never clone their records or sources.
  if(state.curiosityFamily==='all'){
-  const scopes=(state.curiosityData?.landscape_views||[]).filter(scope=>
+  const scopeItems=[...(state.curiosityData?.landscape_views||[])];
+  if(state.curiosityData?.fieldwork_nodes?.length)scopeItems.push({id:'fieldwork',title:'People, projects and working examples',rationale:'Real workflows, observed achievements, and failures with their evidence limitations.'});
+  const scopes=scopeItems.filter(scope=>
    curiosityMatches({question:scope.title,context:scope.rationale,aliases:[scope.short_label||'',scope.id,'investigation']},state.curiositySearch));
   if(scopes.length){
    shownSets=scopes.length;
@@ -544,51 +547,62 @@ function showCuriosityIndex(open){
  if(open&&state.curiosityData)renderCuriosityIndex()
 }
 
-/* Every manufacturing entry (one question, a set, or the legacy full landscape)
-   resolves through this function. The technical nodes always come from one corpus. */
-function manufacturingEntryProjection(data,selection,r,view){
+/* A question, a set, or an old URL is a projection over one canonical
+   research file. Stable technical, question and fieldwork identities are retained. */
+function researchEntryProjection(data,selection,r,view){
  if(!selection)return {tree:makeCuriosityProjection(data,null),title:view.title,originViewId:view.id};
  if(selection.kind==='question'){
   const entry=data.curiosity_atlas?.entries?.find(e=>e.id===selection.id);
-  if(!entry)throw Error('Unknown manufacturing question '+selection.id);
+  if(!entry)throw Error('Unknown curiosity question '+selection.id);
   return {tree:makeCuriosityProjection(data,entry),title:entry.question,originViewId:view.id};
  }
- if(selection.kind!=='set')throw Error('Unknown manufacturing entry kind');
+ if(selection.kind==='questions'||(selection.kind==='set'&&selection.id==='fieldwork')){
+  const fieldwork=selection.kind==='set',records=fieldwork?'fieldwork_nodes':'question_nodes';
+  if(!data[records]?.length)throw Error('No '+records+' in this collection');
+  const legacyId=fieldwork?'human-ai-fieldwork':view.shared_reader_id==='operating-systems'?'os-questions':'human-ai-questions';
+  const title=fieldwork?'People, projects and working examples':'Original question landscape';
+  const mapped={...view,id:legacyId,title,projection:{
+   shape:'flat',records,fields:{id:'id',label:'question',parent:'parent_id',description:'why_ask'},
+   relations:fieldwork?'connections':'question_connections'}};
+  return {tree:mappedView(data,mapped,r),title,originViewId:legacyId};
+ }
+ if(selection.kind!=='set')throw Error('Unknown research entry kind');
  const scope=selection.id==='all'?null:(data.landscape_views||[]).find(x=>x.id===selection.id);
- if(selection.id!=='all'&&!scope)throw Error('Unknown manufacturing question set '+selection.id);
- // Generate the same scoped technical projection formerly described by five
- // repetitive manifest entries. Preserve its technical IDs and old viewport key.
- const mapped={...view,id:scope?'manufacturing-'+scope.id:'manufacturing-investigation',
-  title:scope?.title||'Manufacturing — Complete technical landscape',
+ if(selection.id!=='all'&&!scope)throw Error('Unknown question set '+selection.id);
+ const prefix=view.shared_reader_id==='manufacturing'?'manufacturing':view.id;
+ const mapped={...view,id:scope?prefix+'-'+scope.id:prefix+'-investigation',
+  title:scope?.title||(data.title||view.title)+' — Complete technical landscape',
   projection:{shape:'flat',records:'nodes',
    fields:{id:'id',label:'question',parent:'parent_id',description:'why'},
    relations:'relations',...(scope?{lens:scope.id}:{exclude_kinds:['frustration_entry']})}};
  return {tree:mappedView(data,mapped,r),title:mapped.title,originViewId:mapped.id};
 }
-function openManufacturingSelection(selection){
- const data=state.curiosityData,view=state.views?.find(v=>v.id==='manufacturing-curiosities'),r=state.repo;
- if(!data||!view||!r){setStatus('Manufacturing questions are unavailable',true);return}
+function openResearchSelection(selection){
+ const data=state.curiosityData,view=state.activeView,r=state.repo;
+ if(!data||!view||!r||view.projection?.shape!=='curiosities'){
+  setStatus('Research questions are unavailable',true);return;
+ }
  try{
-  const projection=manufacturingEntryProjection(data,selection,r,view);
-  if(!isTree(projection.tree))throw Error('The selected entry has no technical nodes');
+  const projection=researchEntryProjection(data,selection,r,view);
+  if(!isTree(projection.tree))throw Error('The selected entry has no navigable nodes');
   state.curiosityEntry=selection;
   openTree(projection.tree,null,projection.title,{type:'github',repo:r.owner+'/'+r.repo,
    branch:r.branch,file:view.file,view_id:projection.originViewId,title:projection.title});
-  state.activeView=view;state.url=repoUrl(r,view.file);
+  state.url=repoUrl(r,view.file);
   updateLensSelector();showCuriosityIndex(!selection);
   $('choices').value=view.id;
   const url=new URL(location.href),params=url.searchParams;
   params.set('view',view.id);
   if(selection?.kind==='question')params.set('curiosity',selection.id);else params.delete('curiosity');
-  if(selection?.kind==='set')params.set('set',selection.id);else params.delete('set');
-  url.hash=''; // A prior node bookmark must not select an unrelated node on reload.
+  if(selection?.kind==='set'||selection?.kind==='questions')params.set('set',selection.kind==='questions'?'questions':selection.id);else params.delete('set');
+  url.hash='';
   try{history.replaceState(null,'',url.toString())}catch{}
-  setStatus(selection?'Investigating '+projection.title+' · '+projection.tree.nodes.length+' technical nodes':'Browse manufacturing questions');
-  activity('Opened manufacturing '+(selection?selection.kind+' '+selection.id:'question browser'));
- }catch(err){setStatus('Could not open this manufacturing entry: '+err.message,true)}
+  setStatus(selection?'Investigating '+projection.title+' · '+projection.tree.nodes.length+' navigable nodes':'Browse '+(data.curiosity_atlas?.entries?.length||0)+' research questions');
+  activity('Opened '+(selection?selection.kind+' '+selection.id:'question browser'));
+ }catch(err){setStatus('Could not open this entry: '+err.message,true)}
 }
-function openQuestionSet(lensId){openManufacturingSelection({kind:'set',id:lensId})}
-function openCuriosityEntry(id){openManufacturingSelection({kind:'question',id})}
+function openQuestionSet(lensId){openResearchSelection({kind:'set',id:lensId})}
+function openCuriosityEntry(id){openResearchSelection({kind:'question',id})}
 
 function setChoices(choices,mapped){state.files=choices;clear($('choices'));for(const v of choices){const opt=el('option','',mapped?v.title:v);opt.value=mapped?v.id:v;$('choices').append(opt)}$('choices').classList.toggle('hidden',choices.length<2)}
 function updateLensSelector(){
