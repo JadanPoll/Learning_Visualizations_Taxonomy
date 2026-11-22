@@ -292,6 +292,24 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 #view.question-browse-mode .atlas-inspector-rail{display:none}
 #atlas-in[hidden],#atlas-out[hidden],#atlas-fit[hidden],#atlas-about[hidden]{display:none!important}
 @media(max-width:700px){.curiosity-index{padding:0 11px 25px}.curiosity-index-heading{padding-top:11px}.curiosity-index-heading h2{font-size:18px}.curiosity-card-grid{grid-template-columns:1fr}.curiosity-card{min-height:64px;font-size:14px}#atlas-curiosities{font-size:11px;min-width:69px;padding:5px 6px}}
+
+/* Optional per-domain vocabulary browser: no search libraries or extra panels. */
+.curiosity-modes{display:flex;gap:7px;margin:10px 0 9px}
+.curiosity-modes button{flex:1;min-height:39px;border:1px solid #d5e1eb;border-radius:10px;background:#fff;color:#496880;font-size:13px;font-weight:650}
+.curiosity-modes button[aria-pressed="true"]{border-color:#86badf;background:#eaf5ff;color:#1b5f96}
+.glossary-category{border:1px solid #dce7ef;border-radius:12px;background:#fff;margin:11px 0;overflow:hidden}
+.glossary-category>summary{padding:13px 15px;font-size:14px;font-weight:690;color:#33536e}
+.glossary-term-list{display:flex;flex-wrap:wrap;gap:7px;padding:12px}
+.glossary-term-button,.glossary-term-chip{border:1px solid #cfdeea;border-radius:9px;background:#f5faff;color:#2a5575;min-height:34px;padding:6px 10px;font-size:12px;text-align:left}
+.glossary-term-button:hover,.glossary-term-chip:hover{background:#e4f2ff}
+.glossary-term-detail{background:#fff;border:1px solid #dce7ef;border-radius:14px;padding:17px;margin-top:12px}
+.glossary-term-detail h3{margin:0 0 9px;font-size:22px}
+.glossary-term-detail h4{font-size:14px;color:#355875;margin:22px 0 7px}
+.glossary-term-detail p{font-size:12px}
+.glossary-back{font-size:12px;background:#fff;border:0;padding:5px 0;min-height:32px;color:#246ca4}
+.glossary-match{display:block;color:#497a95;margin-top:6px;font-size:11px}
+.glossary-detail-terms{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:14px 0}
+.glossary-detail-terms>.muted{font-size:12px;margin-right:3px}
 </style></head>
 <body>
 <header class="top">
@@ -317,7 +335,11 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
       <div class="curiosity-index-heading">
         <h2>What do you want to understand?</h2>
         <p>Choose an everyday question or a larger set of questions. Both open technical knowledge and book evidence.</p>
-        <input id="curiosity-search" type="search" autocomplete="off" spellcheck="false" placeholder="Search a question, problem, or idea" aria-label="Search manufacturing curiosities">
+        <div class="curiosity-modes" role="group" aria-label="Browse by questions or vocabulary">
+          <button id="curiosity-mode-questions" type="button" aria-pressed="true">Questions</button>
+          <button id="curiosity-mode-terms" type="button" aria-pressed="false" hidden>Vocabulary</button>
+        </div>
+        <input id="curiosity-search" type="search" autocomplete="off" spellcheck="false" placeholder="Search questions or technical terms" aria-label="Search questions and linked concepts">
         <nav id="curiosity-family-filters" aria-label="Curiosity families"></nav>
         <p id="curiosity-match-count" aria-live="polite"></p>
       </div>
@@ -362,7 +384,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
-const state={tree:null,guide:null,selected:null,detailOpen:false,curiosityData:null,curiosityEntry:null,curiosityFamily:'all',curiositySearch:'',atlas:{x:0,y:0,z:1,ready:false,layout:null,saved:null,pointers:new Map(),gesture:null},url:null,repo:null,ref:null,files:[],views:null,activeView:null,currentSource:null,index:new Map(),children:new Map(),parent:new Map()};
+const state={tree:null,guide:null,selected:null,detailOpen:false,curiosityData:null,curiosityEntry:null,curiosityFamily:'all',curiositySearch:'',glossary:null,termById:new Map(),glossaryMode:'questions',glossarySelected:null,atlas:{x:0,y:0,z:1,ready:false,layout:null,saved:null,pointers:new Map(),gesture:null},url:null,repo:null,ref:null,files:[],views:null,activeView:null,currentSource:null,index:new Map(),children:new Map(),parent:new Map()};
 function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=String(text);return e}
 function clear(node){node.replaceChildren()}
 function setStatus(s,error=false){
@@ -438,7 +460,7 @@ function makeCuriosityProjection(data,entry){
  const rootId=entry?.id||(data.id||'research').toUpperCase()+'-CURI-HOME';
  nodes.push({id:rootId,parent_id:null,kind:entry?'curiosity_entry':'curiosity_home',
   question:entry?.question||'Explore research questions',why:entry?.context||catalogue.purpose||'Start from an everyday question.',
-  status:'navigation_question'});
+  status:'navigation_question',term_ids:entry?.term_ids||[]});
  const used=new Set([rootId]),sourceIds=new Set((data.sources||[]).map(s=>s.id)),caseNodes=new Map((data.fieldwork_nodes||[]).map(n=>[n.id,n]));
  if(entry){
   for(const bridgeId of entry.bridge_ids||[]){
@@ -453,7 +475,7 @@ function makeCuriosityProjection(data,entry){
     nodes.push({id:branchId,parent_id:rootId,kind:'technical_branch',
      question:choice.technical_title||choice.label,why:choice.distinguishing_question,
      mechanism_explanation:choice.why,curiosity_refs:sourceRefs,curiosity_targets:choice.targets||[],
-     source_ids:uniqueSources,curiosity_case_ids:choice.case_ids||[],status:'conditional_mechanism'});
+     source_ids:uniqueSources,curiosity_case_ids:choice.case_ids||[],term_ids:choice.term_ids||[],status:'conditional_mechanism'});
     edges.push({from:rootId,to:branchId,type:'investigate',reason:choice.distinguishing_question||''});
     for(const studyId of [...(choice.targets||[]),...(choice.case_ids||[])]){
      const existing=canonical.get(studyId)||caseNodes.get(studyId);
@@ -470,24 +492,67 @@ function makeCuriosityProjection(data,entry){
   root:rootId,kind:'curiosity_projection',nodes,canonical_nodes:[...(data.nodes||[]),...(data.fieldwork_nodes||[])],
   landscape_lens:null,curiosity_entry:entry||null,connections:edges,edges};
 }
-function curiosityStem(token){
- if(token.endsWith('ies')&&token.length>4)return token.slice(0,-3)+'y';
- if(token.endsWith('ing')&&token.length>6)return token.slice(0,-3);
- if(token.endsWith('ed')&&token.length>5)return token.slice(0,-2);
- if(token.endsWith('s')&&token.length>4)return token.slice(0,-1);
- return token;
+// Domain glossaries stay separate from research trees and are loaded once per
+// collection per session. Search keeps the semantics of distinct term IDs.
+const glossaryCache=new Map();
+async function loadDomainGlossary(r,view,data){
+ if(!data?.curiosity_atlas)return null;
+ const relative=data.glossary_path||'glossary.json';
+ const folder=view.file.slice(0,view.file.lastIndexOf('/')+1);
+ const path=relative.startsWith('Investigations/')?relative:folder+relative;
+ const key=[r.owner,r.repo,r.branch,path].join('/');
+ if(glossaryCache.has(key))return glossaryCache.get(key);
+ try{
+  const glossary=await readRepoFile(r,path);
+  if(!Array.isArray(glossary.terms)||glossary.schema_version!=='1.0'||glossary.domain_id!==data.id)
+   throw Error('Unrecognized domain glossary at '+path);
+  glossaryCache.set(key,glossary);return glossary;
+ }catch(error){
+  activity('Vocabulary unavailable; text search still works','error',String(error.message||error));
+  return null;
+ }
 }
-function curiosityMatches(entry,query){
- const tokenize=s=>String(s||'').toLowerCase().match(/[a-z0-9]+/g)?.map(curiosityStem)||[];
- const terms=tokenize(query);
- if(!terms.length)return true;
- const words=tokenize([entry.question,entry.context,...(entry.aliases||[])].join(' '));
- return terms.every(t=>words.some(w=>w.includes(t)||t.length>=4&&t.includes(w)&&w.length>=4));
+function glossaryIndex(glossary){
+ return new Map((glossary?.terms||[]).map(term=>[term.id,term]));
+}
+function glossaryTokens(s){
+ return String(s||'').toLowerCase().match(/[a-z0-9]+/g)?.map(curiosityStem)||[];
+}
+function glossaryWordMatch(search,words){
+ return words.some(word=>word.includes(search)||search.length>=4&&word.length>=4&&search.includes(word));
+}
+function glossaryScore(record,query){
+ const terms=glossaryTokens(query);
+ if(!terms.length)return 1;
+ const local=glossaryTokens([record.question,record.title,record.context,record.rationale,record.short_label,...(record.aliases||[])].filter(Boolean).join(' '));
+ const linked=(record.term_ids||[]).map(id=>state.termById.get(id)).filter(Boolean);
+ const direct=linked.flatMap(term=>glossaryTokens([term.label,...(term.aliases||[])].join(' ')));
+ const related=linked.flatMap(term=>(term.related_ids||[]).map(id=>state.termById.get(id)).filter(Boolean)
+  .flatMap(other=>glossaryTokens([other.label,...(other.aliases||[])].join(' '))));
+ let score=0;
+ for(const token of terms){
+  if(glossaryWordMatch(token,local))score+=10;
+  else if(glossaryWordMatch(token,direct))score+=7;
+  else if(glossaryWordMatch(token,related))score+=2;
+  else return 0;
+ }
+ const whole=String(query||'').trim().toLowerCase();
+ if(whole.length>2&&String(record.question||record.title||'').toLowerCase().includes(whole))score+=12;
+ if(linked.some(t=>[t.label,...(t.aliases||[])].some(v=>v.toLowerCase()===whole)))score+=10;
+ return score;
 }
 function renderCuriosityIndex(){
  const data=state.curiosityData?.curiosity_atlas;
  if(!data)return;
- const families=$('curiosity-family-filters'),results=$('curiosity-results');clear(families);clear(results);
+ const families=$('curiosity-family-filters'),results=$('curiosity-results');
+ clear(families);clear(results);
+ const vocabularyReady=!!state.glossary?.terms?.length;
+ $('curiosity-mode-terms').hidden=!vocabularyReady;
+ $('curiosity-mode-questions').setAttribute('aria-pressed',String(state.glossaryMode==='questions'));
+ $('curiosity-mode-terms').setAttribute('aria-pressed',String(state.glossaryMode==='terms'));
+ $('curiosity-search').placeholder=state.glossaryMode==='terms'?'Find a technical term or alias':'Search a question, problem, or technical term';
+ if(state.glossaryMode==='terms'&&vocabularyReady){renderGlossaryBrowser();return}
+ families.hidden=false;
  for(const family of [{id:'all',label:'All entries'},...(data.families||[])]){
   const btn=el('button','',family.label);btn.type='button';
   btn.setAttribute('aria-pressed',String(state.curiosityFamily===family.id));
@@ -495,13 +560,12 @@ function renderCuriosityIndex(){
   families.append(btn);
  }
  let shown=0,shownSets=0;
- // A larger investigation is simply an entry scoped to a set of technical questions.
- // Reuse the five existing lens projections; never clone their records or sources.
  if(state.curiosityFamily==='all'){
   const scopeItems=[...(state.curiosityData?.landscape_views||[])];
-  if(state.curiosityData?.fieldwork_nodes?.length)scopeItems.push({id:'fieldwork',title:'People, projects and working examples',rationale:'Real workflows, observed achievements, and failures with their evidence limitations.'});
-  const scopes=scopeItems.filter(scope=>
-   curiosityMatches({question:scope.title,context:scope.rationale,aliases:[scope.short_label||'',scope.id,'investigation']},state.curiositySearch));
+  if(state.curiosityData?.fieldwork_nodes?.length)
+   scopeItems.push({id:'fieldwork',title:'People, projects and working examples',rationale:'Real workflows, observed achievements, and failures with their evidence limitations.'});
+  const scopes=scopeItems.filter(scope=>curiosityMatches(scope,state.curiositySearch))
+   .sort((a,b)=>glossaryScore(b,state.curiositySearch)-glossaryScore(a,state.curiositySearch));
   if(scopes.length){
    shownSets=scopes.length;
    const section=el('section','curiosity-group curiosity-set-group');
@@ -510,8 +574,7 @@ function renderCuriosityIndex(){
    const grid=el('div','curiosity-card-grid');
    for(const scope of scopes){
     const card=el('button','curiosity-card curiosity-set-card');card.type='button';
-    card.append(el('strong','',scope.title));
-    card.append(el('span','',scope.rationale));
+    card.append(el('strong','',scope.title));card.append(el('span','',scope.rationale));
     card.onclick=()=>openQuestionSet(scope.id);
     grid.append(card);
    }
@@ -520,21 +583,26 @@ function renderCuriosityIndex(){
  }
  for(const family of data.families||[]){
   if(state.curiosityFamily!=='all'&&state.curiosityFamily!==family.id)continue;
-  const entries=(data.entries||[]).filter(e=>e.family_id===family.id&&curiosityMatches(e,state.curiositySearch));
+  const entries=(data.entries||[]).filter(e=>e.family_id===family.id&&curiosityMatches(e,state.curiositySearch))
+   .sort((a,b)=>glossaryScore(b,state.curiositySearch)-glossaryScore(a,state.curiositySearch));
   if(!entries.length)continue;
   shown+=entries.length;
-  const section=el('section','curiosity-group');
-  section.append(el('h3','',family.label));
+  const section=el('section','curiosity-group');section.append(el('h3','',family.label));
   if(family.description)section.append(el('p','',family.description));
   const grid=el('div','curiosity-card-grid');
   for(const entry of entries){
    const card=el('button','curiosity-card',entry.question);card.type='button';
+   if(state.curiositySearch.trim()&&state.termById.size){
+    const matching=(entry.term_ids||[]).map(id=>state.termById.get(id))
+     .filter(term=>term&&glossaryTermMatches(term,state.curiositySearch)).slice(0,2);
+    if(matching.length)card.append(el('small','glossary-match','Concept: '+matching.map(t=>t.label).join(' · ')));
+   }
    card.onclick=()=>openCuriosityEntry(entry.id);grid.append(card);
   }
   section.append(grid);results.append(section);
  }
  $('curiosity-match-count').textContent=shown+' specific questions'+(state.curiosityFamily==='all'?' · '+shownSets+' larger sets':'');
- if(!shown&&!shownSets)results.append(el('p','curiosity-empty','No matching question in this source collection. Try a simpler phrase or another category.'));
+ if(!shown&&!shownSets)results.append(el('p','curiosity-empty','No matching question. Try a technical term in Vocabulary, an alternate phrase, or another category.'));
 }
 function showCuriosityIndex(open){
  const pane=$('curiosity-index'),btn=$('atlas-curiosities');
@@ -595,7 +663,7 @@ function openResearchSelection(selection){
   params.set('view',view.id);
   if(selection?.kind==='question')params.set('curiosity',selection.id);else params.delete('curiosity');
   if(selection?.kind==='set'||selection?.kind==='questions')params.set('set',selection.kind==='questions'?'questions':selection.id);else params.delete('set');
-  url.hash='';
+  params.delete('term');url.hash='';
   try{history.replaceState(null,'',url.toString())}catch{}
   setStatus(selection?'Investigating '+projection.title+' · '+projection.tree.nodes.length+' navigable nodes':'Browse '+(data.curiosity_atlas?.entries?.length||0)+' research questions');
   activity('Opened '+(selection?selection.kind+' '+selection.id:'question browser'));
@@ -629,6 +697,7 @@ async function loadMapped(r,view){
  setStatus('Opening '+view.title+'…');
  const data=await readRepoFile(r,view.file);
  const hasAtlas=view.projection?.shape==='curiosities'&&!!data.curiosity_atlas;
+ const glossary=hasAtlas?await loadDomainGlossary(r,view,data):null;
  const query=new URLSearchParams(location.search),wanted=query.get('view')||'';
  const switching=!!state.activeView&&state.activeView.id!==view.id;
  const legacy={
@@ -658,15 +727,25 @@ async function loadMapped(r,view){
  }
  state.curiosityData=data.curiosity_atlas?data:null;
  state.curiosityEntry=hasAtlas?selection:null;
+ state.glossary=glossary;state.termById=glossaryIndex(glossary);
+ if(switching){
+  state.curiosityFamily='all';state.curiositySearch='';state.glossaryMode='questions';state.glossarySelected=null;
+  $('curiosity-search').value='';
+ }
  openTree(tree,guide,projected?.title||view.title,{type:'github',repo:r.owner+'/'+r.repo,
   branch:r.branch,file:view.file,view_id:projected?.originViewId||view.id,title:projected?.title||view.title});
  state.activeView=view;state.url=repoUrl(r,view.file);state.repo=r;updateLensSelector();
- showCuriosityIndex(hasAtlas&&!selection);
+ const selectedTerm=hasAtlas&&!switching?query.get('term'):null;
+ if(selectedTerm&&state.termById.has(selectedTerm)){
+  state.glossaryMode='terms';state.glossarySelected=selectedTerm;
+ }
+ showCuriosityIndex(hasAtlas&&(!selection||!!state.glossarySelected));
  const params=new URLSearchParams(location.search);
  params.set('repo',`https://github.com/${r.owner}/${r.repo}`);
  params.set('view',view.id);
  if(selection?.kind==='question')params.set('curiosity',selection.id);else params.delete('curiosity');
  if(selection?.kind==='set'||selection?.kind==='questions')params.set('set',selection.kind==='questions'?'questions':selection.id);else params.delete('set');
+ if(switching||!state.glossarySelected)params.delete('term');
  try{history.replaceState(null,'','?'+params.toString()+(switching?'':location.hash||''))}catch{}
  $('choices').value=view.id;
  setStatus('Opened '+(projected?.title||view.title)+' · '+(hasAtlas&&!selection?
@@ -692,7 +771,7 @@ async function loadSource(raw){
  setStatus('Opening '+raw+'…');const r=parseGithub(raw);
  if(r.directUrl){
   const d=await fetchJson(r.directUrl);if(!isTree(d))throw Error('JSON has no nodes');
-  state.repo=null;state.views=null;state.curiosityData=null;state.curiosityEntry=null;
+  state.repo=null;state.views=null;state.curiosityData=null;state.curiosityEntry=null;state.glossary=null;state.termById=new Map();
   openTree(d,null,r.directUrl,{type:'url',url:r.directUrl,title:d.title||r.directUrl});
   state.activeView=null;showCuriosityIndex(false);updateLensSelector();setStatus('Loaded remote JSON');return;
  }
@@ -965,6 +1044,18 @@ function renderDetail(){
  box.append(el('h2','',title(n)));
  if(n.why_ask||n.why||n.description)box.append(el('p','',n.why_ask||n.why||n.description));
  if(n.actor)box.append(el('div','case-byline',n.actor+(n.evidence_status?' · '+n.evidence_status:'')));
+ if(n.term_ids?.length&&state.termById.size){
+  const section=el('div','glossary-detail-terms');
+  section.append(el('span','muted','Concepts'));
+  for(const termId of n.term_ids.slice(0,12)){
+   const term=state.termById.get(termId);if(!term)continue;
+   const chip=el('button','glossary-term-chip',term.label);chip.type='button';
+   chip.title='Browse concept '+term.label;
+   chip.onclick=()=>{showCuriosityIndex(true);openGlossaryTerm(termId)};
+   section.append(chip);
+  }
+  if(section.childElementCount>1)box.append(section);
+ }
  if(n.kind==='curiosity_entry'){
   box.append(el('p','case-source-status','Everyday entry question · the mapped nodes below are technical explanations and competing routes, not an automatic diagnosis.'));
   const browse=el('button','case-related-link','Browse other curiosities');
@@ -1292,7 +1383,8 @@ function readerSourceKey(o){
   const canonical={
    'Investigations/manufacturing-orientation/investigation.json':'manufacturing-investigation',
    'Investigations/operating-systems/investigation.json':'os-investigation',
-   'Investigations/human-ai-symbiosis/investigation.json':'human-ai-investigation'
+   'Investigations/human-ai-symbiosis/investigation.json':'human-ai-investigation',
+   'Investigations/digital-hardware-design/investigation.json':'digital-hardware-investigation'
   };
   const identity=o.view_id==='os-questions'||o.view_id==='human-ai-questions'?
    o.view_id:(canonical[o.file]||o.view_id||'');
@@ -1585,8 +1677,19 @@ $('atlas-curiosities').onclick=()=>{
  if(!state.curiosityData?.curiosity_atlas)return;
  showCuriosityIndex($('curiosity-index').hidden);
 };
+$('curiosity-mode-questions').onclick=()=>{
+ state.glossaryMode='questions';state.glossarySelected=null;
+ const url=new URL(location.href);url.searchParams.delete('term');
+ try{history.replaceState(null,'',url.toString())}catch{}
+ renderCuriosityIndex();
+};
+$('curiosity-mode-terms').onclick=()=>{
+ if(!state.glossary)return;
+ state.glossaryMode='terms';state.glossarySelected=null;renderCuriosityIndex();
+};
 $('curiosity-search').addEventListener('input',e=>{
  state.curiositySearch=e.target.value;
+ if(state.glossaryMode==='terms')state.glossarySelected=null;
  renderCuriosityIndex();
 });
 $('local').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!isTree(d))throw Error('This JSON has no recognized nodes collection');state.url=null;openTree(d,null,f.name,{type:'local',file:f.name,size:f.size,title:d.title||f.name});$('library-dialog').hidden=true;setStatus('Loaded local '+f.name+' · '+state.index.size+' nodes. For book references, import reference_guide.json too.')}catch(err){setStatus(err.message,true)}});
