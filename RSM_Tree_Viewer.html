@@ -419,6 +419,11 @@ async function readResearchCorpus(r,path){
   throw Error('Invalid research include_files at '+path);
  const base=path.includes('/')?path.slice(0,path.lastIndexOf('/')+1):'';
  const parts=await Promise.all(includes.map(p=>readRepoFile(r,base+p)));
+ // Preserve a truthful GitHub pointer even after the records are assembled.
+ parts.forEach((part,i)=>{
+  if(Array.isArray(part.nodes))part.nodes=part.nodes.map((node,j)=>({...node,
+   source_location:node.source_location||{url:repoUrl(r,base+includes[i]),pointer:'/nodes/'+j}}));
+ });
  const assembled={...data};
  for(const part of parts){
   for(const key of ['sources','book_landscaplets','nodes','source_inspection_notes']){
@@ -464,7 +469,7 @@ function mappedView(data,view,r){const spec=view.projection||{},shape=spec.shape
    const id=String(field(row,ff.id||'id')||idPrefix+i);if(used.has(id))throw Error('Duplicate node ID '+id);used.add(id);
    const parent=lens?(id===lens.root_id?null:lens.parent_overrides?.[id]):(field(row,ff.parent||'parent_id')??null);
    if(lens&&id!==lens.root_id&&(!parent||!allowed.has(parent)))throw Error('Unconnected landscape node '+id);
-   nodes.push({...row,id,kind:field(row,ff.kind)||spec.kind||row.kind||'question',label:field(row,ff.label||'question')||title(row),description:field(row,ff.description||'why_ask')||row.why||'',parent_id:parent,source_location:{url:source,pointer:'/'+(spec.records||'nodes')+'/'+i}});
+   nodes.push({...row,id,kind:field(row,ff.kind)||spec.kind||row.kind||'question',label:field(row,ff.label||'question')||title(row),description:field(row,ff.description||'why_ask')||row.why||'',parent_id:parent,source_location:row.source_location||{url:source,pointer:'/'+(spec.records||'nodes')+'/'+i}});
   }
   const relations=field(data,spec.relations||'connections')||field(data,'relations')||[];
   for(const e of relations)if(e.from&&e.to&&(!allowed||(allowed.has(e.from)&&allowed.has(e.to))))edges.push({from:e.from,to:e.to,type:e.relationship||e.type||'related',reason:e.why||''});
@@ -844,7 +849,18 @@ async function loadMapped(r,view){
  setStatus('Opening '+view.title+'…');
  const data=await readResearchCorpus(r,view.file);
  const hasAtlas=view.projection?.shape==='curiosities'&&!!data.curiosity_atlas;
- const glossary=hasAtlas?await loadDomainGlossary(r,view,data):null;
+ let glossary=hasAtlas?await loadDomainGlossary(r,view,data):null;
+ // Previous independent-vocabulary term URLs still work without burdening
+ // the default search index with every unused seed term.
+ const requestedTerm=new URLSearchParams(location.search).get('term');
+ if(hasAtlas&&glossary&&requestedTerm&&!glossary.terms.some(t=>t.id===requestedTerm)&&data.glossary_candidate_path){
+  try{
+   const folder=view.file.slice(0,view.file.lastIndexOf('/')+1);
+   const pool=await readRepoFile(r,folder+data.glossary_candidate_path);
+   const seed=pool.terms?.find(t=>t.id===requestedTerm);
+   if(seed)glossary={...glossary,terms:[...glossary.terms,seed]};
+  }catch(error){activity('Archived vocabulary term unavailable','info',String(error.message||error))}
+ }
  const query=new URLSearchParams(location.search),wanted=query.get('view')||'';
  const switching=!!state.activeView&&state.activeView.id!==view.id;
  const legacy={
