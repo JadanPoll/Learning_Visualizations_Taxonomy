@@ -607,65 +607,62 @@ function openCuriosityEntry(id){openResearchSelection({kind:'question',id})}
 function setChoices(choices,mapped){state.files=choices;clear($('choices'));for(const v of choices){const opt=el('option','',mapped?v.title:v);opt.value=mapped?v.id:v;$('choices').append(opt)}$('choices').classList.toggle('hidden',choices.length<2)}
 function updateLensSelector(){
  const selector=$('atlas-lens'),group=state.activeView?.shared_reader_id;
- const isManufacturing=group==='manufacturing';
+ const isCuriosityView=state.activeView?.projection?.shape==='curiosities';
  const options=group?(state.views||[]).filter(v=>v.shared_reader_id===group):[];
  clear(selector);
  for(const v of options){
   const opt=el('option','',v.short_title||v.title);opt.value=v.id;selector.append(opt);
  }
- selector.classList.toggle('hidden',isManufacturing||options.length<2);
+ selector.classList.toggle('hidden',isCuriosityView||options.length<2);
  if(state.activeView)selector.value=state.activeView.id;
- const curiosityAvailable=group==='manufacturing'&&!!state.curiosityData?.curiosity_atlas?.entries?.length;
+ const curiosityAvailable=isCuriosityView&&!!state.curiosityData?.curiosity_atlas?.entries?.length;
  const curiosities=$('atlas-curiosities');
  curiosities.hidden=!curiosityAvailable;
  if(curiosityAvailable)curiosities.textContent='Browse questions';
  const rootButton=$('atlas-about');
- rootButton.hidden=isManufacturing;
- rootButton.textContent='ⓘ';
- rootButton.title='About this investigation';
+ rootButton.hidden=isCuriosityView;
+ rootButton.textContent='ⓘ';rootButton.title='About this investigation';
  rootButton.setAttribute('aria-label',rootButton.title);
 }
 
 async function loadMapped(r,view){
  setStatus('Opening '+view.title+'…');
  const data=await readRepoFile(r,view.file);
- const manufacturing=view.shared_reader_id==='manufacturing'&&!!data.curiosity_atlas;
- const canonical=manufacturing?(state.views||[]).find(v=>v.id==='manufacturing-curiosities')||view:view;
+ const hasAtlas=view.projection?.shape==='curiosities'&&!!data.curiosity_atlas;
  state.curiosityData=data.curiosity_atlas?data:null;
- const query=new URLSearchParams(location.search);
- // Historical URLs such as ?view=manufacturing-make resolve without retaining
- // duplicate view definitions in the manifest.
- const rawView=query.get('view')||'';
- const alias=view.id!=='manufacturing-curiosities'&&view.id.startsWith('manufacturing-')?
-  view.id:rawView.startsWith('manufacturing-')&&rawView!=='manufacturing-curiosities'?rawView:null;
- const legacyId=alias?alias.slice('manufacturing-'.length):null;
- const selection=manufacturing?
-  legacyId?{kind:'set',id:legacyId==='investigation'?'all':legacyId}:
-  query.get('set')?{kind:'set',id:query.get('set')}:
-  query.get('curiosity')?{kind:'question',id:query.get('curiosity')}:null:null;
- const projected=manufacturing?manufacturingEntryProjection(data,selection,r,canonical):null;
+ const query=new URLSearchParams(location.search),wanted=query.get('view')||'';
+ const legacy={
+  'os-questions':{kind:'questions'},'os-investigation':{kind:'set',id:'all'},
+  'human-ai-questions':{kind:'questions'},'human-ai-investigation':{kind:'set',id:'all'},
+  'human-ai-fieldwork':{kind:'set',id:'fieldwork'}
+ };
+ const oldManufacturing=wanted.startsWith('manufacturing-')&&wanted!=='manufacturing-curiosities'?
+  {kind:'set',id:wanted==='manufacturing-investigation'?'all':wanted.slice('manufacturing-'.length)}:null;
+ const selection=hasAtlas?(legacy[wanted]||oldManufacturing||
+  (query.get('set')?query.get('set')==='questions'?{kind:'questions'}:{kind:'set',id:query.get('set')}:
+  query.get('curiosity')?{kind:'question',id:query.get('curiosity')}:null)):null;
+ const projected=hasAtlas?researchEntryProjection(data,selection,r,view):null;
  const tree=projected?projected.tree:mappedView(data,view,r);
  if(!isTree(tree))throw Error('No navigable items in '+view.file);
  let guide=null;
- if(!manufacturing){
+ if(!hasAtlas){
   const guidePath=view.reference_file||data.reference_guide_path;
-  if(guidePath)try{guide=await readRepoFile(r,guidePath)}catch{}
+  if(guidePath)try{guide=guidePath===view.file?data:await readRepoFile(r,guidePath)}catch{}
  }
- state.curiosityEntry=manufacturing?selection:null;
+ state.curiosityEntry=hasAtlas?selection:null;
  openTree(tree,guide,projected?.title||view.title,{type:'github',repo:r.owner+'/'+r.repo,
   branch:r.branch,file:view.file,view_id:projected?.originViewId||view.id,title:projected?.title||view.title});
- state.activeView=canonical;
- state.url=repoUrl(r,view.file);state.repo=r;updateLensSelector();
- showCuriosityIndex(manufacturing&&!selection);
+ state.activeView=view;state.url=repoUrl(r,view.file);state.repo=r;updateLensSelector();
+ showCuriosityIndex(hasAtlas&&!selection);
  const params=new URLSearchParams(location.search);
  params.set('repo',`https://github.com/${r.owner}/${r.repo}`);
- params.set('view',canonical.id);
+ params.set('view',view.id);
  if(selection?.kind==='question')params.set('curiosity',selection.id);else params.delete('curiosity');
- if(selection?.kind==='set')params.set('set',selection.id);else params.delete('set');
+ if(selection?.kind==='set'||selection?.kind==='questions')params.set('set',selection.kind==='questions'?'questions':selection.id);else params.delete('set');
  try{history.replaceState(null,'','?'+params.toString()+(location.hash||''))}catch{}
- if(manufacturing)$('choices').value=canonical.id;
- setStatus('Opened '+(projected?.title||view.title)+' · '+(manufacturing&&!selection?
-  (data.curiosity_atlas?.entries?.length||0)+' question entries':state.index.size+' technical nodes')+(guide?' · reading guide connected':''));
+ $('choices').value=view.id;
+ setStatus('Opened '+(projected?.title||view.title)+' · '+(hasAtlas&&!selection?
+  (data.curiosity_atlas?.entries?.length||0)+' question entries':state.index.size+' navigable nodes')+(guide?' · reading guide connected':''));
 }
 
 async function loadPath(r,path){setStatus('Loading '+path+'…');const d=await readRepoFile(r,path);if(!isTree(d))throw Error(path+' does not contain a supported nodes collection');let guide=null;const dir=path.includes('/')?path.slice(0,path.lastIndexOf('/')+1):'';const ref=d.reference_guide_path||'reference_guide.json';const gp=ref.startsWith(dir)?ref:dir+ref;try{guide=await readRepoFile(r,gp)}catch{}openTree(d,guide,path,{type:'github',repo:r.owner+'/'+r.repo,branch:r.branch,file:path,title:d.title||path});state.url=repoUrl(r,path);state.repo=r;state.activeView=null;state.curiosityData=d.curiosity_atlas?d:null;state.curiosityEntry=null;showCuriosityIndex(false);updateLensSelector();const params=new URLSearchParams(location.search);params.set('repo',state.url);params.delete('view');try{history.replaceState(null,'','?'+params.toString())}catch{}setStatus(`Loaded ${path} · ${state.index.size} nodes`+(guide?' · reference guide connected':' · no accompanying reference guide'));}
