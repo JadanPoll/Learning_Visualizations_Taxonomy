@@ -288,7 +288,9 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .curiosity-set-group{margin-bottom:23px;padding-bottom:15px;border-bottom:1px solid #d4e4ef}
 .curiosity-card:hover,.curiosity-card:focus-visible{border-color:#72a8cd;background:#edf7ff;outline-offset:2px}
 .curiosity-index .curiosity-empty{padding:22px 8px;color:#4d6d86;font-size:13px}
-@media(min-width:900px){#curiosity-index{right:355px}}
+@media(min-width:900px){#curiosity-index{right:0}}
+#view.question-browse-mode .atlas-inspector-rail{display:none}
+#atlas-in[hidden],#atlas-out[hidden],#atlas-fit[hidden],#atlas-about[hidden]{display:none!important}
 @media(max-width:700px){.curiosity-index{padding:0 11px 25px}.curiosity-index-heading{padding-top:11px}.curiosity-index-heading h2{font-size:18px}.curiosity-card-grid{grid-template-columns:1fr}.curiosity-card{min-height:64px;font-size:14px}#atlas-curiosities{font-size:11px;min-width:69px;padding:5px 6px}}
 </style></head>
 <body>
@@ -536,6 +538,8 @@ function renderCuriosityIndex(){
 function showCuriosityIndex(open){
  const pane=$('curiosity-index'),btn=$('atlas-curiosities');
  pane.hidden=!open;
+ $('view').classList.toggle('question-browse-mode',open);
+ for(const id of ['atlas-in','atlas-out','atlas-fit'])$(id).hidden=open;
  btn.hidden=open&&state.activeView?.projection?.shape==='curiosities'&&!state.curiosityEntry;
  btn.textContent=open?'Back to investigation':'Browse questions';
  btn.setAttribute('aria-expanded',String(open));
