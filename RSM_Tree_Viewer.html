@@ -532,7 +532,9 @@ function showCuriosityIndex(open){
 function openCuriosityEntry(id){
  const data=state.curiosityData,entry=data?.curiosity_atlas?.entries?.find(e=>e.id===id);
  if(!entry){setStatus('Curiosity entry not found: '+id,true);return}
- const tree=makeCuriosityProjection(data,entry);
+ let tree;
+ try{tree=makeCuriosityProjection(data,entry)}
+ catch(err){setStatus('Could not build this investigation: '+err.message,true);return}
  state.curiosityEntry=entry;
  const view=state.views?.find(v=>v.id==='manufacturing-curiosities')||state.activeView;
  const origin=state.currentSource;
