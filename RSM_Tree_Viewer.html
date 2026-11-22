@@ -1281,14 +1281,50 @@ let readerEntries=new Map(),readerStoreError='';
 function readerSourceKey(o){
  if(!o)return '';
  if(o.type==='github'){
-  const identity=o.file==='Investigations/manufacturing-orientation/investigation.json'?'manufacturing-investigation':o.view_id||'';
+  const canonical={
+   'Investigations/manufacturing-orientation/investigation.json':'manufacturing-investigation',
+   'Investigations/operating-systems/investigation.json':'os-investigation',
+   'Investigations/human-ai-symbiosis/investigation.json':'human-ai-investigation'
+  };
+  const identity=o.view_id==='os-questions'||o.view_id==='human-ai-questions'?
+   o.view_id:(canonical[o.file]||o.view_id||'');
   return 'github:'+o.repo+'|'+(o.file||'')+'|'+identity;
  }
  if(o.type==='url')return 'url:'+o.url;
  return 'local:'+(o.file||'')+':'+(o.size||0);
 }
 function readerKey(origin,id){return JSON.stringify([readerSourceKey(origin),String(id)])}
-function readerFor(id){return readerEntries.get(readerKey(state.currentSource,id))||null}
+function legacyReaderKeys(id){
+ const o=state.currentSource;
+ if(o?.type!=='github')return [];
+ const keys=[];
+ function candidate(file,view_id){keys.push(readerKey({...o,file,view_id},id))}
+ if(o.file==='Investigations/operating-systems/investigation.json'){
+  if(id.startsWith('OS-Q')||id==='OS-00'){
+   candidate('Investigations/operating-systems/question_tree.json','os-questions');
+   candidate(o.file,'os-questions');
+  }else candidate(o.file,'os-investigation');
+ }
+ if(o.file==='Investigations/human-ai-symbiosis/investigation.json'){
+  if(id.startsWith('FW-')){
+   candidate('Investigations/human-ai-symbiosis/fieldwork.json','human-ai-fieldwork');
+   candidate(o.file,'human-ai-fieldwork');
+  }else if(id.startsWith('HAI-Q')||id==='HAI-00'){
+   candidate('Investigations/human-ai-symbiosis/question_tree.json','human-ai-questions');
+   candidate(o.file,'human-ai-questions');
+  }else candidate(o.file,'human-ai-investigation');
+ }
+ return [...new Set(keys)];
+}
+function readerFor(id){
+ const direct=readerEntries.get(readerKey(state.currentSource,id));
+ if(direct)return direct;
+ for(const key of legacyReaderKeys(id)){
+  const saved=readerEntries.get(key);
+  if(saved)return saved;
+ }
+ return null;
+}
 function readerCount(){return [...readerEntries.values()].filter(x=>x.interested).length}
 function readerUpdateCount(){$('reader-count').textContent=readerCount()?' '+readerCount():''}
 function readerValidate(x){
@@ -1326,8 +1362,12 @@ function readerCapture(id){
 function readerSave(id,interest,note){
  if(!state.currentSource||!state.index.has(id))return;
  if(readerStoreError){readerMessage('Saved annotations are unreadable. Import a backup to repair before making changes.',true);return}
- const next=new Map(readerEntries),k=readerKey(state.currentSource,id),prior=next.get(k);
- const entry={...readerCapture(id),...prior,interested:interest,note,updated_at:new Date().toISOString()};
+ const next=new Map(readerEntries),k=readerKey(state.currentSource,id);
+ const aliases=legacyReaderKeys(id).filter(key=>key!==k);
+ const prior=next.get(k)||aliases.map(key=>next.get(key)).find(Boolean)||null;
+ for(const alias of aliases)next.delete(alias);
+ const entry={...readerCapture(id),...prior,origin:{...state.currentSource},
+  interested:interest,note,updated_at:new Date().toISOString()};
  if(!entry.interested&&!entry.note)next.delete(k);else next.set(k,entry);
  try{
   readerWrite(next);render();
