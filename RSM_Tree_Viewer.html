@@ -211,6 +211,21 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
  .activity-pane:not(.collapsed){max-height:36dvh}
  body:has(#detail:not([hidden])) .activity-pane{bottom:auto;top:143px;max-height:30dvh}
 }
+
+.case-trace{margin-top:14px!important}
+.case-trace>summary{font-size:13px!important;min-height:39px!important;padding:10px 12px!important}
+.case-trace-list{margin:6px 0 12px;padding:0 16px 0 40px;counter-reset:step}
+.case-trace-step{padding:7px 0;border-bottom:1px solid #eef2f6;font-size:13px;line-height:1.45}
+.case-trace-step:last-child{border-bottom:0}
+.case-trace-step p{font-size:13px!important;line-height:1.45!important;margin:0 0 4px!important}
+.case-trace-step small{display:block;color:#698195;line-height:1.4;overflow-wrap:anywhere}
+.case-comparison>summary{font-size:13px!important;line-height:1.4}
+.case-comparison .fold-body{font-size:13px;line-height:1.5}
+.case-comparison .fold-body h4{font-size:13px;margin:13px 0 5px}
+.case-comparison .fold-body ul{margin:7px 0;padding-left:21px}
+.case-comparison .fold-body li{margin:5px 0}
+.case-related-link{border:1px solid #d2e2f0;background:#f4f9fd;text-align:left;padding:8px;border-radius:9px;font-size:12px}
+.case-evidence-status{display:block;margin:8px 0;color:#6a8398}
 </style></head>
 <body>
 <header class="top">
@@ -545,10 +560,52 @@ function renderDetail(){
   }else section.append(el('p','',String(value)));
   box.append(section);
  }
- if(n.observed && n.observed!==n.why_ask)fieldSection('What happened',n.observed);
- fieldSection('How it worked',n.mechanisms_to_investigate);
+ if(n.observed&&n.observed!==n.why_ask&&n.observed!==n.description)fieldSection('What happened',n.observed);
+ if(n.failure_to_intervention)fieldSection('Failure and intervention',n.failure_to_intervention);
+ if(n.mechanism_explanation)fieldSection('How it worked',n.mechanism_explanation);
+ else fieldSection('Mechanisms to investigate',n.mechanisms_to_investigate);
+ if(n.observed_trace?.length){
+  const fold=el('details','details-fold case-trace');
+  fold.open=true;fold.append(el('summary','','What actually happened · '+n.observed_trace.length+' steps'));
+  const list=el('ol','case-trace-list');
+  for(const step of n.observed_trace){
+   const li=el('li','case-trace-step');
+   li.append(el('p','',step.what||''));
+   const meta=[step.who,step.evidence].filter(Boolean).join(' · ');
+   if(meta)li.append(el('small','',meta));
+   list.append(li);
+  }
+  fold.append(list);box.append(fold);
+ }
+ if(n.transferable_insight)fieldSection('Transferable insight',n.transferable_insight);
+ const comparison=(state.tree.mechanism_comparison?.id===n.comparison_id)?state.tree.mechanism_comparison:null;
+ if(comparison){
+  const fold=el('details','details-fold case-comparison');
+  fold.append(el('summary','','Compare mechanisms · '+comparison.cases.map(id=>state.index.get(id)?.actor||id).join(' vs ')));
+  const body=el('div','fold-body');
+  body.append(el('p','',comparison.question));
+  const related=el('div','case-related');
+  for(const id of n.compare_with||[]){
+   const other=state.index.get(id);if(!other)continue;
+   const btn=el('button','case-related-link',title(other));btn.type='button';
+   btn.onclick=()=>select(id);related.append(btn);
+  }
+  body.append(related);
+  const conclusion=comparison.rsm_trajectory?.find(x=>x.stage?.startsWith('C '));
+  if(conclusion)body.append(el('p','case-comparison-finding',conclusion.detail));
+  if(comparison.competing_explanations?.length){
+   body.append(el('h4','','Competing explanations'));
+   const list=el('ul');for(const claim of comparison.competing_explanations)list.append(el('li','',claim));body.append(list);
+  }
+  if(comparison.cheapest_discriminating_probe){
+   body.append(el('h4','','Discriminating experiment'));
+   body.append(el('p','',comparison.cheapest_discriminating_probe));
+  }
+  body.append(el('small','case-evidence-status',comparison.certificate_status||comparison.status||''));
+  fold.append(body);box.append(fold);
+ }
  fieldSection('What remains uncertain',n.unresolved_questions);
- fieldSection('Try reproducing it',n.minimum_reconstruction_probe);
+ if(!comparison||comparison.cheapest_discriminating_probe!==n.minimum_reconstruction_probe)fieldSection('Try reproducing it',n.minimum_reconstruction_probe);
  fieldSection('Limits',n.resource_or_outcome_limitations);
  const notes=(state.tree.evidence_notes||[]).filter(e=>e.node_id===n.id);
  for(const e of notes){fieldSection('Evidence',e.observation);fieldSection('Interpretation',e.interpretation)}
