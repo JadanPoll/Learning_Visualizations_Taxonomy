@@ -1117,7 +1117,7 @@ async function loadSource(raw){
    try{views=viewList(manifest,await discover(r))}
    catch(err){
     activity('Repository listing unavailable; loading explicit manifest files','error',err.message);
-    views=viewList({...manifest,views:manifest.views.filter(v=>v.file)},[]);
+    views=viewList({...manifest,views:manifest.views.filter(v=>v.file)},null);
    }
   }else views=viewList(manifest,null);
   const filtered=r.path?views.filter(v=>v.file.startsWith(r.path.replace(/\/$/,'')+'/')):views;
