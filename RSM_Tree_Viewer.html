@@ -1585,6 +1585,17 @@ function renderDetail(){
  }
  const marker=el('span','chip',(n.kind||'Question').replace(/_/g,' '));box.append(marker);
  box.append(el('h2','',title(n)));
+ if(n.kind==='subdomain'&&n.url&&state.repo&&state.views){
+  const destination=state.views.find(v=>v.file&&repoUrl(state.repo,v.file)===n.url);
+  if(destination){
+   const go=el('button','case-related-link','Explore this domain');go.type='button';
+   go.onclick=async()=>{
+    try{await loadMapped(state.repo,destination);$('choices').value=destination.id;window.scrollTo(0,0)}
+    catch(error){setStatus('Cannot open domain: '+error.message,true)}
+   };
+   box.append(go);
+  }
+ }
  if(n.why_ask||n.why||n.description)box.append(el('p','',n.why_ask||n.why||n.description));
  if(n.actor)box.append(el('div','case-byline',n.actor+(n.evidence_status?' · '+n.evidence_status:'')));
  if(n.term_ids?.length&&state.termById.size){
