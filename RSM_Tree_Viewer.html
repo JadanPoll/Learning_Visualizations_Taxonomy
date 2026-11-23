@@ -1354,6 +1354,25 @@ function renderDetail(){
    box.append(section);
   }
  }
+ if(n.kind==='ai_workflow_generator'||n.kind==='ai_workflow_control'){
+  fieldSection('Functional contract',n.contract);
+  if(n.why_separate)fieldSection('Why this is an independent generator',n.why_separate);
+  if(n.note)fieldSection('Operational boundary',n.note);
+  if(n.examples?.length)fieldSection('Existing example IDs',n.examples);
+ }
+ if(n.kind==='ai_workflow_exemplar'){
+  fieldSection('Why this representative matters',n.why_this_one);
+  fieldSection('Distinct capability or failure boundary',n.distinct_contact);
+  fieldSection('AI transformations',n.generator_ids);
+  fieldSection('Workflow orchestration',n.shell_ids);
+  if(n.case_id){
+   const sec=el('div','case-section');
+   sec.append(el('h3','','Canonical workflow'));
+   sec.append(el('p','','Case ID: '+n.case_id));
+   sec.append(link('https://github.com/JadanPoll/FKEN_Ecosystem/blob/main/Collections/Cool_Uses_Of_AI/1/cases.json','Open Tier 1 source records'));
+   box.append(sec);
+  }
+ }
  if(n.observed&&n.observed!==n.why_ask&&n.observed!==n.description)fieldSection('What happened',n.observed);
  if(n.failure_to_intervention)fieldSection('Failure and intervention',n.failure_to_intervention);
  if(n.mechanism_explanation)fieldSection(n.kind==='technical_branch'?'Mechanism and conditions to investigate':'How it worked',n.mechanism_explanation);
