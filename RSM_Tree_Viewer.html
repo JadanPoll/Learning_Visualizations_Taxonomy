@@ -2182,9 +2182,11 @@ $('recent-repos').onchange=async e=>{
  try{await openLibrarySource()}catch(error){setStatus(error.message,true)}
 };
 $('private-repo-forget').onclick=()=>{
+ const activeRepo=githubReadRepo;
  try{
   const r=parseGithub($('source').value);
   if(r.owner&&r.repo)localStorage.removeItem(githubTokenKey(r.owner+'/'+r.repo));
+  if(activeRepo)localStorage.removeItem(githubTokenKey(activeRepo));
  }catch{}
  githubReadToken=null;githubReadRepo=null;githubReadExpiresAt=0;
  $('github-read-token').value='';
