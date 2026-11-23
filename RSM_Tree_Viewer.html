@@ -412,24 +412,30 @@ if(u.hostname==='github.com'){const a=u.pathname.split('/').filter(Boolean);if(a
 if(u.pathname.endsWith('.json'))return{directUrl:u.href};throw Error('Use a github.com repository/folder/file or a direct JSON URL')}
 // Private repo credentials are deliberately ephemeral: never serialize or log them.
 // Only GitHub's official API hostname can receive an Authorization header.
-let githubReadToken=null;
+let githubReadToken=null,githubReadRepo=null;
 function setGitHubReadToken(input){
  const token=String(input||'').trim();
  if(!token)throw Error('Enter a GitHub fine-grained read-only token');
  if(!/^[A-Za-z0-9_]+$/.test(token))throw Error('Token format is invalid; paste the token alone, not a URL or command');
+ const source=parseGithub($('source').value);
+ if(source.directUrl||!source.owner||!source.repo)throw Error('Choose a GitHub repository before unlocking it');
  githubReadToken=token;
- $('private-repo-status').textContent='Read-only token active for this tab';
+ githubReadRepo=source.owner+'/'+source.repo;
+ $('private-repo-status').textContent='Token active only for '+githubReadRepo+' until page reload';
 }
+function tokenForRepo(r){return !!githubReadToken&&githubReadRepo===r.owner+'/'+r.repo}
 async function fetchJson(url){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
  const u=new URL(url),isGitHubApi=u.protocol==='https:'&&u.hostname==='api.github.com';
  const headers={Accept:isGitHubApi?'application/vnd.github+json':'application/json'};
- if(isGitHubApi&&githubReadToken)headers.Authorization='Bearer '+githubReadToken;
+ const expected=githubReadRepo&&'/repos/'+githubReadRepo.split('/').map(encodeURIComponent).join('/');
+ const authorized=isGitHubApi&&githubReadToken&&expected&&(u.pathname===expected||u.pathname.startsWith(expected+'/'));
+ if(authorized)headers.Authorization='Bearer '+githubReadToken;
  let r;try{r=await fetch(url,{signal:controller.signal,cache:'no-store',credentials:'omit',headers})}
  catch(e){throw Error('Cannot load '+url+': '+(e.name==='AbortError'?'request timed out':e.message))}
  finally{clearTimeout(timer)}
  if(!r.ok){
-  const hint=r.status===404?(isGitHubApi&&githubReadToken?
+  const hint=r.status===404?(authorized?
    ' — repository or file not accessible with this token; check its selected repository and Contents read permission':
    ' — private repositories require a read-only token; open Library → Private GitHub repository'):
    r.status===403?' — check GitHub permissions or API rate limits':'';
@@ -445,7 +451,7 @@ function decodeGitHubBase64(content){
  return new TextDecoder('utf-8',{fatal:true}).decode(raw);
 }
 async function readRepoFile(r,path){
- if(githubReadToken){
+ if(tokenForRepo(r)){
   const url=api(r,'contents/'+encodePath(path))+'?ref='+encodeURIComponent(r.branch);
   let record=await fetchJson(url);
   if(record.type!=='file')throw Error('Expected a file at '+path);
@@ -2023,7 +2029,7 @@ async function openLibrarySource(){
 $('loadForm').addEventListener('submit',async e=>{e.preventDefault();try{await openLibrarySource()}catch(err){setStatus(err.message,true)}});
 $('private-repo-open').onclick=()=>openLibrarySource().catch(err=>setStatus(err.message,true));
 $('private-repo-forget').onclick=()=>{
- githubReadToken=null;
+ githubReadToken=null;githubReadRepo=null;
  $('github-read-token').value='';
  $('private-repo-status').textContent='Token cleared; reload to clear already loaded content';
  activity('Private GitHub access token cleared from memory');
@@ -2143,6 +2149,6 @@ $('library-open').onclick=()=>{$('library-dialog').hidden=false};$('library-clos
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('reader-dialog').hidden){$('reader-dialog').hidden=true;return}if(e.key==='Escape'&&!$('library-dialog').hidden){$('library-dialog').hidden=true;return}if(e.target.matches('input,textarea,select'))return;if(e.key==='Escape'&&state.detailOpen){closeDetail();return}});
 const params=new URLSearchParams(location.search);const source=params.get('repo')||params.get('url')||'https://github.com/JadanPoll/Kami_Uploads_RSM_Tree';$('source').value=source;loadSource(source).then(()=>{const match=location.hash.match(/^#node=(.+)$/);if(match&&state.index.has(decodeURIComponent(match[1])))select(decodeURIComponent(match[1]))}).catch(err=>{
  setStatus(err.message,true);
- if(/^HTTP 404\\b/.test(err.message)&&err.message.includes('api.github.com/repos/'))$('library-dialog').hidden=false;
+ if(/^HTTP 404\b/.test(err.message)&&err.message.includes('api.github.com/repos/'))$('library-dialog').hidden=false;
 })
 </script></body></html>
