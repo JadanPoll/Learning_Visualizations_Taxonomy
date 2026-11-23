@@ -367,6 +367,17 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   <form class="loader" id="loadForm"><label for="source" class="tiny">GitHub repository or JSON URL</label><input id="source" type="text" spellcheck="false" placeholder="https://github.com/…"><button type="submit" class="primary">Open</button>
     <label for="local" class="smallbtn local-button">Choose JSON file</label><input id="local" type="file" accept=".json,application/json" class="hidden">
     <button id="addRef" type="button" title="Add a reference guide to a local tree">Add references</button><input id="localRef" type="file" accept=".json,application/json" class="hidden"></form>
+  <details id="private-repo-access" style="margin:12px 0;padding:10px 12px;border:1px solid #d5e2ed;border-radius:11px;background:#f8fbfd">
+    <summary style="font-size:14px;font-weight:650">Private GitHub repository (read-only access)</summary>
+    <p class="tiny muted">Use a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">fine-grained GitHub token</a> restricted to the repository, with <strong>Contents: read-only</strong>. It goes only to api.github.com, stays in memory until this page reloads, and is never saved in your URL or browser storage. Use this only in a viewer host you trust.</p>
+    <label for="github-read-token" class="library-label">Token (leave blank after unlocking)</label>
+    <input id="github-read-token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" style="width:100%;max-width:100%;margin:4px 0 8px">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button type="button" id="private-repo-open" class="primary">Unlock and open</button>
+      <button type="button" id="private-repo-forget">Forget token</button>
+      <span class="tiny muted" id="private-repo-status" role="status">Not unlocked</span>
+    </div>
+  </details>
   <label for="choices" class="library-label">Explore a collection</label><select id="choices" aria-label="Choose a tree" class="hidden"></select>
   <div class="library-explainer">Your notes stay in this browser. Use Saved to export them to another device.</div>
 </section></div>
@@ -399,15 +410,53 @@ function parseGithub(s){s=s.trim();let u;try{u=new URL(s)}catch{if(/^[\w.-]+\/[\
 if(u.hostname==='raw.githubusercontent.com'){const a=u.pathname.split('/').filter(Boolean);if(a.length<4)throw Error('Invalid GitHub raw file URL');return {owner:a[0],repo:a[1],branch:a[2],path:a.slice(3).join('/'),direct:true}}
 if(u.hostname==='github.com'){const a=u.pathname.split('/').filter(Boolean);if(a.length<2)throw Error('URL must include owner and repository');let branch=null,path='';if(['blob','tree'].includes(a[2])){branch=a[3]||null;path=a.slice(4).join('/')}return {owner:a[0],repo:a[1],branch,path}}
 if(u.pathname.endsWith('.json'))return{directUrl:u.href};throw Error('Use a github.com repository/folder/file or a direct JSON URL')}
+// Private repo credentials are deliberately ephemeral: never serialize or log them.
+// Only GitHub's official API hostname can receive an Authorization header.
+let githubReadToken=null;
+function setGitHubReadToken(input){
+ const token=String(input||'').trim();
+ if(!token)throw Error('Enter a GitHub fine-grained read-only token');
+ if(!/^[A-Za-z0-9_]+$/.test(token))throw Error('Token format is invalid; paste the token alone, not a URL or command');
+ githubReadToken=token;
+ $('private-repo-status').textContent='Read-only token active for this tab';
+}
 async function fetchJson(url){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
- let r;try{r=await fetch(url,{signal:controller.signal,cache:'no-store',headers:{Accept:'application/json'}})}catch(e){throw Error('Cannot load '+url+': '+(e.name==='AbortError'?'request timed out':e.message))}finally{clearTimeout(timer)}
- if(!r.ok)throw Error('HTTP '+r.status+' loading '+url+(r.status===404?' — check repository, file path, and visibility':'')+(r.status===403?' — GitHub API rate limit or access restriction':''));
+ const u=new URL(url),isGitHubApi=u.protocol==='https:'&&u.hostname==='api.github.com';
+ const headers={Accept:isGitHubApi?'application/vnd.github+json':'application/json'};
+ if(isGitHubApi&&githubReadToken)headers.Authorization='Bearer '+githubReadToken;
+ let r;try{r=await fetch(url,{signal:controller.signal,cache:'no-store',credentials:'omit',headers})}
+ catch(e){throw Error('Cannot load '+url+': '+(e.name==='AbortError'?'request timed out':e.message))}
+ finally{clearTimeout(timer)}
+ if(!r.ok){
+  const hint=r.status===404?(isGitHubApi&&githubReadToken?
+   ' — repository or file not accessible with this token; check its selected repository and Contents read permission':
+   ' — private repositories require a read-only token; open Library → Private GitHub repository'):
+   r.status===403?' — check GitHub permissions or API rate limits':'';
+  throw Error('HTTP '+r.status+' loading '+url+hint);
+ }
  try{return await r.json()}catch{throw Error('Invalid JSON from '+url)}
 }
 const api=(r,path='')=>`https://api.github.com/repos/${encodeURIComponent(r.owner)}/${encodeURIComponent(r.repo)}${path?'/'+path:''}`;
 const encodePath=p=>p.split('/').map(encodeURIComponent).join('/');
-async function readRepoFile(r,path){const url=`https://raw.githubusercontent.com/${encodeURIComponent(r.owner)}/${encodeURIComponent(r.repo)}/${encodeURIComponent(r.branch)}/${encodePath(path)}`;return fetchJson(path==='rsm-view.json'?url+'?fresh='+Date.now():url)}
+function decodeGitHubBase64(content){
+ const bytes=atob(String(content||'').replace(/\s/g,''));
+ const raw=Uint8Array.from(bytes,c=>c.charCodeAt(0));
+ return new TextDecoder('utf-8',{fatal:true}).decode(raw);
+}
+async function readRepoFile(r,path){
+ if(githubReadToken){
+  const url=api(r,'contents/'+encodePath(path))+'?ref='+encodeURIComponent(r.branch);
+  let record=await fetchJson(url);
+  if(record.type!=='file')throw Error('Expected a file at '+path);
+  if(!record.content&&record.sha)record=await fetchJson(api(r,'git/blobs/'+encodeURIComponent(record.sha)));
+  if(record.encoding!=='base64'||typeof record.content!=='string')throw Error('GitHub returned an unsupported file representation at '+path);
+  try{return JSON.parse(decodeGitHubBase64(record.content))}
+  catch(e){throw Error('Invalid UTF-8 JSON at '+path+': '+e.message)}
+ }
+ const url=`https://raw.githubusercontent.com/${encodeURIComponent(r.owner)}/${encodeURIComponent(r.repo)}/${encodeURIComponent(r.branch)}/${encodePath(path)}`;
+ return fetchJson(path==='rsm-view.json'?url+'?fresh='+Date.now():url);
+}
 // A research family owns its records; the top-level atlas only composes them.
 // Only explicitly named, same-repository JSON files are read. No recursive
 // discovery, copied records, or new schema is required for older investigations.
@@ -1961,7 +2010,24 @@ $('reader-file').onchange=async e=>{
 };
 readerLoad();
 
-$('loadForm').addEventListener('submit',async e=>{e.preventDefault();try{await loadSource($('source').value);$('library-dialog').hidden=true;window.scrollTo(0,0)}catch(err){setStatus(err.message,true)}});
+async function openLibrarySource(){
+ const typed=$('github-read-token').value.trim();
+ if(typed){
+  setGitHubReadToken(typed);
+  $('github-read-token').value='';
+ }
+ await loadSource($('source').value);
+ $('library-dialog').hidden=true;
+ window.scrollTo(0,0);
+}
+$('loadForm').addEventListener('submit',async e=>{e.preventDefault();try{await openLibrarySource()}catch(err){setStatus(err.message,true)}});
+$('private-repo-open').onclick=()=>openLibrarySource().catch(err=>setStatus(err.message,true));
+$('private-repo-forget').onclick=()=>{
+ githubReadToken=null;
+ $('github-read-token').value='';
+ $('private-repo-status').textContent='Token cleared; reload to clear already loaded content';
+ activity('Private GitHub access token cleared from memory');
+};
 $('choices').addEventListener('change',async e=>{try{const view=state.views?.find(v=>v.id===e.target.value);if(view)await loadMapped(state.repo,view);else await loadPath(state.repo,e.target.value);$('library-dialog').hidden=true;window.scrollTo(0,0)}catch(err){setStatus(err.message,true)}});
 $('atlas-lens').addEventListener('change',async e=>{
  const view=state.views?.find(v=>v.id===e.target.value);
@@ -2075,5 +2141,8 @@ window.addEventListener('resize',()=>{
 });
 $('library-open').onclick=()=>{$('library-dialog').hidden=false};$('library-close').onclick=()=>{$('library-dialog').hidden=true};$('library-dialog').addEventListener('click',e=>{if(e.target===$('library-dialog'))$('library-dialog').hidden=true});
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('reader-dialog').hidden){$('reader-dialog').hidden=true;return}if(e.key==='Escape'&&!$('library-dialog').hidden){$('library-dialog').hidden=true;return}if(e.target.matches('input,textarea,select'))return;if(e.key==='Escape'&&state.detailOpen){closeDetail();return}});
-const params=new URLSearchParams(location.search);const source=params.get('repo')||params.get('url')||'https://github.com/JadanPoll/Kami_Uploads_RSM_Tree';$('source').value=source;loadSource(source).then(()=>{const match=location.hash.match(/^#node=(.+)$/);if(match&&state.index.has(decodeURIComponent(match[1])))select(decodeURIComponent(match[1]))}).catch(err=>setStatus(err.message,true))
+const params=new URLSearchParams(location.search);const source=params.get('repo')||params.get('url')||'https://github.com/JadanPoll/Kami_Uploads_RSM_Tree';$('source').value=source;loadSource(source).then(()=>{const match=location.hash.match(/^#node=(.+)$/);if(match&&state.index.has(decodeURIComponent(match[1])))select(decodeURIComponent(match[1]))}).catch(err=>{
+ setStatus(err.message,true);
+ if(/^HTTP 404\\b/.test(err.message)&&err.message.includes('api.github.com/repos/'))$('library-dialog').hidden=false;
+})
 </script></body></html>
