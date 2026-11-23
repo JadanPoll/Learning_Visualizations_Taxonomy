@@ -367,6 +367,11 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   <form class="loader" id="loadForm"><label for="source" class="tiny">GitHub repository or JSON URL</label><input id="source" type="text" spellcheck="false" placeholder="https://github.com/…"><button type="submit" class="primary">Open</button>
     <label for="local" class="smallbtn local-button">Choose JSON file</label><input id="local" type="file" accept=".json,application/json" class="hidden">
     <button id="addRef" type="button" title="Add a reference guide to a local tree">Add references</button><input id="localRef" type="file" accept=".json,application/json" class="hidden"></form>
+  <div class="tiny muted" style="margin:7px 0 4px">Previously opened repositories (saved on this device)</div>
+  <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+    <select id="recent-repos" aria-label="Previously opened repositories" style="flex:1;min-width:180px"><option value="">Choose a previous repository…</option></select>
+    <button id="recent-repos-clear" type="button">Clear list</button>
+  </div>
   <details id="private-repo-access" style="margin:12px 0;padding:10px 12px;border:1px solid #d5e2ed;border-radius:11px;background:#f8fbfd">
     <summary style="font-size:14px;font-weight:650">Private GitHub repository (read-only access)</summary>
     <p class="tiny muted">Use a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">fine-grained GitHub token</a> restricted to the repository, with <strong>Contents: read-only</strong>. It goes only to api.github.com, stays in memory until this page reloads, and is never saved in your URL or browser storage. Use this only in a viewer host you trust.</p>
@@ -424,6 +429,26 @@ function setGitHubReadToken(input){
  $('private-repo-status').textContent='Token active only for '+githubReadRepo+' until page reload';
 }
 function tokenForRepo(r){return !!githubReadToken&&githubReadRepo===r.owner+'/'+r.repo}
+const RECENT_REPOS_STORE='knowledge-atlas-recent-repositories-v1';
+function recentRepoList(){
+ try{
+  const list=JSON.parse(localStorage.getItem(RECENT_REPOS_STORE)||'[]');
+  return Array.isArray(list)?list.filter(x=>typeof x==='string'&&/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(x)).slice(0,12):[];
+ }catch{return []}
+}
+function renderRecentRepos(){
+ const list=$('recent-repos');list.replaceChildren();
+ const intro=document.createElement('option');intro.value='';intro.textContent='Choose a previous repository…';list.append(intro);
+ for(const name of recentRepoList()){
+  const opt=document.createElement('option');opt.value=name;opt.textContent=name;list.append(opt);
+ }
+}
+function rememberRecentRepo(r){
+ if(!r?.owner||!r?.repo)return;
+ const name=r.owner+'/'+r.repo,others=recentRepoList().filter(x=>x.toLowerCase()!==name.toLowerCase());
+ try{localStorage.setItem(RECENT_REPOS_STORE,JSON.stringify([name,...others].slice(0,12)))}catch{}
+ renderRecentRepos();
+}
 async function fetchJson(url){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
  const u=new URL(url),isGitHubApi=u.protocol==='https:'&&u.hostname==='api.github.com';
@@ -1079,11 +1104,12 @@ async function loadMapped(r,view){
  if(switching||!state.glossarySelected)params.delete('term');
  try{history.replaceState(null,'','?'+params.toString()+(switching?'':location.hash||''))}catch{}
  $('choices').value=view.id;
+ rememberRecentRepo(r);
  setStatus('Opened '+(projected?.title||view.title)+' · '+(hasAtlas&&!selection?
   (data.curiosity_atlas?.entries?.length||0)+' question entries':state.index.size+' navigable nodes')+(guide?' · reading guide connected':''));
 }
 
-async function loadPath(r,path){setStatus('Loading '+path+'…');const d=await readResearchCorpus(r,path);if(!isTree(d))throw Error(path+' does not contain a supported nodes collection');state.glossary=null;state.termById=new Map();state.glossarySelected=null;state.glossaryMode='questions';let guide=null;const dir=path.includes('/')?path.slice(0,path.lastIndexOf('/')+1):'';const ref=d.reference_guide_path||'reference_guide.json';const gp=ref.startsWith(dir)?ref:dir+ref;try{guide=await readRepoFile(r,gp)}catch{}openTree(d,guide,path,{type:'github',repo:r.owner+'/'+r.repo,branch:r.branch,file:path,title:d.title||path});state.url=repoUrl(r,path);state.repo=r;state.activeView=null;state.curiosityData=d.curiosity_atlas?d:null;state.curiosityEntry=null;showCuriosityIndex(false);updateLensSelector();const params=new URLSearchParams(location.search);params.set('repo',state.url);params.delete('view');try{history.replaceState(null,'','?'+params.toString())}catch{}setStatus(`Loaded ${path} · ${state.index.size} nodes`+(guide?' · reference guide connected':' · no accompanying reference guide'));}
+async function loadPath(r,path){setStatus('Loading '+path+'…');const d=await readResearchCorpus(r,path);if(!isTree(d))throw Error(path+' does not contain a supported nodes collection');state.glossary=null;state.termById=new Map();state.glossarySelected=null;state.glossaryMode='questions';let guide=null;const dir=path.includes('/')?path.slice(0,path.lastIndexOf('/')+1):'';const ref=d.reference_guide_path||'reference_guide.json';const gp=ref.startsWith(dir)?ref:dir+ref;try{guide=await readRepoFile(r,gp)}catch{}openTree(d,guide,path,{type:'github',repo:r.owner+'/'+r.repo,branch:r.branch,file:path,title:d.title||path});state.url=repoUrl(r,path);state.repo=r;state.activeView=null;state.curiosityData=d.curiosity_atlas?d:null;state.curiosityEntry=null;showCuriosityIndex(false);updateLensSelector();const params=new URLSearchParams(location.search);params.set('repo',state.url);params.delete('view');try{history.replaceState(null,'','?'+params.toString())}catch{}rememberRecentRepo(r);setStatus(`Loaded ${path} · ${state.index.size} nodes`+(guide?' · reference guide connected':' · no accompanying reference guide'));}
 // Manifest-first loading avoids rate-limited unauthenticated GitHub tree listing.
 async function tryManifest(r){
  const candidates=r.branch?[r.branch]:['main','master'];
@@ -1114,9 +1140,16 @@ async function loadSource(raw){
  if(manifest){
   let views;
   if(manifest.views.some(v=>v.glob)){
-   try{views=viewList(manifest,await discover(r))}
-   catch(err){
-    activity('Repository listing unavailable; loading explicit manifest files','error',err.message);
+   try{
+    if(manifest.paths_file){
+     const catalog=await readRepoFile(r,manifest.paths_file);
+     const paths=Array.isArray(catalog)?catalog:catalog?.paths;
+     if(!Array.isArray(paths)||paths.some(p=>typeof p!=='string'||p.includes('..')||p.startsWith('/')))
+      throw Error('Invalid explicit file index at '+manifest.paths_file);
+     views=viewList(manifest,paths);
+    }else views=viewList(manifest,await discover(r));
+   }catch(err){
+    activity('Repository navigation index unavailable; loading explicit views','error',err.message);
     views=viewList({...manifest,views:manifest.views.filter(v=>v.file)},null);
    }
   }else views=viewList(manifest,null);
@@ -2054,6 +2087,15 @@ async function openLibrarySource(){
 }
 $('loadForm').addEventListener('submit',async e=>{e.preventDefault();try{await openLibrarySource()}catch(err){setStatus(err.message,true)}});
 $('private-repo-open').onclick=()=>openLibrarySource().catch(err=>setStatus(err.message,true));
+$('recent-repos').onchange=async e=>{
+ if(!e.target.value)return;
+ $('source').value='https://github.com/'+e.target.value;
+ try{await openLibrarySource()}catch(error){setStatus(error.message,true)}
+};
+$('recent-repos-clear').onclick=()=>{
+ try{localStorage.removeItem(RECENT_REPOS_STORE)}catch{}
+ renderRecentRepos();
+};
 $('private-repo-forget').onclick=()=>{
  githubReadToken=null;githubReadRepo=null;
  $('github-read-token').value='';
@@ -2173,7 +2215,7 @@ window.addEventListener('resize',()=>{
 });
 $('library-open').onclick=()=>{$('library-dialog').hidden=false};$('library-close').onclick=()=>{$('library-dialog').hidden=true};$('library-dialog').addEventListener('click',e=>{if(e.target===$('library-dialog'))$('library-dialog').hidden=true});
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('reader-dialog').hidden){$('reader-dialog').hidden=true;return}if(e.key==='Escape'&&!$('library-dialog').hidden){$('library-dialog').hidden=true;return}if(e.target.matches('input,textarea,select'))return;if(e.key==='Escape'&&state.detailOpen){closeDetail();return}});
-const params=new URLSearchParams(location.search);const source=params.get('repo')||params.get('url')||'https://github.com/JadanPoll/Kami_Uploads_RSM_Tree';$('source').value=source;loadSource(source).then(()=>{const match=location.hash.match(/^#node=(.+)$/);if(match&&state.index.has(decodeURIComponent(match[1])))select(decodeURIComponent(match[1]))}).catch(err=>{
+renderRecentRepos();const params=new URLSearchParams(location.search);const source=params.get('repo')||params.get('url')||(recentRepoList()[0]?'https://github.com/'+recentRepoList()[0]:'https://github.com/JadanPoll/Kami_Uploads_RSM_Tree');$('source').value=source;loadSource(source).then(()=>{const match=location.hash.match(/^#node=(.+)$/);if(match&&state.index.has(decodeURIComponent(match[1])))select(decodeURIComponent(match[1]))}).catch(err=>{
  setStatus(err.message,true);
  if(/^HTTP 404\b/.test(err.message)&&err.message.includes('api.github.com/repos/'))$('library-dialog').hidden=false;
 })
