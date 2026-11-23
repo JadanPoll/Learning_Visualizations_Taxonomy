@@ -302,6 +302,9 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .glossary-term-list{display:flex;flex-wrap:wrap;gap:7px;padding:12px}
 .glossary-term-button,.glossary-term-chip{border:1px solid #cfdeea;border-radius:9px;background:#f5faff;color:#2a5575;min-height:34px;padding:6px 10px;font-size:12px;text-align:left}
 .glossary-term-button:hover,.glossary-term-chip:hover{background:#e4f2ff}
+.glossary-term-button.unmapped{background:#fff1d5;border-color:#e8be71;color:#704806}
+.glossary-term-button.unmapped:hover{background:#ffe6b0}
+.glossary-scope-hint{font-size:12px;color:#5c7185;margin:9px 12px 0}
 .glossary-term-detail{background:#fff;border:1px solid #dce7ef;border-radius:14px;padding:17px;margin-top:12px}
 .glossary-term-detail h3{margin:0 0 9px;font-size:22px}
 .glossary-term-detail h4{font-size:14px;color:#355875;margin:22px 0 7px}
@@ -639,7 +642,11 @@ function mappedView(data,view,r){const spec=view.projection||{},shape=spec.shape
  const root=add(data,null,rootDef.kind||'subject','/',view.id+':root',rootLabel,field(data,rootDef.description_field)||'',source);
  function walk(container,parent,rule,pointer,depth){if(depth>14)throw Error('Mapping nesting exceeds 14 levels');const value=field(container,rule.path||'');if(value==null)return;
   const items=Array.isArray(value)?value.map((v,i)=>({v,k:i})):value&&typeof value==='object'?Object.entries(value).map(([k,v])=>({v,k})):rule.scalar?[{v:value,k:rule.path||'value'}]:[];
-  for(const {v,k} of items){const ptr=pointer+'/'+(rule.path||'').split('.').join('/')+'/'+String(k).replace(/~/g,'~0').replace(/\//g,'~1');const label=(v&&typeof v==='object'?field(v,rule.label_field||'name'):null)||rule.label||((Array.isArray(value)||rule.label_from_value||rule.scalar)?simpleLabel(v):String(k));const idKey=(v&&typeof v==='object'&&(v.id||v.url||field(v,rule.label_field||'name')))|| (typeof v==='string'?v:String(k));const description=(v&&typeof v==='object'?(field(v,rule.description_field)||v.why_necessary||v.difference||v.why||v.note):'')||'';const url=(v&&typeof v==='object'?maybeLink(field(v,rule.url_field||'url'),r):maybeLink(v,r));const n=add(v,parent,rule.kind||'item',ptr,parent+':'+rule.kind+':'+idKey,label,description,url);
+  for(const {v,k} of items){const ptr=pointer+'/'+(rule.path||'').split('.').join('/')+'/'+String(k).replace(/~/g,'~0').replace(/\//g,'~1');const label=(v&&typeof v==='object'?field(v,rule.label_field||'name'):null)||rule.label||((Array.isArray(value)||rule.label_from_value||rule.scalar)?simpleLabel(v):String(k));const idKey=(v&&typeof v==='object'&&(v.id||v.url||field(v,rule.label_field||'name')))|| (typeof v==='string'?v:String(k));const description=(v&&typeof v==='object'?(field(v,rule.description_field)||v.why_necessary||v.difference||v.why||v.note):'')||'';const childPath=rule.kind==='subdomain'&&typeof v==='string'&&/^[A-Za-z0-9_-]+$/.test(v)?
+    view.file.slice(0,view.file.lastIndexOf('/')+1)+v+'/domain.json':null;
+   const url=(v&&typeof v==='object'?maybeLink(field(v,rule.url_field||'url'),r):maybeLink(v,r))
+    ||(childPath?repoUrl(r,childPath):null);
+   const n=add(v,parent,rule.kind||'item',ptr,parent+':'+rule.kind+':'+idKey,label,description,url);
    if(rule.children_field&&v&&typeof v==='object')walk(v,n,{...rule,path:rule.children_field},ptr,depth+1);
    for(const child of rule.collections||[])if(v&&typeof v==='object')walk(v,n,child,ptr,depth+1);
   }
@@ -763,7 +770,12 @@ function glossaryLinkedRecords(termId){
  const questions=(d.curiosity_atlas?.entries||[]).filter(x=>(x.term_ids||[]).includes(termId));
  const technical=[...(d.nodes||[]),...(d.question_nodes||[]),...(d.fieldwork_nodes||[])]
   .filter(x=>(x.term_ids||[]).includes(termId));
- return {questions,technical};
+ // Bridge choices are themselves mapped research mechanisms, even when
+ // a term is not directly attached to a question or canonical node.
+ const mechanisms=(d.navigation_bridges||[]).flatMap(bridge=>
+  (bridge.choices||[]).filter(choice=>(choice.term_ids||[]).includes(termId))
+   .map(choice=>({...choice,bridge_id:bridge.id})));
+ return {questions,technical,mechanisms};
 }
 function openGlossaryTerm(id){
  if(!state.termById.has(id))return;
@@ -811,6 +823,18 @@ function renderGlossaryBrowser(){
     }
     section.append(grid);
    }
+   if(linked.mechanisms.length){
+    section.append(el('h4','','Technical routes ('+linked.mechanisms.length+')'));
+    const grid=el('div','glossary-term-list');
+    for(const route of linked.mechanisms.slice(0,12)){
+     const target=(route.targets||[]).find(id=>(state.curiosityData?.nodes||[]).some(n=>n.id===id));
+     const item=target?el('button','glossary-term-button',route.technical_title||route.label||route.bridge_id)
+                      :el('span','glossary-term-chip',route.technical_title||route.label||route.bridge_id);
+     if(target){item.type='button';item.onclick=()=>openResearchTarget(target)}
+     grid.append(item);
+    }
+    section.append(grid);
+   }
    const related=(term.related_ids||[]).map(id=>state.termById.get(id)).filter(Boolean);
    if(related.length){
     section.append(el('h4','','Related concepts (not synonyms)'));
@@ -821,16 +845,23 @@ function renderGlossaryBrowser(){
     }
     section.append(grid);
    }
-   if(!linked.questions.length&&!linked.technical.length)section.append(
+   if(!linked.questions.length&&!linked.technical.length&&!linked.mechanisms.length)section.append(
     el('p','muted','Vocabulary discovery only: this concept has no mapped question yet.'));
    results.append(section);
    $('curiosity-match-count').textContent=linked.questions.length+
-    ' linked curiosities · '+linked.technical.length+' technical records';
+    ' linked curiosities · '+linked.technical.length+' technical records · '+linked.mechanisms.length+' technical routes';
    return;
   }
   state.glossarySelected=null;
  }
  const matching=glossary.terms.filter(t=>glossaryTermMatches(t,query)),groups=new Map();
+ const mapped=new Set();
+ for(const n of [...(state.curiosityData?.curiosity_atlas?.entries||[]),...(state.curiosityData?.nodes||[]),
+                  ...(state.curiosityData?.question_nodes||[]),...(state.curiosityData?.fieldwork_nodes||[])])
+  for(const id of n.term_ids||[])mapped.add(id);
+ for(const b of state.curiosityData?.navigation_bridges||[])
+  for(const ch of b.choices||[])for(const id of ch.term_ids||[])mapped.add(id);
+ results.append(el('p','glossary-scope-hint','Amber terms have no mapped question, investigation or technical route in this view.'));
  for(const term of matching){
   const category=term.category||'Other';
   if(!groups.has(category))groups.set(category,[]);
@@ -843,8 +874,10 @@ function renderGlossaryBrowser(){
   const grid=el('div','glossary-term-list');
   terms.sort((a,b)=>a.label.localeCompare(b.label));
   for(const term of terms){
-   const b=el('button','glossary-term-button',term.label);b.type='button';
-   b.title=term.aliases?.length?'Also called '+term.aliases.join(', '):term.label;
+   const unmatched=!mapped.has(term.id);
+   const b=el('button','glossary-term-button'+(unmatched?' unmapped':''),term.label);b.type='button';
+   b.title=(term.aliases?.length?'Also called '+term.aliases.join(', '):term.label)
+    +(unmatched?' · No mapped research route in this view':'');
    b.onclick=()=>openGlossaryTerm(term.id);grid.append(b);
   }
   section.append(grid);results.append(section);
