@@ -376,9 +376,13 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   </div>
   <details id="private-repo-access" style="margin:12px 0;padding:10px 12px;border:1px solid #d5e2ed;border-radius:11px;background:#f8fbfd">
     <summary style="font-size:14px;font-weight:650">Private GitHub repository (read-only access)</summary>
-    <p class="tiny muted">Use a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">fine-grained GitHub token</a> restricted to the repository, with <strong>Contents: read-only</strong>. It goes only to api.github.com, stays in memory until this page reloads, and is never saved in your URL or browser storage. Use this only in a viewer host you trust.</p>
+    <p class="tiny muted">Use a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">fine-grained GitHub token</a> restricted to the repository, with <strong>Contents: read-only</strong>. It is sent only to api.github.com and never appears in URLs. When Remember is enabled, the token is stored <strong>unencrypted</strong> in this browser for up to 24 hours. Use a repository-limited, read-only token on a device and viewer host you trust; Forget token removes the saved copy.</p>
     <label for="github-read-token" class="library-label">Token (leave blank after unlocking)</label>
     <input id="github-read-token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" style="width:100%;max-width:100%;margin:4px 0 8px">
+    <label class="tiny" style="display:flex;align-items:center;gap:7px;margin-bottom:9px">
+      <input id="private-repo-remember" type="checkbox" checked>
+      Remember this read-only token for 24 hours on this device
+    </label>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <button type="button" id="private-repo-open" class="primary">Unlock and open</button>
       <button type="button" id="private-repo-forget">Forget token</button>
@@ -419,7 +423,12 @@ if(u.hostname==='github.com'){const a=u.pathname.split('/').filter(Boolean);if(a
 if(u.pathname.endsWith('.json'))return{directUrl:u.href};throw Error('Use a github.com repository/folder/file or a direct JSON URL')}
 // Private repo credentials are deliberately ephemeral: never serialize or log them.
 // Only GitHub's official API hostname can receive an Authorization header.
-let githubReadToken=null,githubReadRepo=null;
+// Tokens are repository-scoped and expire 24 hours after entry.
+// Browser storage contains plaintext credentials only when Remember is selected.
+const GITHUB_READ_TOKEN_STORE='knowledge-atlas-gh-read-token-v1:';
+const GITHUB_READ_TOKEN_TTL=24*60*60*1000;
+let githubReadToken=null,githubReadRepo=null,githubReadExpiresAt=0;
+function githubTokenKey(repo){return GITHUB_READ_TOKEN_STORE+repo.toLowerCase()}
 function setGitHubReadToken(input){
  const token=String(input||'').trim();
  if(!token)throw Error('Enter a GitHub fine-grained read-only token');
@@ -428,9 +437,47 @@ function setGitHubReadToken(input){
  if(source.directUrl||!source.owner||!source.repo)throw Error('Choose a GitHub repository before unlocking it');
  githubReadToken=token;
  githubReadRepo=source.owner+'/'+source.repo;
- $('private-repo-status').textContent='Token active only for '+githubReadRepo+' until page reload';
+ githubReadExpiresAt=Date.now()+GITHUB_READ_TOKEN_TTL;
+ $('private-repo-status').textContent='Read-only access active for '+githubReadRepo;
 }
-function tokenForRepo(r){return !!githubReadToken&&githubReadRepo===r.owner+'/'+r.repo}
+function rememberGitHubReadToken(){
+ if(!githubReadToken||!githubReadRepo)return;
+ try{
+  localStorage.setItem(githubTokenKey(githubReadRepo),
+   JSON.stringify({version:1,token:githubReadToken,expiresAt:githubReadExpiresAt}));
+  $('private-repo-status').textContent='Saved read-only access for '+githubReadRepo+' (expires within 24h)';
+ }catch(error){
+  $('private-repo-status').textContent='Access active for this tab; browser storage unavailable';
+ }
+}
+function restoreGitHubReadToken(r){
+ if(!r?.owner||!r?.repo||r.directUrl)return false;
+ const repo=r.owner+'/'+r.repo;
+ if(githubReadToken&&githubReadRepo?.toLowerCase()===repo.toLowerCase()&&Date.now()<githubReadExpiresAt)return true;
+ const key=githubTokenKey(repo);
+ let record;
+ try{record=JSON.parse(localStorage.getItem(key)||'null')}catch{}
+ if(!record)return false;
+ if(record.version!==1||typeof record.token!=='string'||!/^[A-Za-z0-9_]+$/.test(record.token)
+    ||!Number.isFinite(record.expiresAt)||Date.now()>=record.expiresAt
+    ||record.expiresAt>Date.now()+GITHUB_READ_TOKEN_TTL){
+  try{localStorage.removeItem(key)}catch{}
+  return false;
+ }
+ githubReadToken=record.token;
+ githubReadRepo=repo;
+ githubReadExpiresAt=record.expiresAt;
+ $('private-repo-status').textContent='Restored read-only access for '+repo+' (expires within 24h)';
+ return true;
+}
+function tokenForRepo(r){
+ if(!githubReadToken||githubReadRepo?.toLowerCase()!==(r.owner+'/'+r.repo).toLowerCase())return false;
+ if(Date.now()<githubReadExpiresAt)return true;
+ try{localStorage.removeItem(githubTokenKey(githubReadRepo))}catch{}
+ githubReadToken=null;githubReadRepo=null;githubReadExpiresAt=0;
+ $('private-repo-status').textContent='Saved access expired; enter a read-only token';
+ return false;
+}
 const RECENT_REPOS_STORE='knowledge-atlas-recent-repositories-v1';
 function recentRepoList(){
  try{
@@ -459,7 +506,7 @@ async function fetchJson(url){
  const u=new URL(url),isGitHubApi=u.protocol==='https:'&&u.hostname==='api.github.com';
  const headers={Accept:isGitHubApi?'application/vnd.github+json':'application/json'};
  const expected=githubReadRepo&&'/repos/'+githubReadRepo.split('/').map(encodeURIComponent).join('/');
- const authorized=isGitHubApi&&githubReadToken&&expected&&(u.pathname===expected||u.pathname.startsWith(expected+'/'));
+ const authorized=isGitHubApi&&githubReadToken&&Date.now()<githubReadExpiresAt&&expected&&(u.pathname===expected||u.pathname.startsWith(expected+'/'));
  if(authorized)headers.Authorization='Bearer '+githubReadToken;
  let r;try{r=await fetch(url,{signal:controller.signal,cache:'no-store',credentials:'omit',headers})}
  catch(e){throw Error('Cannot load '+url+': '+(e.name==='AbortError'?'request timed out':e.message))}
@@ -1161,6 +1208,7 @@ async function tryManifest(r){
 }
 async function loadSource(raw){
  setStatus('Opening '+raw+'…');const r=parseGithub(raw);
+ restoreGitHubReadToken(r);
  if(r.directUrl){
   const d=await fetchJson(r.directUrl);if(!isTree(d))throw Error('JSON has no nodes');
   state.repo=null;state.views=null;state.curiosityData=null;state.curiosityEntry=null;state.glossary=null;state.termById=new Map();
@@ -2112,11 +2160,13 @@ readerLoad();
 
 async function openLibrarySource(){
  const typed=$('github-read-token').value.trim();
+ if(typed)setGitHubReadToken(typed);
+ await loadSource($('source').value);
  if(typed){
-  setGitHubReadToken(typed);
+  if($('private-repo-remember').checked)rememberGitHubReadToken();
+  else try{localStorage.removeItem(githubTokenKey(githubReadRepo))}catch{}
   $('github-read-token').value='';
  }
- await loadSource($('source').value);
  $('library-dialog').hidden=true;
  window.scrollTo(0,0);
 }
@@ -2132,10 +2182,14 @@ $('recent-repos').onchange=async e=>{
  try{await openLibrarySource()}catch(error){setStatus(error.message,true)}
 };
 $('private-repo-forget').onclick=()=>{
- githubReadToken=null;githubReadRepo=null;
+ try{
+  const r=parseGithub($('source').value);
+  if(r.owner&&r.repo)localStorage.removeItem(githubTokenKey(r.owner+'/'+r.repo));
+ }catch{}
+ githubReadToken=null;githubReadRepo=null;githubReadExpiresAt=0;
  $('github-read-token').value='';
- $('private-repo-status').textContent='Token cleared; reload to clear already loaded content';
- activity('Private GitHub access token cleared from memory');
+ $('private-repo-status').textContent='Token forgotten for this repository; reload to clear already loaded content';
+ activity('Read-only GitHub access removed from memory and browser storage');
 };
 $('choices').addEventListener('change',async e=>{try{const view=state.views?.find(v=>v.id===e.target.value);if(view)await loadMapped(state.repo,view);else await loadPath(state.repo,e.target.value);$('library-dialog').hidden=true;window.scrollTo(0,0)}catch(err){setStatus(err.message,true)}});
 $('atlas-lens').addEventListener('change',async e=>{
