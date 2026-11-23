@@ -673,7 +673,7 @@ async function loadDomainGlossary(r,view,data){
  if(!data?.curiosity_atlas)return null;
  const relative=view.glossary_file||data.glossary_path||'glossary.json';
  const folder=view.file.slice(0,view.file.lastIndexOf('/')+1);
- const path=relative.startsWith('Investigations/')?relative:folder+relative;
+ const path=/^(?:Investigations|Collections)\//.test(relative)?relative:folder+relative;
  const key=[r.owner,r.repo,r.branch,path].join('/');
  if(glossaryCache.has(key))return glossaryCache.get(key);
  try{
@@ -764,6 +764,7 @@ function renderGlossaryBrowser(){
    results.append(back);
    const section=el('section','glossary-term-detail');
    section.append(el('h3','',term.label));
+   if(term.definition)section.append(el('p','',term.definition));
    if(term.aliases?.length)section.append(el('p','muted','Also called: '+term.aliases.join(' · ')));
    section.append(el('p','muted',term.category+' · '+term.id));
    const linked=glossaryLinkedRecords(term.id);
