@@ -463,13 +463,38 @@ async function readRepoFile(r,path){
  const url=`https://raw.githubusercontent.com/${encodeURIComponent(r.owner)}/${encodeURIComponent(r.repo)}/${encodeURIComponent(r.branch)}/${encodePath(path)}`;
  return fetchJson(path==='rsm-view.json'?url+'?fresh='+Date.now():url);
 }
+// Canonical case files can contribute navigation nodes without copying cases into
+// a second investigation JSON. Other collections (including Kami mathematics)
+// continue to use their existing nodes and include_files unchanged.
+async function linkCanonicalCases(r,data,path){
+ const files=data.case_files;
+ if(!files)return data;
+ if(!Array.isArray(files)||!files.length||files.length>8||
+    files.some(p=>typeof p!=='string'||!p.endsWith('/cases.json')||p.startsWith('/')||p.split('/').includes('..')))
+  throw Error('Invalid canonical case_files in '+path);
+ const parts=await Promise.all(files.map(file=>readRepoFile(r,file)));
+ const nodes=[...(data.nodes||[])],seen=new Set(nodes.map(n=>n.id));
+ for(let i=0;i<files.length;i++){
+  const part=parts[i];
+  if(!Array.isArray(part.cases))throw Error('Missing cases array in '+files[i]);
+  for(let j=0;j<part.cases.length;j++){
+   const c=part.cases[j];
+   if(!c.id||seen.has(c.id))throw Error('Duplicate or missing canonical case ID '+c.id);
+   seen.add(c.id);
+   nodes.push({...c,kind:'ai_use_case',question:c.title,
+    parent_id:data.case_parent_id||data.root||null,
+    source_location:{url:repoUrl(r,files[i]),pointer:'/cases/'+j}});
+  }
+ }
+ return {...data,nodes};
+}
 // A research family owns its records; the top-level atlas only composes them.
 // Only explicitly named, same-repository JSON files are read. No recursive
 // discovery, copied records, or new schema is required for older investigations.
 async function readResearchCorpus(r,path){
  const data=await readRepoFile(r,path);
  const includes=data.include_files;
- if(!includes)return data;
+ if(!includes)return linkCanonicalCases(r,data,path);
  if(!Array.isArray(includes)||includes.length>12||includes.some(p=>typeof p!=='string'||!p.endsWith('.json')||p.startsWith('/')||p.split('/').includes('..')))
   throw Error('Invalid research include_files at '+path);
  const base=path.includes('/')?path.slice(0,path.lastIndexOf('/')+1):'';
@@ -501,7 +526,7 @@ async function readResearchCorpus(r,path){
    seen.add(id);
   }
  }
- return assembled;
+ return linkCanonicalCases(r,assembled,path);
 }
 // A family question panel reuses one shared question atlas but reads only
 // that family's research records. No GitHub directory enumeration is involved.
@@ -865,12 +890,12 @@ function renderCuriosityIndex(){
   const globalView=state.views?.find(v=>v.file===state.activeView.atlas_file&&v.projection?.shape==='curiosities');
   if(globalView){
    const footer=el('p','curiosity-scope-footer');
-   footer.append('Focused on this family. For additional mechanisms from other mathematical fields, ');
-   const linkButton=el('button','glossary-back','Explore all mathematics');
+   footer.append('Focused on this family. For related cases and other questions, ');
+   const linkButton=el('button','glossary-back','Explore complete '+(globalView.short_title||'atlas'));
    linkButton.type='button';
    linkButton.onclick=async()=>{
     try{await loadMapped(state.repo,globalView)}
-    catch(error){setStatus('Cannot open complete mathematics atlas: '+error.message,true)}
+    catch(error){setStatus('Cannot open complete question atlas: '+error.message,true)}
    };
    footer.append(linkButton);
    results.append(footer);
