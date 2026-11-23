@@ -1326,6 +1326,34 @@ function renderDetail(){
   }else section.append(el('p','',String(value)));
   box.append(section);
  }
+ if(n.kind==='ai_use_case'){
+  // Generic case inspection consumes canonical FKEN records without another viewer.
+  if(n.workflow?.steps?.length){
+   const section=el('div','case-section');section.append(el('h3','','Workflow'));
+   const list=el('ol');
+   for(const step of n.workflow.steps)list.append(el('li','',String(step)));
+   section.append(list);
+   if(n.workflow.deliverable)section.append(el('p','','Deliverable: '+n.workflow.deliverable));
+   if(n.workflow.acceptance_check)section.append(el('p','','Check: '+n.workflow.acceptance_check));
+   box.append(section);
+  }
+  fieldSection('Typical tools',n.typical_tools);
+  fieldSection('Why this tier',n.why_this_tier);
+  fieldSection('First experiment',n.first_experiment);
+  fieldSection('Reported result',n.claims);
+  fieldSection('Demonstrated stage',n.demonstrated_stage?.replaceAll('_',' '));
+  fieldSection('Evidence',n.evidence);
+  fieldSection('What we could build',n.possible_project);
+  fieldSection('Important qualification',n.qualification);
+  if(Array.isArray(n.source_urls)&&n.source_urls.length){
+   const section=el('div','case-section');section.append(el('h3','','Sources'));
+   for(const url of n.source_urls){
+    if(typeof url!=='string'||!/^https:\/\//i.test(url))continue;
+    const source=el('div','case-source');source.append(link(url,url));section.append(source);
+   }
+   box.append(section);
+  }
+ }
  if(n.observed&&n.observed!==n.why_ask&&n.observed!==n.description)fieldSection('What happened',n.observed);
  if(n.failure_to_intervention)fieldSection('Failure and intervention',n.failure_to_intervention);
  if(n.mechanism_explanation)fieldSection(n.kind==='technical_branch'?'Mechanism and conditions to investigate':'How it worked',n.mechanism_explanation);
