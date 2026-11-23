@@ -265,7 +265,13 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .case-route-resource .case-source-status{margin:4px 0!important}
 
 /* Curiosity entrance: conventional vertical scrolling instead of canvas panning. */
-#atlas-curiosities[hidden],#curiosity-index[hidden]{display:none!important}
+#atlas-curiosities[hidden],#curiosity-index[hidden],#collection-index[hidden]{display:none!important}
+#collection-index .catalog-search{display:block;width:100%;max-width:740px;min-height:43px;border:1px solid #bed4e6;background:#fff;border-radius:11px;padding:10px 13px;font-size:15px;color:#244f6d}
+#collection-index .catalog-count{font-size:12px;color:#657e91;margin:9px 0 0}
+#collection-index .catalog-section{margin:18px 5px 26px}
+#collection-index .catalog-section h3{font-size:16px;color:#285471;margin:0 0 10px}
+#collection-index .catalog-section details>summary{font-size:15px;font-weight:650;cursor:pointer;color:#285471;margin-bottom:10px}
+#catalog-home{font-weight:680;font-size:12px}
 #atlas-curiosities{font-size:12px;font-weight:680;min-width:79px}
 .curiosity-index{position:absolute;z-index:12;inset:0;background:#f7fafe;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:0 16px 34px}
 .curiosity-index-heading{position:sticky;z-index:2;top:0;background:#f7fafe;padding:18px 5px 10px;border-bottom:1px solid #d8e5ef}
@@ -325,6 +331,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
     <div class="atlas-heading"><h2 id="collection-title">Your question landscape</h2><p>Drag or scroll to pan · Pinch or use +/− to zoom · Select to inspect</p></div>
     <nav class="atlas-toolbar" aria-label="Map navigation">
       <select id="atlas-lens" class="hidden" aria-label="Manufacturing investigation viewpoint" title="Choose the manufacturing question to navigate"></select>
+      <button id="catalog-home" type="button" hidden>All collections</button>
       <button id="atlas-curiosities" type="button" hidden title="Browse ordinary questions">Curiosities</button>
       <button id="atlas-about" type="button" aria-label="About this investigation" title="About this investigation">ⓘ</button>
       <button id="atlas-out" type="button" aria-label="Zoom out">−</button>
@@ -334,6 +341,15 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   </div>
   <div class="explore-workspace">
     <div id="canvas" class="landscape-canvas atlas-viewport" aria-label="Knowledge landscape map"></div>
+    <section id="collection-index" class="curiosity-index" aria-label="Collection navigator" hidden>
+      <div class="curiosity-index-heading">
+        <h2 id="catalog-title">Explore collections</h2>
+        <p id="catalog-description">Choose a subject, investigation or project landscape.</p>
+        <input id="catalog-search" class="catalog-search" type="search" autocomplete="off" spellcheck="false" placeholder="Search domains, projects, and investigations" aria-label="Search collections">
+        <p id="catalog-count" class="catalog-count" aria-live="polite"></p>
+      </div>
+      <div id="catalog-results" class="curiosity-results"></div>
+    </section>
     <section id="curiosity-index" class="curiosity-index" aria-label="Manufacturing curiosity encyclopedia" hidden>
       <div class="curiosity-index-heading">
         <h2>What do you want to understand?</h2>
@@ -1017,7 +1033,8 @@ function showCuriosityIndex(open){
  pane.hidden=!open;
  $('view').classList.toggle('question-browse-mode',open);
  for(const id of ['atlas-in','atlas-out','atlas-fit'])$(id).hidden=open;
- btn.hidden=open&&state.activeView?.projection?.shape==='curiosities'&&!state.curiosityEntry;
+ const available=state.activeView?.projection?.shape==='curiosities'&&!!state.curiosityData?.curiosity_atlas?.entries?.length;
+ btn.hidden=!available||(open&&!state.curiosityEntry);
  btn.textContent=open?'Back to investigation':'Browse questions';
  btn.setAttribute('aria-expanded',String(open));
  if(open&&state.curiosityData)renderCuriosityIndex()
@@ -1082,6 +1099,79 @@ function openQuestionSet(lensId){openResearchSelection({kind:'set',id:lensId})}
 function openCuriosityEntry(id){openResearchSelection({kind:'question',id})}
 
 function setChoices(choices,mapped){state.files=choices;clear($('choices'));for(const v of choices){const opt=el('option','',mapped?v.title:v);opt.value=mapped?v.id:v;$('choices').append(opt)}$('choices').classList.toggle('hidden',choices.length<2)}
+// A manifest can opt into a first-class library landing page. Every card is
+// derived from already-indexed views, so the home itself fetches no research
+// files and does not make a recursive GitHub discovery request.
+function closeCatalog(){
+ state.catalogVisible=false;
+ $('collection-index').hidden=true;
+ $('catalog-home').hidden=!state.catalogHome;
+}
+function renderCatalog(){
+ if(!state.catalogHome||!state.views)return;
+ const results=$('catalog-results');clear(results);
+ const views=state.views,query=$('catalog-search').value.trim().toLowerCase();
+ const matches=v=>!query||[v.title,v.short_title,v.file,v.id].some(x=>String(x||'').toLowerCase().includes(query));
+ const domain=views.filter(v=>v.file?.startsWith('Domains/')&&v.file.endsWith('/domain.json'));
+ const top=domain.filter(v=>v.file.split('/').length===3);
+ const sub=domain.filter(v=>v.file.split('/').length>3);
+ const projects=views.filter(v=>v.file?.startsWith('Project_Ideas/Landscapes/'));
+ const other=views.filter(v=>!domain.includes(v)&&!projects.includes(v));
+ const featured=(state.catalogHome.featured||[]).map(item=>{
+  const v=views.find(v=>(item.view_id&&v.id===item.view_id)||(item.file&&v.file===item.file));
+  return v?{...v,home_label:item.label||v.short_title||v.title,home_description:item.description||''}:null;
+ }).filter(Boolean);
+ function group(name,items,{collapsed=false,featured=false}={}){
+  const selected=items.filter(v=>featured||matches(v));
+  if(!selected.length)return;
+  const section=el('section','catalog-section');
+  const host=collapsed?el('details',''):section;
+  if(collapsed){host.append(el('summary','',name+' ('+selected.length+')'));section.append(host)}
+  else section.append(el('h3','',name));
+  const grid=el('div','curiosity-card-grid');
+  for(const v of selected){
+   const card=el('button','curiosity-card curiosity-set-card');card.type='button';
+   card.append(el('strong','',v.home_label||v.short_title||v.title));
+   if(v.home_description)card.append(el('span','',v.home_description));
+   card.onclick=async()=>{
+    try{await loadMapped(state.repo,v);$('choices').value=v.id;window.scrollTo(0,0)}
+    catch(error){setStatus('Could not open '+v.title+': '+error.message,true)}
+   };
+   grid.append(card);
+  }
+  host.append(grid);results.append(section);
+ }
+ if(!query)group('Start exploring',featured,{featured:true});
+ group('Domains',top);
+ group('Specialized domains',sub,{collapsed:!query});
+ group('Project landscapes',projects,{collapsed:!query});
+ group('Investigations and other collections',other,{collapsed:!query});
+ $('catalog-count').textContent=query?
+  views.filter(matches).length+' matching collections':
+  top.length+' major domains · '+sub.length+' specialized domains · '+projects.length+' project landscapes · '+other.length+' other views';
+ if(!results.children.length)results.append(el('p','curiosity-empty','No matching collections.'));
+}
+function openCatalog(){
+ if(!state.catalogHome||!state.views)return;
+ state.catalogVisible=true;
+ const home=state.catalogHome;
+ $('catalog-title').textContent=home.title||'Explore collections';
+ $('catalog-description').textContent=home.description||'Choose a subject or project landscape.';
+ $('collection-title').textContent=home.title||'Explore collections';
+ $('collection-index').hidden=false;
+ $('curiosity-index').hidden=true;
+ $('view').classList.add('question-browse-mode');
+ for(const id of ['atlas-in','atlas-out','atlas-fit','atlas-about','atlas-curiosities','catalog-home'])$(id).hidden=true;
+ $('atlas-lens').classList.add('hidden');
+ const url=new URL(location.href);
+ url.searchParams.set('repo','https://github.com/'+state.repo.owner+'/'+state.repo.repo);
+ for(const key of ['view','curiosity','set','term'])url.searchParams.delete(key);
+ url.hash='';
+ try{history.replaceState(null,'',url.toString())}catch{}
+ renderCatalog();
+ setStatus('Explore '+(home.title||'collections')+' · choose a domain, project, or investigation');
+}
+
 function updateLensSelector(){
  const selector=$('atlas-lens'),group=state.activeView?.shared_reader_id;
  const isCuriosityView=state.activeView?.projection?.shape==='curiosities';
@@ -1095,6 +1185,7 @@ function updateLensSelector(){
  const curiosityAvailable=isCuriosityView&&!!state.curiosityData?.curiosity_atlas?.entries?.length;
  const curiosities=$('atlas-curiosities');
  curiosities.hidden=!curiosityAvailable;
+ $('catalog-home').hidden=!state.catalogHome;
  if(curiosityAvailable)curiosities.textContent='Browse questions';
  const rootButton=$('atlas-about');
  rootButton.hidden=isCuriosityView;
@@ -1170,6 +1261,7 @@ async function loadMapped(r,view){
   state.curiosityFamily='all';state.curiositySearch='';state.glossaryMode='questions';state.glossarySelected=null;
   $('curiosity-search').value='';
  }
+ closeCatalog();
  openTree(tree,guide,projected?.title||view.title,{type:'github',repo:r.owner+'/'+r.repo,
   branch:r.branch,file:view.file,view_id:projected?.originViewId||view.id,title:projected?.title||view.title});
  state.activeView=view;state.url=repoUrl(r,view.file);state.repo=r;updateLensSelector();
@@ -1207,6 +1299,8 @@ async function tryManifest(r){
  return null;
 }
 async function loadSource(raw){
+ state.catalogHome=null;state.catalogVisible=false;
+ $('collection-index').hidden=true;$('catalog-home').hidden=true;
  setStatus('Opening '+raw+'…');const r=parseGithub(raw);
  restoreGitHubReadToken(r);
  if(r.directUrl){
@@ -1238,6 +1332,7 @@ async function loadSource(raw){
   }else views=viewList(manifest,null);
   const filtered=r.path?views.filter(v=>v.file.startsWith(r.path.replace(/\/$/,'')+'/')):views;
   state.repo=r;state.views=filtered.length?filtered:views;state.activeView=null;
+  state.catalogHome=manifest.home||null;
   if(!state.views.length)throw Error('Mapping manifest has no files to display');
   setChoices(state.views,true);
   const wanted=new URLSearchParams(location.search).get('view');
@@ -1246,6 +1341,7 @@ async function loadSource(raw){
    'human-ai-fieldwork':'human-ai-curiosities'};
   const alias=wanted?.startsWith('manufacturing-')?'manufacturing-curiosities':aliases[wanted];
   const selected=state.views.find(v=>v.id===wanted)||state.views.find(v=>v.id===alias)||state.views[0];
+  if(state.catalogHome&&!wanted&&!r.path){openCatalog();return}
   $('choices').value=selected.id;await loadMapped(r,selected);return;
  }
  // Generic older repositories without an explicit mapping retain discovery fallback.
@@ -2304,6 +2400,8 @@ window.addEventListener('resize',()=>{
  a.viewportSize={w,h};
  scheduleAtlasFrame();queueAtlasSave();
 });
+$('catalog-home').onclick=openCatalog;
+$('catalog-search').addEventListener('input',renderCatalog);
 $('library-open').onclick=()=>{$('library-dialog').hidden=false};$('library-close').onclick=()=>{$('library-dialog').hidden=true};$('library-dialog').addEventListener('click',e=>{if(e.target===$('library-dialog'))$('library-dialog').hidden=true});
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('reader-dialog').hidden){$('reader-dialog').hidden=true;return}if(e.key==='Escape'&&!$('library-dialog').hidden){$('library-dialog').hidden=true;return}if(e.target.matches('input,textarea,select'))return;if(e.key==='Escape'&&state.detailOpen){closeDetail();return}});
 renderRecentRepos();const params=new URLSearchParams(location.search);const source=params.get('repo')||params.get('url')||(recentRepoList()[0]?'https://github.com/'+recentRepoList()[0]:'https://github.com/JadanPoll/Kami_Uploads_RSM_Tree');$('source').value=source;loadSource(source).then(()=>{const match=location.hash.match(/^#node=(.+)$/);if(match&&state.index.has(decodeURIComponent(match[1])))select(decodeURIComponent(match[1]))}).catch(err=>{
