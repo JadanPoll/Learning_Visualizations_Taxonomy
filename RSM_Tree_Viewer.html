@@ -298,6 +298,9 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 #collection-index .catalog-section h3{font-size:16px;color:#285471;margin:0 0 10px}
 #collection-index .catalog-section details>summary{font-size:15px;font-weight:650;cursor:pointer;color:#285471;margin-bottom:10px}
 #catalog-home{font-weight:680;font-size:12px}
+#history-back,#history-forward{font-size:12px;font-weight:650;white-space:nowrap}
+#history-back:disabled,#history-forward:disabled{opacity:.38;cursor:default}
+@media(max-width:650px){#history-back,#history-forward{font-size:11px;padding:6px 7px}}
 #atlas-curiosities{font-size:12px;font-weight:680;min-width:79px}
 .curiosity-index{position:absolute;z-index:12;inset:0;background:#f7fafe;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:0 16px 34px}
 .curiosity-index-heading{position:sticky;z-index:2;top:0;background:#f7fafe;padding:18px 5px 10px;border-bottom:1px solid #d8e5ef}
@@ -357,6 +360,8 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
     <div class="atlas-heading"><h2 id="collection-title">Your question landscape</h2><p>Drag or scroll to pan · Pinch or use +/− to zoom · Select to inspect</p></div>
     <nav class="atlas-toolbar" aria-label="Map navigation">
       <select id="atlas-lens" class="hidden" aria-label="Manufacturing investigation viewpoint" title="Choose the manufacturing question to navigate"></select>
+      <button id="history-back" type="button" title="Return to previous domain or collection" aria-label="Navigate back" disabled>← Back</button>
+      <button id="history-forward" type="button" title="Return to next domain or collection" aria-label="Navigate forward" disabled>Forward →</button>
       <button id="catalog-home" type="button" hidden>All collections</button>
       <button id="atlas-curiosities" type="button" hidden title="Browse ordinary questions">Curiosities</button>
       <button id="atlas-about" type="button" aria-label="About this investigation" title="About this investigation">ⓘ</button>
@@ -1288,6 +1293,7 @@ function renderCatalog(){
 }
 function openCatalog(){
  if(!state.catalogHome||!state.views)return;
+ const navigationBefore=navigationSnapshot();
  state.catalogVisible=true;
  const home=state.catalogHome;
  $('catalog-title').textContent=home.title||'Explore collections';
@@ -1305,6 +1311,7 @@ function openCatalog(){
  try{history.replaceState(null,'',url.toString())}catch{}
  renderCatalog();
  setStatus('Explore '+(home.title||'collections')+' · choose a domain, project, or investigation');
+ commitNavigation(navigationBefore);
 }
 
 function updateLensSelector(){
@@ -1329,6 +1336,7 @@ function updateLensSelector(){
 }
 
 async function loadMapped(r,view){
+ const navigationBefore=navigationSnapshot();
  setStatus('Opening '+view.title+'…');
  const data=await readMappedCorpus(r,view);
  const hasAtlas=view.projection?.shape==='curiosities'&&!!data.curiosity_atlas;
@@ -1417,6 +1425,7 @@ async function loadMapped(r,view){
  setStatus('Opened '+(projected?.title||view.title)+' · '+(hasAtlas&&!selection?
   (data.curiosity_atlas?.entries?.length||0)+' question entries':state.index.size+' navigable nodes')+(guide?' · reading guide connected':'')+
   (state.qualityIssueCount?' · '+state.qualityIssueCount+' quality warning(s) to review':''),!!state.qualityIssueCount);
+ commitNavigation(navigationBefore);
 }
 
 async function loadPath(r,path){setStatus('Loading '+path+'…');const d=await readResearchCorpus(r,path);if(!isTree(d))throw Error(path+' does not contain a supported nodes collection');state.glossary=null;state.termById=new Map();state.glossarySelected=null;state.glossaryMode='questions';let guide=null;const dir=path.includes('/')?path.slice(0,path.lastIndexOf('/')+1):'';const ref=d.reference_guide_path||'reference_guide.json';const gp=ref.startsWith(dir)?ref:dir+ref;try{guide=await readRepoFile(r,gp)}catch{}openTree(d,guide,path,{type:'github',repo:r.owner+'/'+r.repo,branch:r.branch,file:path,title:d.title||path});state.url=repoUrl(r,path);state.repo=r;state.activeView=null;state.curiosityData=d.curiosity_atlas?d:null;state.curiosityEntry=null;showCuriosityIndex(false);updateLensSelector();const params=new URLSearchParams(location.search);params.set('repo',state.url);params.delete('view');try{history.replaceState(null,'','?'+params.toString())}catch{}rememberRecentRepo(r);setStatus(`Loaded ${path} · ${state.index.size} nodes`+(guide?' · reference guide connected':' · no accompanying reference guide')+(state.qualityIssueCount?' · '+state.qualityIssueCount+' quality warning(s) to review':''),!!state.qualityIssueCount);}
@@ -1435,6 +1444,7 @@ async function tryManifest(r){
  return null;
 }
 async function loadSource(raw){
+ navigationTrail.length=0;navigationCursor=-1;updateNavigationControls();
  state.catalogHome=null;state.catalogVisible=false;
  $('collection-index').hidden=true;$('catalog-home').hidden=true;
  setStatus('Opening '+raw+'…');const r=parseGithub(raw);
@@ -1499,6 +1509,95 @@ function openTree(d,guide,source,origin=null){state.currentSource=origin||{type:
   defects.slice(0,3).map(n=>mappingRepairReport(n)).join('\n\n---\n\n'));
 }
 function ancestry(id){const out=[],visited=new Set();let x=id;while(x&&state.index.has(x)&&!visited.has(x)){out.unshift(x);visited.add(x);x=state.parent.get(x)}return out}
+// Domain-level history records actual navigational transitions, distinct
+// from the adjacent-card arrows used to thumb through the current landscape.
+// Entries keep the already loaded research graph, selection and map viewport,
+// so Back/Forward restores the parent immediately without refetching JSON.
+const navigationTrail=[];let navigationCursor=-1,navigationRestoring=false;
+function navigationSnapshot(){
+ if(!state.repo||(!state.activeView&&!state.catalogVisible))return null;
+ const a=state.atlas||{};
+ return {repo:state.repo,views:state.views,catalogHome:state.catalogHome,
+  catalogVisible:!!state.catalogVisible,activeView:state.activeView,
+  tree:state.tree,guide:state.guide,source:state.currentSource,
+  selected:state.selected,detailOpen:!!state.detailOpen,
+  atlas:{x:a.x,y:a.y,z:a.z},url:state.url,href:location.href,
+  curiosityData:state.curiosityData,curiosityEntry:state.curiosityEntry,
+  glossary:state.glossary,glossaryMode:state.glossaryMode,
+  glossarySelected:state.glossarySelected,curiosityFamily:state.curiosityFamily,
+  curiositySearch:state.curiositySearch,
+  browseQuestions:!$('curiosity-index').hidden};
+}
+function navigationIdentity(s){
+ if(!s)return '';
+ const root=s.repo?.owner+'/'+s.repo?.repo;
+ if(s.catalogVisible)return root+':catalog';
+ let u;try{u=new URL(s.href)}catch{}
+ return root+':'+(s.activeView?.id||s.source?.view_id||s.source?.file||'')+':'+
+  (u?.searchParams.get('curiosity')||'')+':'+(u?.searchParams.get('set')||'');
+}
+function updateNavigationControls(){
+ $('history-back').disabled=navigationCursor<=0;
+ $('history-forward').disabled=navigationCursor<0||navigationCursor>=navigationTrail.length-1;
+}
+function commitNavigation(before){
+ if(navigationRestoring)return;
+ const now=navigationSnapshot();if(!now)return;
+ if(navigationCursor<0){
+  if(before&&navigationIdentity(before)!==navigationIdentity(now)){
+   navigationTrail.push(before);navigationCursor++;
+  }
+  navigationTrail.push(now);navigationCursor++;updateNavigationControls();return;
+ }
+ if(before)navigationTrail[navigationCursor]=before;
+ if(navigationIdentity(navigationTrail[navigationCursor])===navigationIdentity(now)){
+  navigationTrail[navigationCursor]=now;updateNavigationControls();return;
+ }
+ navigationTrail.splice(navigationCursor+1);
+ navigationTrail.push(now);navigationCursor++;updateNavigationControls();
+}
+function restoreNavigation(s){
+ if(!s)return;
+ state.repo=s.repo;state.views=s.views;state.catalogHome=s.catalogHome;
+ state.activeView=s.activeView;state.url=s.url;
+ state.curiosityData=s.curiosityData;state.curiosityEntry=s.curiosityEntry;
+ state.glossary=s.glossary;state.termById=glossaryIndex(s.glossary);
+ state.glossaryMode=s.glossaryMode;state.glossarySelected=s.glossarySelected;
+ state.curiosityFamily=s.curiosityFamily;state.curiositySearch=s.curiositySearch;
+ $('curiosity-search').value=s.curiositySearch||'';
+ if(s.catalogVisible){
+  openCatalog();
+ }else{
+  if(!s.tree)throw Error('Previous domain has no recoverable research graph');
+  closeCatalog();
+  openTree(s.tree,s.guide,s.source?.title||s.activeView?.title||'Explore',s.source);
+  state.selected=state.index.has(s.selected)?s.selected:state.selected;
+  state.detailOpen=s.detailOpen;
+  if(s.atlas&&Number.isFinite(s.atlas.x)&&Number.isFinite(s.atlas.y)&&Number.isFinite(s.atlas.z)){
+   state.atlas.x=s.atlas.x;state.atlas.y=s.atlas.y;state.atlas.z=s.atlas.z;
+   applyAtlas();
+  }
+  updateLensSelector();
+  if(s.activeView)$('choices').value=s.activeView.id;
+  showCuriosityIndex(s.browseQuestions);
+  updateSelection();renderDetail();
+  $('detail').scrollTop=0;
+ }
+ try{history.replaceState(null,'',s.href)}catch{}
+ updateNavigationControls();
+}
+function navigateHistory(delta){
+ const next=navigationCursor+delta;
+ if(navigationRestoring||next<0||next>=navigationTrail.length)return;
+ const current=navigationSnapshot();
+ if(current)navigationTrail[navigationCursor]=current;
+ const old=navigationCursor;navigationCursor=next;navigationRestoring=true;
+ try{restoreNavigation(navigationTrail[navigationCursor])}
+ catch(error){navigationCursor=old;activity('Unable to restore previous domain','error',error.message);updateNavigationControls()}
+ finally{navigationRestoring=false}
+}
+$('history-back').onclick=()=>navigateHistory(-1);
+$('history-forward').onclick=()=>navigateHistory(1);
 function browseNodeOrder(){
  const layout=state.atlas.layout;
  if(!layout?.regions)return [...state.index.keys()];
