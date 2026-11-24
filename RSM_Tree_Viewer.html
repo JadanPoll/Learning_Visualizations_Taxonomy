@@ -1482,8 +1482,9 @@ function renderLandscape(){
   section.style.width=region.w+'px';section.style.height=region.h+'px';section.dataset.nodeId=region.id;
   const head=el('div','atlas-region-heading'),name=el('button','atlas-region-title',title(state.index.get(region.id)));
   name.type='button';name.onclick=()=>select(region.id);
-  const actions=el('div','atlas-region-actions'),count=el('span','',region.descendants.length+' nearby');
-  actions.append(count);head.append(name,actions);section.append(head);
+  const actions=el('div','atlas-region-actions');
+  if(region.descendants.length)actions.append(el('span','',region.descendants.length+' nested nodes'));
+  head.append(name,actions);section.append(head);
   for(const item of region.descendants){
    const node=state.index.get(item.id);
    const button=el('button','atlas-item'+(item.depth>1?' is-deep':''));
@@ -1497,7 +1498,7 @@ function renderLandscape(){
   world.append(section);
   const summary=el('button','atlas-overview-card');
   summary.type='button';summary.append(el('strong','',title(state.index.get(region.id))));
-  summary.append(el('small','',region.descendants.length+' nearby'));
+  if(region.descendants.length)summary.append(el('small','',region.descendants.length+' nested nodes'));
   summary.title='Inspect '+title(state.index.get(region.id));
   summary.onclick=()=>select(region.id);
   labels.append(summary);a.overviewLabels.push({region,el:summary});
@@ -1646,10 +1647,22 @@ function renderDetail(){
   fieldSection('Holistic purpose',c.holistic_purpose);
   fieldSection('Why this question matters',c.why);
   fieldSection('Research direction',c.judgment);
+  fieldSection('Existing tools to examine',lab.reuse_first);
   fieldSection('Example to investigate',lab.initial_case);
   fieldSection('What would demonstrate progress',lab.first_canary);
   fieldSection('Current development stage',lab.status?.replaceAll('_',' '));
   fieldSection('Most useful next action',review.next_action);
+  if(n.focal_project&&n.source_location?.url){
+   try{
+    const url=new URL(n.focal_project,n.source_location.url);
+    if(url.hostname==='github.com'){
+     const section=el('div','case-section');
+     section.append(el('h3','','Core project record'));
+     section.append(link(url.href,'Open the related project idea'));
+     box.append(section);
+    }
+   }catch{}
+  }
  }
  if(n.kind==='domain'){
   fieldSection('Field characterization',n.characterization);
