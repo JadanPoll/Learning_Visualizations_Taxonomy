@@ -165,6 +165,10 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .reference-scan .case-section{margin:10px 0}
 .reference-scan .case-section h3{font-size:13px}
 .reference-scan .case-section ul{padding-left:20px}
+.reference-inline-link{display:inline;border:0;background:none;color:#17619b;text-align:left;text-decoration:underline;font:inherit;cursor:pointer;padding:0;overflow-wrap:anywhere}
+.reference-inline-link:hover{color:#0c446d}
+.reference-scan .scan-tabs button:disabled{opacity:.4;cursor:default}
+.reference-scan .scan-tabs button[aria-pressed="true"]{background:#e5f2fc;border-color:#8fb9d7}
 .details-fold .fold-body>a{display:block;margin:7px 0;overflow-wrap:anywhere}
 .atlas-item.is-saved::after,.atlas-region.is-saved::after{content:'★';position:absolute;right:8px;bottom:5px;color:#ba8a22;font-size:15px}
 .atlas-viewport[data-level="overview"] .atlas-item{visibility:hidden;pointer-events:none}
@@ -1750,16 +1754,25 @@ function localJsonReference(url,r){
  return null;
 }
 function resourceHeading(k){return k.replace(/_/g,' ').replace(/([a-z])([A-Z])/g,'$1 $2').replace(/^./,s=>s.toUpperCase())}
-function renderReferencedData(host,data,r){
+// Repository references remain inside the inspector. External sites use links.
+function renderReferencedData(host,data,r,openLocal){
  if(data==null)return;
  if(typeof data==='string'){
-  const address=safeHref(data),repoPath=!address&&/^(?:Resources|Domains|Glossaries|Collections|Project_Ideas|Practical_Knowledge|Axioms)\/[\w./-]+\.json$/.test(data)&&!data.includes('..');
-  host.append(address?link(address,data):repoPath?link(repoUrl(r,data),simpleLabel(data)):el('span','',data));return;
+  const address=safeHref(data),repoPath=!address&&/^(?:Resources|Domains|Glossaries|Collections|Project_Ideas|Practical_Knowledge|Axioms)\/[\w./-]+\.json$/.test(data)&&!data.includes('..')?data:null;
+  const internal=repoPath||localJsonReference(address,r);
+  if(internal&&openLocal){
+   const open=el('button','reference-inline-link',simpleLabel(data));open.type='button';
+   open.title='Read '+internal+' here, without leaving this map';
+   open.onclick=()=>openLocal(internal);host.append(open);
+  }else host.append(address?link(address,data):repoPath?link(repoUrl(r,repoPath),simpleLabel(data)):el('span','',data));
+  return;
  }
  if(typeof data==='number'||typeof data==='boolean'){host.append(el('span','',String(data)));return}
  if(Array.isArray(data)){
   const list=el('ul','');
-  for(const item of data.slice(0,100)){const li=el('li','');renderReferencedData(li,item,r);list.append(li)}
+  for(const item of data.slice(0,100)){
+   const li=el('li','');renderReferencedData(li,item,r,openLocal);list.append(li);
+  }
   host.append(list);
   if(data.length>100)host.append(el('p','muted','Showing the first 100 entries; open source for the full collection.'));
   return;
@@ -1773,13 +1786,11 @@ function renderReferencedData(host,data,r){
   for(const [key,value] of entries){
    if(value==null||value===''||(Array.isArray(value)&&!value.length))continue;
    const section=el('div','case-section');section.append(el('h3','',resourceHeading(key)));
-   const content=el('div','');renderReferencedData(content,value,r);section.append(content);host.append(section);
+   const content=el('div','');renderReferencedData(content,value,r,openLocal);section.append(content);host.append(section);
   }
  }
 }
-// Small in-memory cache avoids repeated JSON fetches when rapidly scanning nodes.
-const referencePreviewCache=new Map();
-const MAX_REFERENCE_CACHE=48;
+const referencePreviewCache=new Map(),MAX_REFERENCE_CACHE=48;
 function cacheReference(key,value){
  if(referencePreviewCache.has(key))referencePreviewCache.delete(key);
  referencePreviewCache.set(key,value);
@@ -1788,16 +1799,16 @@ function cacheReference(key,value){
 function appendResourcePreview(box,node){
  const path=localJsonReference(node.url,state.repo);
  if(!path)return;
- const r={...state.repo},key=r.owner+'/'+r.repo+'@'+r.branch+':'+path;
+ const r={...state.repo},historyPaths=[path];let index=0,requestId=0,data=null,mode='readable';
  const section=el('section','reference-scan');
- section.append(el('h3','','Reference preview'));
- const status=el('p','case-source-status','Loading linked JSON…');
+ const heading=el('h3','','Reference preview'),status=el('p','case-source-status','Loading linked JSON…');
+ const nav=el('div','scan-tabs'),back=el('button','','← Back'),forward=el('button','','Forward →');
+ back.type=forward.type='button';nav.append(back,forward);nav.hidden=true;
  const tabs=el('div','scan-tabs'),readable=el('button','','Readable'),raw=el('button','','JSON');
- readable.type='button';raw.type='button';tabs.hidden=true;tabs.append(readable,raw);
+ readable.type=raw.type='button';tabs.hidden=true;tabs.append(readable,raw);
  const body=el('div',''),code=el('pre','');code.hidden=true;
- section.append(status,tabs,body,code);box.append(section);
- let data=null;
- function display(mode){
+ section.append(heading,status,nav,tabs,body,code);box.append(section);
+ function display(){
   if(!data)return;
   const json=mode==='json';
   body.hidden=json;code.hidden=!json;
@@ -1805,24 +1816,41 @@ function appendResourcePreview(box,node){
   raw.setAttribute('aria-pressed',String(json));
   if(json)code.textContent=JSON.stringify(data,null,2);
  }
- readable.onclick=()=>display('readable');
- raw.onclick=()=>display('json');
- async function load(){
+ readable.onclick=()=>{mode='readable';display()};
+ raw.onclick=()=>{mode='json';display()};
+ function updateNavigation(){
+  nav.hidden=historyPaths.length<2;back.disabled=index===0;forward.disabled=index===historyPaths.length-1;
+ }
+ async function openPath(next,addHistory=false){
+  if(!/^[\w./-]+\.json$/.test(next)||next.startsWith('/')||next.split('/').includes('..')){
+   activity('Unsafe local resource path blocked','error',next);return;
+  }
+  if(addHistory){
+   if(next===historyPaths[index])return;
+   historyPaths.splice(index+1);historyPaths.push(next);index=historyPaths.length-1;
+  }
+  const active=++requestId,key=r.owner+'/'+r.repo+'@'+r.branch+':'+next;
+  status.textContent='Opening '+next+'…';updateNavigation();
   try{
-   if(referencePreviewCache.has(key))data=referencePreviewCache.get(key);
-   else{data=await readRepoFile(r,path);cacheReference(key,data)}
-   if(!data||typeof data!=='object')throw Error('Expected an object or array');
-   status.textContent=path;
-   renderReferencedData(body,data,r);
-   tabs.hidden=false;display('readable');
+   const record=referencePreviewCache.has(key)?referencePreviewCache.get(key):await readRepoFile(r,next);
+   if(active!==requestId||!section.isConnected)return;
+   if(!record||typeof record!=='object')throw Error('Expected a JSON object or array');
+   cacheReference(key,record);data=record;
+   heading.textContent=record.name||record.title||simpleLabel(next);
+   status.textContent=next;clear(body);
+   renderReferencedData(body,data,r,p=>openPath(p,true));
+   const source=el('p','case-source');source.append(link(repoUrl(r,next),'Open original JSON on GitHub'));
+   body.append(source);tabs.hidden=false;display();
   }catch(error){
-   status.textContent='Could not preview '+path+': '+error.message;
-   const linkOut=link(repoUrl(r,path),'Open source JSON');
-   body.append(linkOut);
-   activity('Linked record preview failed','error',path+': '+error.message);
+   if(active!==requestId||!section.isConnected)return;
+   data=null;heading.textContent='Resource unavailable';status.textContent='Could not open '+next+': '+error.message;
+   clear(body);body.append(link(repoUrl(r,next),'Open the original JSON'));body.hidden=false;code.hidden=true;
+   tabs.hidden=true;activity('Linked record preview failed','error',next+': '+error.message);
   }
  }
- load();
+ back.onclick=()=>{if(index>0){index--;openPath(historyPaths[index])}};
+ forward.onclick=()=>{if(index<historyPaths.length-1){index++;openPath(historyPaths[index])}};
+ openPath(path);
 }
 function renderDetail(){
  const box=$('detail');clear(box);
