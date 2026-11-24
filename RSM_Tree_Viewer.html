@@ -143,7 +143,14 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .atlas-item{position:absolute;display:flex;align-items:flex-start;border:1px solid #cfdfe9;border-radius:12px;background:#f9fcff;padding:10px 12px;text-align:left;color:#2c455c;font-size:15px;line-height:1.3;overflow:hidden}
 .atlas-item .atlas-item-label{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden;overflow-wrap:anywhere}
 .atlas-item.is-deep{border-left:4px solid #9bbbd3;background:#fff}
+.atlas-item.mapping-frontier,.atlas-region.mapping-frontier,.atlas-overview-card.mapping-frontier{background:#fff2d9;border-color:#dda953;color:#6c4a16}
+.atlas-region.mapping-frontier::before{background:#d99d38}
+.atlas-item.mapping-frontier:hover,.atlas-overview-card.mapping-frontier:hover{background:#ffebc3}
 .atlas-item.is-selected,.atlas-region.is-selected{border-color:#2777b8;background:#e9f4ff;box-shadow:0 0 0 2px #4398d026}
+.navigation-quality-warning{border-left:4px solid #cc9634;background:#fff7e8;border-radius:9px;padding:11px 12px;margin:14px 0;color:#624819;font-size:13px;line-height:1.5}
+.navigation-quality-warning strong{display:block;font-size:14px;margin-bottom:4px}
+.navigation-quality-warning button{margin-top:8px;border-color:#d7b36d;color:#704e1a;background:#fff}
+.navigation-quality-warning textarea{display:block;width:100%;min-height:120px;margin-top:9px;font-size:12px;white-space:pre-wrap}
 .atlas-item.is-saved::after,.atlas-region.is-saved::after{content:'★';position:absolute;right:8px;bottom:5px;color:#ba8a22;font-size:15px}
 .atlas-viewport[data-level="overview"] .atlas-item{visibility:hidden;pointer-events:none}
 .atlas-viewport[data-level="overview"] .atlas-region{background:#fcfeff}
@@ -683,8 +690,89 @@ function simpleLabel(value){if(typeof value!=='string')return String(value??'Unt
 function hashKey(s){let h=2166136261;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0).toString(36)}
 function repoUrl(r,path){return `https://github.com/${encodeURIComponent(r.owner)}/${encodeURIComponent(r.repo)}/blob/${encodeURIComponent(r.branch)}/${encodePath(path)}`}
 function maybeLink(value,r){if(typeof value!=='string')return null;if(safeHref(value))return value;if(/^[\w.\-\/]+\.json$/.test(value)&&!value.includes('..'))return repoUrl(r,value);return null}
+// A structural signal, not a claim to judge the intellectual merit of text.
+// Inspect the *active source record* and its declared projection, not all files.
+function mappedQuality(item,kind,rule,linkUrl){
+ const isObject=item&&typeof item==='object'&&!Array.isArray(item);
+ const original=isObject?item:{};
+ const meaningfulFields=['description','definition','why_necessary','what_changes_if_chosen',
+  'base_confidence','stop_when','goal','purpose','characterization','centrality_role',
+  'why','rationale','contract','how_it_works','mechanism','evidence','observation',
+  'initial_case','practical_effect','claims','first_experiment','distinct_contact',
+  'big_picture_certification','reverse_engineered_virtual_lab','qualification',
+  'source_sections','source_ids','routes','source_views','source_urls'];
+ const contentFields=meaningfulFields.filter(k=>{
+  const v=original[k];return typeof v==='string'?v.trim().length>=12:
+   Array.isArray(v)?v.length>0:!!(v&&typeof v==='object'&&Object.keys(v).length);
+ });
+ const hasRef=!!linkUrl||['url','source','kami_url','link','reference'].some(k=>safeHref(original[k]))||
+  Object.values(original).some(v=>typeof v==='string'&&safeHref(v));
+ const hasChildren=Array.isArray(original.children)&&original.children.length>0;
+ // A question or glossary concept is legitimate as a navigational lead.
+ // Amber conveys that it has no developed explanation in this source record.
+ if(typeof item==='string'){
+  if(linkUrl||safeHref(item))return null;
+  if(kind==='research_question')return {code:'QUESTION_LEAD',label:'Open question',
+   message:'This source currently contains a question, not an investigated answer.',
+   action:'Investigate the question using concrete references; add evidence, rival mechanisms and discriminating checks, or connect it to an existing investigation.'};
+  if(kind==='domain_concept')return {code:'VOCABULARY_LEAD',label:'Vocabulary lead',
+   message:'This concept is named here without an explanation or linked study.',
+   action:'Add a useful reference or independent explanation where it belongs; do not invent definitions merely to satisfy a quota.'};
+  if(kind==='subdomain')return {code:'UNRESOLVED_SUBDOMAIN',label:'Unresolved subdomain',
+   message:'This subdomain name has no navigable target.',
+   action:'Correct the child path or index an existing domain file.'};
+  return {code:'REFERENCE_OR_OUTLINE',label:'Reference or outline',
+   message:'This record supplies a name but no explanation or navigable resource.',
+   action:'Add a useful source link, a concise substantive description, or an actual investigation.'};
+ }
+ if(!isObject)return null;
+ const descName=rule?.description_field;
+ const alternatives=['description','characterization','why_necessary','what_changes_if_chosen',
+  'base_confidence','goal','why','rationale','centrality_role'];
+ if(descName&&!field(item,descName)){
+  const alternativesFound=alternatives.filter(k=>k!==descName&&typeof field(item,k)==='string'&&field(item,k).trim());
+  const fallback=Array.isArray(rule.description_fallback_fields)?rule.description_fallback_fields:[];
+  if(alternativesFound.some(k=>!fallback.includes(k))){
+   return {code:'MAPPING_DESCRIPTION_MISMATCH',label:'Mapping field mismatch',
+    message:'The RSM view requests "'+descName+'" but this record stores its explanation under '+alternativesFound.join(', ')+'.',
+    action:'Correct the rsm-view.json description_field, or explicitly declare suitable description_fallback_fields. Do not duplicate the source.'};
+  }
+ }
+ if(contentFields.length||hasRef||hasChildren)return null;
+ if(kind==='domain'&&Object.keys(original).some(k=>Array.isArray(original[k])&&original[k].length))
+  return null; // A navigable index is a valid domain, not a failed investigation.
+ if(typeof original.name==='string'&&Object.keys(original).length===1)return {
+  code:'NAME_ONLY',label:'Name-only record',
+  message:'Only a name is provided; no explanation, references or capabilities are recorded.',
+  action:'Provide one actionable reason to navigate here, or connect it to a canonical resource.'};
+ if(!Object.keys(original).length)return {code:'EMPTY_RECORD',label:'Empty source record',
+  message:'The mapped source object contains no fields.',
+  action:'Replace the placeholder with an actual referenced finding or remove its view entry.'};
+ return {code:'THIN_RECORD',label:'Undeveloped record',
+  message:'This source has no usable explanation, evidence, competence check or reference in recognized fields.',
+  action:'Inspect the source and either add concrete content or correct its projection to expose the existing fields.'};
+}
+function mappingRepairReport(node){
+ const q=node?.mapping_quality;if(!q)return '';
+ const loc=node.source_location||{},o=state.currentSource||{};
+ return [
+  'RSM Tree Viewer — source or mapping gap',
+  'Repository: '+(o.repo||state.repo?.owner+'/'+state.repo?.repo||'unknown'),
+  'Active view: '+(state.activeView?.id||o.view_id||'unknown'),
+  'Mapping: rsm-view.json',
+  'Source: '+(o.file||state.activeView?.file||'unknown'),
+  'JSON pointer: '+(loc.pointer||'unknown'),
+  'Node: '+title(node)+' ['+(node.kind||'unknown')+']',
+  'Diagnostic: '+q.code+' — '+q.message,
+  'Source fields: '+(q.keys?.join(', ')||'(scalar value)'),
+  'Suggested repair: '+q.action,
+  'Preserve the original facts and stable IDs. Check whether the gap is in source content or the projection. Fix the smallest relevant location, then verify the actual user-facing view. Do not add filler or redundant copies.'
+ ].join('\n');
+}
 function mappedView(data,view,r){const spec=view.projection||{},shape=spec.shape||'flat',idPrefix=view.id+':',nodes=[],edges=[],used=new Set(),source=repoUrl(r,view.file);
- function add(item,parent,kind,pointer,key,label,description,url){let id=idPrefix+hashKey(key||pointer);while(used.has(id))id+='x';used.add(id);const node={...(item&&typeof item==='object'&&!Array.isArray(item)?item:{}),id,label:String(label||simpleLabel(key)),kind:kind||'item',parent_id:parent||null,description:description||'',source_location:{url:source,pointer}};if(url)node.url=url;nodes.push(node);if(parent)edges.push({from:parent,to:id,type:'contains'});return id}
+ function add(item,parent,kind,pointer,key,label,description,url,rule){let id=idPrefix+hashKey(key||pointer);while(used.has(id))id+='x';used.add(id);const node={...(item&&typeof item==='object'&&!Array.isArray(item)?item:{}),id,label:String(label||simpleLabel(key)),kind:kind||'item',parent_id:parent||null,description:description||'',source_location:{url:source,pointer}};if(url)node.url=url;
+  const quality=mappedQuality(item,node.kind,rule,url);if(quality)node.mapping_quality={...quality,keys:item&&typeof item==='object'?Object.keys(item):[]};
+  nodes.push(node);if(parent)edges.push({from:parent,to:id,type:'contains'});return id}
  if(shape==='flat'){
   const rawRows=field(data,spec.records||'nodes');if(!Array.isArray(rawRows))throw Error('Flat view requires an array at '+(spec.records||'nodes'));
   const lens=spec.lens?(data.landscape_views||[]).find(x=>x.id===spec.lens):null;
@@ -704,14 +792,14 @@ function mappedView(data,view,r){const spec=view.projection||{},shape=spec.shape
  }
  if(shape!=='record')throw Error('Unknown mapping shape: '+shape);
  const rootDef=spec.root||{};const rootLabel=field(data,rootDef.label_field)||rootDef.label||data.title||data.name||view.title;
- const root=add(data,null,rootDef.kind||'subject','/',view.id+':root',rootLabel,field(data,rootDef.description_field)||'',source);
+ const root=add(data,null,rootDef.kind||'subject','/',view.id+':root',rootLabel,field(data,rootDef.description_field)||rootDef.description_fallback_fields?.map(k=>field(data,k)).find(Boolean)||'',source,rootDef);
  function walk(container,parent,rule,pointer,depth){if(depth>14)throw Error('Mapping nesting exceeds 14 levels');const value=field(container,rule.path||'');if(value==null)return;
   const items=Array.isArray(value)?value.map((v,i)=>({v,k:i})):value&&typeof value==='object'?Object.entries(value).map(([k,v])=>({v,k})):rule.scalar?[{v:value,k:rule.path||'value'}]:[];
   for(const {v,k} of items){const ptr=pointer+'/'+(rule.path||'').split('.').join('/')+'/'+String(k).replace(/~/g,'~0').replace(/\//g,'~1');const label=(v&&typeof v==='object'?field(v,rule.label_field||'name'):null)||rule.label||((Array.isArray(value)||rule.label_from_value||rule.scalar)?simpleLabel(v):String(k));const idKey=(v&&typeof v==='object'&&(v.id||v.url||field(v,rule.label_field||'name')))|| (typeof v==='string'?v:String(k));const description=(v&&typeof v==='object'?(field(v,rule.description_field)||v.why_necessary||v.difference||v.why||v.note):'')||'';const childPath=rule.kind==='subdomain'&&typeof v==='string'&&/^[A-Za-z0-9_-]+$/.test(v)?
     view.file.slice(0,view.file.lastIndexOf('/')+1)+v+'/domain.json':null;
    const url=(v&&typeof v==='object'?maybeLink(field(v,rule.url_field||'url'),r):maybeLink(v,r))
     ||(childPath?repoUrl(r,childPath):null);
-   const n=add(v,parent,rule.kind||'item',ptr,parent+':'+rule.kind+':'+idKey,label,description,url);
+   const n=add(v,parent,rule.kind||'item',ptr,parent+':'+rule.kind+':'+idKey,label,description||rule.description_fallback_fields?.map(k=>field(v,k)).find(Boolean),url,rule);
    if(rule.children_field&&v&&typeof v==='object')walk(v,n,{...rule,path:rule.children_field},ptr,depth+1);
    for(const child of rule.collections||[])if(v&&typeof v==='object')walk(v,n,child,ptr,depth+1);
   }
