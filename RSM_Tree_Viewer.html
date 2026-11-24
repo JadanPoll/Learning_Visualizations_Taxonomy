@@ -1945,7 +1945,37 @@ function cacheReference(key,value){
  referencePreviewCache.set(key,value);
  if(referencePreviewCache.size>MAX_REFERENCE_CACHE)referencePreviewCache.delete(referencePreviewCache.keys().next().value);
 }
-function appendResourcePreview(box,node){
+// Derive a subdomain's immediately visible children from its existing view
+// rules. This is an in-memory operation on the selected source file, not an
+// expansion of the entire repository or a fetch of each referenced child.
+function mappedChildEntries(data,sourcePath,r){
+ const view=(state.views||[]).find(v=>v.file===sourcePath);
+ const collections=view?.projection?.collections||[];
+ const entries=[];
+ for(const rule of collections){
+  const value=field(data,rule.path);
+  if(value===undefined||value===null||value===''||(Array.isArray(value)&&!value.length))continue;
+  const items=Array.isArray(value)?value:[value];
+  for(const item of items){
+   if(item===undefined||item===null||item==='')continue;
+   const rawHref=typeof item==='string'?safeHref(item):
+    (item&&typeof item==='object'?safeHref(field(item,rule.url_field||'url')||item.source||item.link):null);
+   let path=localJsonReference(rawHref,r);
+   if(!path&&typeof item==='string'){
+    if(rule.path==='children'&&/^[A-Za-z0-9_-]+$/.test(item))
+     path=sourcePath.slice(0,sourcePath.lastIndexOf('/')+1)+item+'/domain.json';
+    else if(/^(?:Resources|Domains|Glossaries|Collections|Project_Ideas|Practical_Knowledge|Axioms)\/[\w./-]+\.json$/.test(item)&&!item.includes('..'))path=item;
+   }
+   const label=typeof item==='string'?simpleLabel(item):
+    field(item,rule.label_field)||item?.name||item?.title||item?.question||item?.label||rule.label||rule.path;
+   const entry={label:String(label),kind:rule.kind||rule.path,
+    path:path&&path!==sourcePath?path:null,href:rawHref,raw:item,collection:rule.path};
+   entries.push(entry);
+  }
+ }
+ return entries.slice(0,250);
+}
+function appendResourcePreview(box,node,childThumb=null){
  const path=localJsonReference(node.url,state.repo);
  if(!path)return;
  const r={...state.repo},historyPaths=[path];let index=0,requestId=0,data=null,mode='readable';
@@ -1988,6 +2018,8 @@ function appendResourcePreview(box,node){
    heading.textContent=record.name||record.title||simpleLabel(next);
    status.textContent=next;clear(body);
    renderReferencedData(body,data,r,p=>openPath(p,true),'',next);
+   if(next===path&&childThumb&&!childThumb.bound)
+    childThumb.bind(mappedChildEntries(record,path,r),(child,i)=>showChild(child,i));
    const source=el('p','case-source');source.append(link(repoUrl(r,next),'Open original JSON on GitHub'));
    body.append(source);tabs.hidden=false;display();
   }catch(error){
@@ -1996,6 +2028,24 @@ function appendResourcePreview(box,node){
    clear(body);body.append(link(repoUrl(r,next),'Open the original JSON'));body.hidden=false;code.hidden=true;
    tabs.hidden=true;activity('Linked record preview failed','error',next+': '+error.message);
   }
+ }
+ async function showChild(entry,i){
+  // The top arrows are a scoped reading deck. They do not change the active
+  // map or alter parent-domain navigation history.
+  historyPaths.splice(0,historyPaths.length,entry?.path||path);
+  index=0;updateNavigation();
+  if(!entry){await openPath(path);return}
+  if(entry.path){await openPath(entry.path);return}
+  ++requestId;
+  data=entry.raw;
+  heading.textContent=entry.label;
+  status.textContent=entry.kind+' · '+entry.collection+' in '+path;
+  clear(body);tabs.hidden=false;
+  if(entry.href)body.append(link(entry.href,'Open external source'));
+  else if(typeof entry.raw==='string')body.append(el('p','',
+   entry.raw)); // Unmapped glossary leads remain explicit, not made-up explanations.
+  else renderReferencedData(body,entry.raw,r,p=>openPath(p,true),'',path);
+  display();
  }
  back.onclick=()=>{if(index>0){index--;openPath(historyPaths[index])}};
  forward.onclick=()=>{if(index<historyPaths.length-1){index++;openPath(historyPaths[index])}};
@@ -2015,14 +2065,38 @@ function renderDetail(){
  const marker=el('span','chip',(n.kind||'Question').replace(/_/g,' '));box.append(marker);
  box.append(el('h2','',title(n)));
  const toolbar=renderReaderDetail(box,n);
- const order=browseNodeOrder(),position=order.indexOf(n.id);
- if(position>=0&&order.length>1){
+ const isChildDeck=n.kind==='subdomain'&&!!localJsonReference(n.url,state.repo);
+ let childThumb=null;
+ if(isChildDeck){
   const previous=el('button','inspector-step','←'),next=el('button','inspector-step','→');
-  previous.type=next.type='button';previous.title='Previous map card';next.title='Next map card';
-  previous.setAttribute('aria-label','Previous map card');next.setAttribute('aria-label','Next map card');
-  previous.disabled=position===0;next.disabled=position===order.length-1;
-  previous.onclick=()=>inspectAdjacent(-1);next.onclick=()=>inspectAdjacent(1);
-  toolbar.prepend(previous,next,el('span','inspector-position',(position+1)+' / '+order.length));
+  const count=el('span','inspector-position','Children…');
+  previous.type=next.type='button';
+  previous.title='Previous child, or return to parent';next.title='Inspect next child';
+  previous.setAttribute('aria-label','Previous child');next.setAttribute('aria-label','Next child');
+  previous.disabled=next.disabled=true;
+  toolbar.prepend(previous,next,count);
+  childThumb={bound:false,bind(entries,show){
+   if(this.bound)return;this.bound=true;
+   let at=-1;
+   const update=()=>{
+    count.textContent=entries.length?(at<0?'0 / '+entries.length+' children':(at+1)+' / '+entries.length+' children'):'No mapped children';
+    previous.disabled=at<0;next.disabled=at>=entries.length-1;
+   };
+   previous.onclick=()=>{if(at>=0){at--;update();show(at>=0?entries[at]:null,at)}};
+   next.onclick=()=>{if(at<entries.length-1){at++;update();show(entries[at],at)}};
+   update();
+  }};
+ }else{
+  const order=browseNodeOrder(),position=order.indexOf(n.id);
+  if(position>=0&&order.length>1){
+   const previous=el('button','inspector-step','←'),next=el('button','inspector-step','→');
+   previous.type=next.type='button';
+   previous.title='Previous visible card';next.title='Next visible card';
+   previous.setAttribute('aria-label','Previous visible card');next.setAttribute('aria-label','Next visible card');
+   previous.disabled=position===0;next.disabled=position===order.length-1;
+   previous.onclick=()=>inspectAdjacent(-1);next.onclick=()=>inspectAdjacent(1);
+   toolbar.prepend(previous,next,el('span','inspector-position',(position+1)+' / '+order.length+' cards'));
+  }
  }
  if(n.kind==='subdomain'&&n.url&&state.repo&&state.views){
   const destination=state.views.find(v=>v.file&&repoUrl(state.repo,v.file)===n.url);
@@ -2058,7 +2132,7 @@ function renderDetail(){
   open.className='case-related-link';
   box.append(open);
  }
- if(n.url&&state.repo)appendResourcePreview(box,n);
+ if(n.url&&state.repo)appendResourcePreview(box,n,childThumb);
 
  if(n.why_ask||n.why||n.description)box.append(el('p','',n.why_ask||n.why||n.description));
  if(n.actor)box.append(el('div','case-byline',n.actor+(n.evidence_status?' · '+n.evidence_status:'')));
