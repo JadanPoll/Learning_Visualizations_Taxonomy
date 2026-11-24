@@ -511,7 +511,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
-const state={tree:null,guide:null,selected:null,detailOpen:false,curiosityData:null,curiosityEntry:null,curiosityFamily:'all',curiositySearch:'',glossary:null,termById:new Map(),glossaryMode:'questions',glossarySelected:null,atlas:{x:0,y:0,z:1,ready:false,layout:null,saved:null,pointers:new Map(),gesture:null},url:null,repo:null,ref:null,files:[],views:null,activeView:null,currentSource:null,index:new Map(),children:new Map(),parent:new Map()};
+const state={tree:null,guide:null,selected:null,detailOpen:false,curiosityData:null,curiosityEntry:null,curiosityFamily:'all',curiositySearch:'',curiosityTypeFilter:'all',glossary:null,termById:new Map(),glossaryMode:'questions',glossarySelected:null,atlas:{x:0,y:0,z:1,ready:false,layout:null,saved:null,pointers:new Map(),gesture:null},url:null,repo:null,ref:null,files:[],views:null,activeView:null,currentSource:null,index:new Map(),children:new Map(),parent:new Map()};
 function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=String(text);return e}
 function clear(node){node.replaceChildren()}
 function setStatus(s,error=false){
@@ -1191,6 +1191,7 @@ function renderCuriosityIndex(){
  const typeTotals=new Map();
  for(const entry of familyPool)if(entry.question_type)
   typeTotals.set(entry.question_type,(typeTotals.get(entry.question_type)||0)+1);
+ if(!typeTotals.size)state.curiosityTypeFilter='all';
  if(typeTotals.size){
   const typeSelect=el('select','curiosity-type-filter');
   typeSelect.setAttribute('aria-label','Filter questions by type');
@@ -1507,7 +1508,8 @@ async function loadMapped(r,view){
  state.curiosityEntry=hasAtlas?selection:null;
  state.glossary=glossary;state.termById=glossaryIndex(glossary);
  if(switching){
-  state.curiosityFamily='all';state.curiositySearch='';state.glossaryMode='questions';state.glossarySelected=null;
+  state.curiosityFamily='all';state.curiositySearch='';state.curiosityTypeFilter='all';
+  state.glossaryMode='questions';state.glossarySelected=null;
   $('curiosity-search').value='';
  }
  closeCatalog();
@@ -1631,7 +1633,7 @@ function navigationSnapshot(){
   curiosityData:state.curiosityData,curiosityEntry:state.curiosityEntry,
   glossary:state.glossary,glossaryMode:state.glossaryMode,
   glossarySelected:state.glossarySelected,curiosityFamily:state.curiosityFamily,
-  curiositySearch:state.curiositySearch,
+  curiositySearch:state.curiositySearch,curiosityTypeFilter:state.curiosityTypeFilter,
   browseQuestions:!$('curiosity-index').hidden};
 }
 function navigationIdentity(s){
@@ -1672,6 +1674,7 @@ function restoreNavigation(s){
  state.glossary=s.glossary;state.termById=glossaryIndex(s.glossary);
  state.glossaryMode=s.glossaryMode;state.glossarySelected=s.glossarySelected;
  state.curiosityFamily=s.curiosityFamily;state.curiositySearch=s.curiositySearch;
+ state.curiosityTypeFilter=s.curiosityTypeFilter||'all';
  $('curiosity-search').value=s.curiositySearch||'';
  if(s.catalogVisible){
   openCatalog();
