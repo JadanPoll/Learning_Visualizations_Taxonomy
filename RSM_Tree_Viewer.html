@@ -371,6 +371,10 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .curiosity-set-card strong{font-size:14px;line-height:1.35;color:#254e6e}
 .curiosity-set-card span{font-size:12px;font-weight:400;line-height:1.45;color:#58738a}
 .curiosity-set-group{margin-bottom:23px;padding-bottom:15px;border-bottom:1px solid #d4e4ef}
+.curiosity-card:not(.curiosity-set-card){flex-direction:column;align-items:flex-start;justify-content:center;gap:5px}
+.question-type-tag{font-size:11px;line-height:1.2;font-weight:650;color:#547c97}
+.chip.question-type-tag{display:inline-block;margin-left:6px;background:#eff5fa;color:#365f7e}
+.curiosity-type-filter{max-width:230px;min-height:35px;font-size:12px;padding:5px 8px;background:white;border:1px solid #bcd4e4;border-radius:9px}
 .curiosity-card:hover,.curiosity-card:focus-visible{border-color:#72a8cd;background:#edf7ff;outline-offset:2px}
 .curiosity-index .curiosity-empty{padding:22px 8px;color:#4d6d86;font-size:13px}
 @media(min-width:900px){#curiosity-index{right:0}}
@@ -942,24 +946,32 @@ function makeCuriosityProjection(data,entry){
  const rootId=entry?.id||(data.id||'research').toUpperCase()+'-CURI-HOME';
  nodes.push({id:rootId,parent_id:null,kind:entry?'curiosity_entry':'curiosity_home',
   question:entry?.question||'Explore research questions',why:entry?.context||catalogue.purpose||'Start from an everyday question.',
+  question_type:entry?.question_type,task_scope:entry?.task_scope,success_criterion:entry?.success_criterion,
   status:'navigation_question',term_ids:entry?.term_ids||[]});
  const used=new Set([rootId]),sourceIds=new Set((data.sources||[]).map(s=>s.id)),caseNodes=new Map((data.fieldwork_nodes||[]).map(n=>[n.id,n]));
  if(entry){
+  // Optional capability targets constrain otherwise broad navigation bridges.
+  // A capability never inherits unrelated studies just because it shares a bridge.
+  const specifiedTargets=Array.isArray(entry.target_ids)&&entry.target_ids.length?new Set(entry.target_ids):null;
   for(const bridgeId of entry.bridge_ids||[]){
    const bridge=bridges.get(bridgeId);
    if(!bridge)throw Error('Curiosity refers to missing navigation bridge '+bridgeId);
    for(const [i,choice] of (bridge.choices||[]).entries()){
+    const targets=specifiedTargets?(choice.targets||[]).filter(id=>specifiedTargets.has(id)):(choice.targets||[]);
+    const cases=specifiedTargets?[]:(choice.case_ids||[]);
+    if(specifiedTargets&&!targets.length)continue;
     const branchId=entry.id+':'+bridgeId+':'+i;
     const sourceRefs=choice.section_targets||[];
     const candidateSources=choice.candidate_source_ids||[];
     for(const loc of sourceRefs)if(!sourceIds.has(loc.source_id))throw Error('Unresolved source '+loc.source_id);
     const uniqueSources=[...new Set([...sourceRefs.map(x=>x.source_id),...candidateSources])].filter(id=>sourceIds.has(id));
     nodes.push({id:branchId,parent_id:rootId,kind:'technical_branch',
-     question:choice.technical_title||choice.label,why:choice.distinguishing_question,
-     mechanism_explanation:choice.why,curiosity_refs:sourceRefs,curiosity_targets:choice.targets||[],
-     source_ids:uniqueSources,curiosity_case_ids:choice.case_ids||[],term_ids:choice.term_ids||[],status:'conditional_mechanism'});
+     question:specifiedTargets?'Relevant technical route: '+(choice.technical_title||choice.label):choice.technical_title||choice.label,
+     why:choice.distinguishing_question,
+     mechanism_explanation:choice.why,curiosity_refs:sourceRefs,curiosity_targets:targets,
+     source_ids:uniqueSources,curiosity_case_ids:cases,term_ids:choice.term_ids||[],status:'conditional_mechanism'});
     edges.push({from:rootId,to:branchId,type:'investigate',reason:choice.distinguishing_question||''});
-    for(const studyId of [...(choice.targets||[]),...(choice.case_ids||[])]){
+    for(const studyId of [...targets,...cases]){
      const existing=canonical.get(studyId)||caseNodes.get(studyId);
      if(!existing)throw Error('Unresolved technical case '+studyId);
      if(used.has(studyId)){edges.push({from:branchId,to:studyId,type:'related_mechanism',reason:choice.why||''});continue}
@@ -1161,6 +1173,8 @@ function renderGlossaryBrowser(){
  $('curiosity-match-count').textContent=matching.length+' vocabulary terms';
  if(!matching.length)results.append(el('p','curiosity-empty','No matching term in this glossary.'));
 }
+const QUESTION_TYPE_NAMES={explanation:'Explain',execution:'Execute',verification:'Verify',diagnosis:'Diagnose',decomposition:'Decompose',design:'Design',empirical_investigation:'Experiment',transfer:'Transfer'};
+function questionTypeLabel(type){return QUESTION_TYPE_NAMES[type]||String(type).replaceAll('_',' ')}
 function renderCuriosityIndex(){
  const data=state.curiosityData?.curiosity_atlas;
  if(!data)return;
@@ -1173,6 +1187,23 @@ function renderCuriosityIndex(){
  $('curiosity-search').placeholder=state.glossaryMode==='terms'?'Find a technical term or alias':'Search a question, problem, or technical term';
  if(state.glossaryMode==='terms'&&vocabularyReady){renderGlossaryBrowser();return}
  families.hidden=false;
+ const familyPool=(data.entries||[]).filter(e=>state.curiosityFamily==='all'||e.family_id===state.curiosityFamily);
+ const typeTotals=new Map();
+ for(const entry of familyPool)if(entry.question_type)
+  typeTotals.set(entry.question_type,(typeTotals.get(entry.question_type)||0)+1);
+ if(typeTotals.size){
+  const typeSelect=el('select','curiosity-type-filter');
+  typeSelect.setAttribute('aria-label','Filter questions by type');
+  const allOption=el('option','','All question types · '+familyPool.length);allOption.value='all';typeSelect.append(allOption);
+  for(const type of Object.keys(QUESTION_TYPE_NAMES)){
+   if(!typeTotals.has(type))continue;
+   const opt=el('option','',questionTypeLabel(type)+' · '+typeTotals.get(type));opt.value=type;typeSelect.append(opt);
+  }
+  if(!typeTotals.has(state.curiosityTypeFilter))state.curiosityTypeFilter='all';
+  typeSelect.value=state.curiosityTypeFilter||'all';
+  typeSelect.onchange=()=>{state.curiosityTypeFilter=typeSelect.value;renderCuriosityIndex()};
+  families.append(typeSelect);
+ }
  for(const family of [{id:'all',label:'All entries'},...(data.families||[])]){
   const btn=el('button','',family.label);btn.type='button';
   btn.setAttribute('aria-pressed',String(state.curiosityFamily===family.id));
@@ -1203,7 +1234,9 @@ function renderCuriosityIndex(){
  }
  for(const family of data.families||[]){
   if(state.curiosityFamily!=='all'&&state.curiosityFamily!==family.id)continue;
-  const entries=(data.entries||[]).filter(e=>e.family_id===family.id&&curiosityMatches(e,state.curiositySearch))
+  const entries=(data.entries||[]).filter(e=>e.family_id===family.id&&
+   (state.curiosityTypeFilter==='all'||!state.curiosityTypeFilter||e.question_type===state.curiosityTypeFilter)&&
+   curiosityMatches(e,state.curiositySearch))
    .sort((a,b)=>glossaryScore(b,state.curiositySearch)-glossaryScore(a,state.curiositySearch));
   if(!entries.length)continue;
   shown+=entries.length;
@@ -1211,7 +1244,9 @@ function renderCuriosityIndex(){
   if(family.description)section.append(el('p','',family.description));
   const grid=el('div','curiosity-card-grid');
   for(const entry of entries){
-   const card=el('button','curiosity-card',entry.question);card.type='button';
+   const card=el('button','curiosity-card');card.type='button';
+   card.append(el('span','',entry.question));
+   if(entry.question_type)card.append(el('small','question-type-tag',questionTypeLabel(entry.question_type)));
    if(state.curiositySearch.trim()&&state.termById.size){
     const matching=(entry.term_ids||[]).map(id=>state.termById.get(id))
      .filter(term=>term&&glossaryTermMatches(term,state.curiositySearch)).slice(0,2);
@@ -2106,6 +2141,7 @@ function renderDetail(){
   const locate=el('button','detail-locate','Locate on map');locate.type='button';locate.onclick=()=>{focusAtlasNode(n.id);activity('Located '+title(n))};box.append(locate);
  }
  const marker=el('span','chip',(n.kind||'Question').replace(/_/g,' '));box.append(marker);
+ if(n.question_type)box.append(el('span','chip question-type-tag',questionTypeLabel(n.question_type)));
  box.append(el('h2','',title(n)));
  const toolbar=renderReaderDetail(box,n);
  const isChildDeck=n.kind==='subdomain'&&!!localJsonReference(n.url,state.repo);
@@ -2192,7 +2228,9 @@ function renderDetail(){
   if(section.childElementCount>1)box.append(section);
  }
  if(n.kind==='curiosity_entry'){
-  box.append(el('p','case-source-status','Everyday entry question · the mapped nodes below are technical explanations and competing routes, not an automatic diagnosis.'));
+  box.append(el('p','case-source-status',n.task_scope==='capability_family'?
+   'Reusable capability family · instantiate with suitable inputs and demonstrate the stated criterion. Source pointers are not evidence of mastery.':
+   'Exploratory question · the mapped nodes below are technical explanations and conditional routes, not an automatic diagnosis.'));
   const browse=el('button','case-related-link','Browse other curiosities');
   browse.type='button';browse.onclick=()=>showCuriosityIndex(true);box.append(browse);
  }
@@ -2211,6 +2249,7 @@ function renderDetail(){
   }else section.append(el('p','',String(value)));
   box.append(section);
  }
+ fieldSection('Demonstrate competence',n.success_criterion);
  // Source-grounded FKEN navigation: a node's meaningful operational fields
  // should be visible before anyone has to open and decipher its JSON.
  if(n.kind==='project_alternative'){
