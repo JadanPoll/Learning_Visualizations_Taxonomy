@@ -686,7 +686,7 @@ function isTree(d){return d&&typeof d==='object'&&nodesOf(d).length>0}
 // A manifest describes *how to read* source JSON, without changing that JSON.
 // The output is a provisional navigation graph: nodes + typed links + provenance.
 function field(obj,key){if(!key)return undefined;return String(key).split('.').reduce((o,k)=>o==null?undefined:o[k],obj)}
-function simpleLabel(value){if(typeof value!=='string')return String(value??'Untitled');if(/^https?:\/\//.test(value)){try{const u=new URL(value);if(u.hostname==='github.com')return u.pathname.replace(/^\//,'')||'GitHub';if(u.hostname.includes('drive.google.com'))return 'Google Drive';return u.hostname.replace(/^www\./,'')}catch{}}return value.split('/').pop().replace(/\.json$/,'').replace(/_/g,' ')}
+function simpleLabel(value){if(typeof value!=='string')return String(value??'Untitled');if(/^https?:\/\//.test(value)){try{const u=new URL(value);if(u.hostname==='github.com')return u.pathname.replace(/^\//,'')||'GitHub';if(u.hostname.includes('drive.google.com'))return 'Google Drive';return u.hostname.replace(/^www\./,'')}catch{}}const parts=value.split('/');if(parts.length>1&&parts[parts.length-1]==='domain.json'&&parts[parts.length-2]!=='.'&&parts[parts.length-2]!=='..')return parts[parts.length-2].replace(/_/g,' ');return value.split('/').pop().replace(/\.json$/,'').replace(/_/g,' ')}
 function hashKey(s){let h=2166136261;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0).toString(36)}
 function repoUrl(r,path){return `https://github.com/${encodeURIComponent(r.owner)}/${encodeURIComponent(r.repo)}/blob/${encodeURIComponent(r.branch)}/${encodePath(path)}`}
 function maybeLink(value,r){if(typeof value!=='string')return null;if(safeHref(value))return value;if(/^[\w.\-\/]+\.json$/.test(value)&&!value.includes('..'))return repoUrl(r,value);return null}
@@ -726,9 +726,9 @@ function mappedQuality(item,kind,rule,linkUrl){
   if(kind==='research_question')return {code:'QUESTION_LEAD',label:'Open question',
    message:'This source currently contains a question, not an investigated answer.',
    action:'Investigate the question using concrete references; add evidence, rival mechanisms and discriminating checks, or connect it to an existing investigation.'};
-  if(kind==='domain_concept')return {code:'VOCABULARY_LEAD',label:'Vocabulary lead',
-   message:'This concept is named here without an explanation or linked study.',
-   action:'Add a useful reference or independent explanation where it belongs; do not invent definitions merely to satisfy a quota.'};
+  if(kind==='domain_concept')return {code:'VOCABULARY_LEAD',label:'Unexplored concept',
+   message:'This is an independent domain-landscape term, not a developed explanation. Research elsewhere in this domain may still be relevant.',
+   action:'If this concept is worth investigating, find the relevant existing research or add a useful reference, explanation, or experiment. Do not require artificial links or generate filler.'};
   if(kind==='subdomain')return {code:'UNRESOLVED_SUBDOMAIN',label:'Unresolved subdomain',
    message:'This subdomain name has no navigable target.',
    action:'Correct the child path or index an existing domain file.'};
@@ -775,7 +775,7 @@ function mappingRepairReport(node){
  const q=node?.mapping_quality;if(!q)return '';
  const loc=node.source_location||{},o=state.currentSource||{};
  return [
-  'RSM Tree Viewer — source or mapping gap',
+  'RSM Tree Viewer — '+(['QUESTION_LEAD','VOCABULARY_LEAD'].includes(q.code)?'optional research lead':'source or mapping defect'),
   'Repository: '+(o.repo||state.repo?.owner+'/'+state.repo?.repo||'unknown'),
   'Active view: '+(o.view_id||state.activeView?.id||'unknown'),
   'Mapping: rsm-view.json',
@@ -784,8 +784,10 @@ function mappingRepairReport(node){
   'Node: '+title(node)+' ['+(node.kind||'unknown')+']',
   'Diagnostic: '+q.code+' — '+q.message,
   'Source fields: '+(q.keys?.join(', ')||'(scalar value)'),
-  'Suggested repair: '+q.action,
-  'Preserve the original facts and stable IDs. Check whether the gap is in source content or the projection. Fix the smallest relevant location, then verify the actual user-facing view. Do not add filler or redundant copies.'
+  'Next action: '+q.action,
+  (['QUESTION_LEAD','VOCABULARY_LEAD'].includes(q.code)?
+   'This lead is NOT a structural defect. Do not fabricate content merely to remove the accent. Develop only when there is a real research purpose.':
+   'Preserve original facts and stable IDs. Determine whether information is absent or merely hidden by the projection. Fix the smallest relevant location and inspect the real viewer. Do not add filler or redundant copies.')
  ].join('\n');
 }
 function mappedView(data,view,r){const spec=view.projection||{},shape=spec.shape||'flat',idPrefix=view.id+':',nodes=[],edges=[],used=new Set(),source=repoUrl(r,view.file);
@@ -1714,7 +1716,8 @@ function renderDetail(){
   const issue=n.mapping_quality,block=el('section','navigation-quality-warning');
   block.append(el('strong','',issue.label));
   block.append(el('p','',issue.message));
-  const copy=el('button','','Copy repair report for LLM');
+  const lead=['QUESTION_LEAD','VOCABULARY_LEAD'].includes(issue.code);
+  const copy=el('button','',lead?'Copy research lead':'Copy repair report for LLM');
   copy.type='button';
   copy.onclick=async()=>{
    const report=mappingRepairReport(n);
@@ -1729,6 +1732,11 @@ function renderDetail(){
    }
   };
   block.append(copy);box.append(block);
+ }
+ if(n.kind==='research_view'&&n.url){
+  const open=link(n.url,'Open the linked research view');
+  open.className='case-related-link';
+  box.append(open);
  }
  if(n.kind==='subdomain'&&n.url&&state.repo&&state.views){
   const destination=state.views.find(v=>v.file&&repoUrl(state.repo,v.file)===n.url);
