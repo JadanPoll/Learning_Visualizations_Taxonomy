@@ -708,6 +708,11 @@ function mappedQuality(item,kind,rule,linkUrl){
  const hasRef=!!linkUrl||['url','source','kami_url','link','reference'].some(k=>safeHref(original[k]))||
   Object.values(original).some(v=>typeof v==='string'&&safeHref(v));
  const hasChildren=Array.isArray(original.children)&&original.children.length>0;
+ const placeholders=meaningfulFields.filter(k=>typeof original[k]==='string'&&
+  /^\s*(?:tbd|todo|to be (?:added|written|filled)|coming soon|placeholder(?: text)?|lorem ipsum(?: dolor sit amet)?|fill (?:this )?in|insert (?:text|content|answer) here|n\/a)\s*[.!?]?\s*$/i.test(original[k]));
+ if(placeholders.length)return {code:'PLACEHOLDER_CONTENT',label:'Placeholder content',
+  message:'Fields '+placeholders.join(', ')+' contain explicit unfinished placeholder text.',
+  action:'Replace each placeholder with actual verified content, a clearly marked open question, or remove the empty entry. Never fabricate evidence.'};
  // A question or glossary concept is legitimate as a navigational lead.
  // Amber conveys that it has no developed explanation in this source record.
  if(typeof item==='string'){
@@ -771,7 +776,7 @@ function mappingRepairReport(node){
 }
 function mappedView(data,view,r){const spec=view.projection||{},shape=spec.shape||'flat',idPrefix=view.id+':',nodes=[],edges=[],used=new Set(),source=repoUrl(r,view.file);
  function add(item,parent,kind,pointer,key,label,description,url,rule){let id=idPrefix+hashKey(key||pointer);while(used.has(id))id+='x';used.add(id);const node={...(item&&typeof item==='object'&&!Array.isArray(item)?item:{}),id,label:String(label||simpleLabel(key)),kind:kind||'item',parent_id:parent||null,description:description||'',source_location:{url:source,pointer}};if(url)node.url=url;
-  const quality=mappedQuality(item,node.kind,rule,url);if(quality)node.mapping_quality={...quality,keys:item&&typeof item==='object'?Object.keys(item):[]};
+  const quality=mappedQuality(item,node.kind,rule,parent?url:null);if(quality)node.mapping_quality={...quality,keys:item&&typeof item==='object'?Object.keys(item):[]};
   nodes.push(node);if(parent)edges.push({from:parent,to:id,type:'contains'});return id}
  if(shape==='flat'){
   const rawRows=field(data,spec.records||'nodes');if(!Array.isArray(rawRows))throw Error('Flat view requires an array at '+(spec.records||'nodes'));
@@ -805,6 +810,13 @@ function mappedView(data,view,r){const spec=view.projection||{},shape=spec.shape
   }
  }
  for(const collection of spec.collections||[])walk(data,root,collection,'',0);
+ if(nodes.length===1&&data&&typeof data==='object'){
+  const nonMetadata=Object.keys(data).filter(k=>!['name','title','id','kind','status','updated','version','parent','description'].includes(k));
+  if(nonMetadata.length&&!nodes[0].mapping_quality)
+   nodes[0].mapping_quality={code:'NO_MAPPED_CONTENT',label:'No navigable content',
+    message:'The source has additional fields ('+nonMetadata.join(', ')+'), but this RSM view maps none of them into a navigable child.',
+    action:'Inspect the source and add the most useful existing fields to rsm-view.json, or explicitly designate the record as a standalone reference.',keys:Object.keys(data)};
+ }
  return {schema:'rsm-navigation/v0.1',id:view.id,kind:'mapped_landscape',title:view.title,root,nodes,edges,connections:edges};
 }
 function globMatch(pattern,path){const parts=pattern.split(/(\*\*|\*)/),re='^'+parts.map(x=>x==='**'?'.*':x==='*'?'[^/]*':x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('')+'$';return new RegExp(re).test(path)}
@@ -1443,7 +1455,12 @@ async function loadSource(raw){
  if(filtered.length)found=filtered;
  setChoices(found,false);await loadPath(r,found[0]);
 }
-function openTree(d,guide,source,origin=null){state.currentSource=origin||{type:'local',file:source||'unspecified',title:source||'Local JSON'};state.tree=d;state.guide=guide;state.selected=null;state.detailOpen=false;state.index=new Map();state.children=new Map();state.parent=new Map();const nodes=nodesOf(d);for(let i=0;i<nodes.length;i++){const n=nodes[i];const id=String(n.id||'node-'+i);n.id=id;state.index.set(id,n);state.children.set(id,[])}for(const n of nodes){const raw=n.parent_id??n.parent??null;const p=raw==null?null:String(raw);if(p&&p!==n.id&&state.index.has(p)){state.parent.set(n.id,p);state.children.get(p).push(n.id)}else state.parent.set(n.id,null)}let first=String(d.root||'');if(!state.index.has(first))first=nodes.find(n=>state.parent.get(n.id)===null)?.id||nodes[0].id;state.selected=first;restoreAtlas();$('sourceMeta').textContent=source||'Local JSON';$('collection-title').textContent=d.title||source||'Explore';render()}
+function openTree(d,guide,source,origin=null){state.currentSource=origin||{type:'local',file:source||'unspecified',title:source||'Local JSON'};state.tree=d;state.guide=guide;state.selected=null;state.detailOpen=false;state.index=new Map();state.children=new Map();state.parent=new Map();const nodes=nodesOf(d);for(let i=0;i<nodes.length;i++){const n=nodes[i];const id=String(n.id||'node-'+i);n.id=id;state.index.set(id,n);state.children.set(id,[])}for(const n of nodes){const raw=n.parent_id??n.parent??null;const p=raw==null?null:String(raw);if(p&&p!==n.id&&state.index.has(p)){state.parent.set(n.id,p);state.children.get(p).push(n.id)}else state.parent.set(n.id,null)}let first=String(d.root||'');if(!state.index.has(first))first=nodes.find(n=>state.parent.get(n.id)===null)?.id||nodes[0].id;state.selected=first;restoreAtlas();$('sourceMeta').textContent=source||'Local JSON';$('collection-title').textContent=d.title||source||'Explore';render();
+ const defects=nodes.filter(n=>n.mapping_quality&&
+  ['PLACEHOLDER_CONTENT','MAPPING_DESCRIPTION_MISMATCH','NO_MAPPED_CONTENT','EMPTY_RECORD','NAME_ONLY','THIN_RECORD','UNRESOLVED_SUBDOMAIN'].includes(n.mapping_quality.code));
+ if(defects.length)activity(defects.length+' source or mapping quality warning'+(defects.length===1?'':'s')+' in this view','error',
+  defects.slice(0,3).map(n=>mappingRepairReport(n)).join('\n\n---\n\n'));
+}
 function ancestry(id){const out=[],visited=new Set();let x=id;while(x&&state.index.has(x)&&!visited.has(x)){out.unshift(x);visited.add(x);x=state.parent.get(x)}return out}
 function select(id){
  if(!state.index.has(id))return;
@@ -1566,7 +1583,9 @@ function renderLandscape(){
  const world=el('div','atlas-world');world.style.width=l.width+'px';world.style.height=l.height+'px';
  const labels=el('div','atlas-overview-labels');a.overviewLabels=[];
  for(const region of l.regions){
-  const section=el('section','atlas-region');section.style.left=region.x+'px';section.style.top=region.y+'px';
+  const section=el('section','atlas-region');
+  if(state.index.get(region.id)?.mapping_quality)section.classList.add('mapping-frontier');
+  section.style.left=region.x+'px';section.style.top=region.y+'px';
   section.style.width=region.w+'px';section.style.height=region.h+'px';section.dataset.nodeId=region.id;
   const head=el('div','atlas-region-heading'),name=el('button','atlas-region-title',title(state.index.get(region.id)));
   name.type='button';name.onclick=()=>select(region.id);
@@ -1575,7 +1594,7 @@ function renderLandscape(){
   head.append(name,actions);section.append(head);
   for(const item of region.descendants){
    const node=state.index.get(item.id);
-   const button=el('button','atlas-item'+(item.depth>1?' is-deep':''));
+   const button=el('button','atlas-item'+(item.depth>1?' is-deep':'')+(node?.mapping_quality?' mapping-frontier':''));
    button.type='button';button.dataset.nodeId=item.id;
    button.style.left=item.x+'px';button.style.top=item.y+'px';button.style.width=item.w+'px';button.style.height=item.h+'px';
    button.append(el('span','atlas-item-label',title(node)));
@@ -1585,6 +1604,7 @@ function renderLandscape(){
   if(readerFor(region.id)?.interested)section.classList.add('is-saved');
   world.append(section);
   const summary=el('button','atlas-overview-card');
+  if(state.index.get(region.id)?.mapping_quality)summary.classList.add('mapping-frontier');
   summary.type='button';summary.append(el('strong','',title(state.index.get(region.id))));
   if(region.descendants.length)summary.append(el('small','',region.descendants.length+' nested nodes'));
   summary.title='Inspect '+title(state.index.get(region.id));
@@ -1674,6 +1694,26 @@ function renderDetail(){
  }
  const marker=el('span','chip',(n.kind||'Question').replace(/_/g,' '));box.append(marker);
  box.append(el('h2','',title(n)));
+ if(n.mapping_quality){
+  const issue=n.mapping_quality,block=el('section','navigation-quality-warning');
+  block.append(el('strong','',issue.label));
+  block.append(el('p','',issue.message));
+  const copy=el('button','','Copy repair report for LLM');
+  copy.type='button';
+  copy.onclick=async()=>{
+   const report=mappingRepairReport(n);
+   try{
+    if(!navigator.clipboard?.writeText)throw Error('Clipboard API not available');
+    await navigator.clipboard.writeText(report);
+    copy.textContent='Report copied';
+   }catch{
+    const draft=el('textarea','');draft.readOnly=true;draft.value=report;
+    block.append(draft);draft.focus();draft.select();
+    copy.textContent='Select and copy the report below';
+   }
+  };
+  block.append(copy);box.append(block);
+ }
  if(n.kind==='subdomain'&&n.url&&state.repo&&state.views){
   const destination=state.views.find(v=>v.file&&repoUrl(state.repo,v.file)===n.url);
   if(destination){
@@ -2385,6 +2425,7 @@ function atlasDiagnostics(){
  const summary=[
   'Knowledge Atlas diagnostics',
   'Source: '+JSON.stringify(source||null),
+  'Quality findings: '+[...state.index.values()].filter(n=>n.mapping_quality).map(n=>n.mapping_quality.code+' @ '+(n.source_location?.pointer||'unknown')+' ('+title(n)+')').join('; '),
   'Selected: '+(state.selected||'none'),
   'Viewport: '+JSON.stringify({x:a.x,y:a.y,zoom:a.z,width:$('canvas').clientWidth,height:$('canvas').clientHeight}),
   'Active pointers: '+(a.pointers?.size||0),
