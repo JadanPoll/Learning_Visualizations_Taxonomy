@@ -3,6 +3,30 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Knowledge Tree Navigator</title>
+<script>
+// GitHack's branch URL is a stable entry point, not a guaranteed fresh build.
+// Resolve it once to GitHub's current main commit, then load an immutable URL.
+// Already pinned URLs never redirect, and failures leave the viewer usable.
+window.__viewerVersionRedirect=(async()=>{
+ const u=new URL(location.href);
+ const branch=/^\/JadanPoll\/Learning_Visualizations_Taxonomy\/(?:main|refs\/heads\/main)\/RSM_Tree_Viewer\.html$/i;
+ if(u.hostname!=='raw.githack.com'||!branch.test(u.pathname))return false;
+ const abort=new AbortController(),deadline=setTimeout(()=>abort.abort(),4000);
+ try{
+  const ref=await fetch('https://api.github.com/repos/JadanPoll/Learning_Visualizations_Taxonomy/git/ref/heads/main?at='+Date.now(),
+   {cache:'no-store',signal:abort.signal,headers:{Accept:'application/vnd.github+json'}});
+  if(!ref.ok)throw Error('HTTP '+ref.status);
+  const head=await ref.json(),sha=head?.object?.sha;
+  if(!/^[a-f0-9]{40}$/i.test(sha))throw Error('GitHub returned no valid main-branch commit');
+  const target=new URL('https://raw.githack.com/JadanPoll/Learning_Visualizations_Taxonomy/'+sha+'/RSM_Tree_Viewer.html');
+  target.search=u.search;target.hash=u.hash;
+  location.replace(target.href);return true;
+ }catch(error){
+  window.__viewerVersionError='Could not check the latest viewer commit ('+error.message+'). Showing the available branch version.';
+  return false;
+ }finally{clearTimeout(deadline)}
+})();
+</script>
 <style>
 :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#1b2b3b;background:#f4f7fa;--line:#dce4ec;--blue:#2465a2;--muted:#5c7185;--paper:#fff;--pale:#eaf3fb}
 *{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{cursor:pointer}a{color:#175e99;overflow-wrap:anywhere}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #87bce8;outline-offset:2px}
@@ -3102,8 +3126,22 @@ $('catalog-home').onclick=openCatalog;
 $('catalog-search').addEventListener('input',renderCatalog);
 $('library-open').onclick=()=>{$('library-dialog').hidden=false};$('library-close').onclick=()=>{$('library-dialog').hidden=true};$('library-dialog').addEventListener('click',e=>{if(e.target===$('library-dialog'))$('library-dialog').hidden=true});
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('reader-dialog').hidden){$('reader-dialog').hidden=true;return}if(e.key==='Escape'&&!$('library-dialog').hidden){$('library-dialog').hidden=true;return}if(e.target.matches('input,textarea,select'))return;if(e.key==='Escape'&&state.detailOpen){closeDetail();return}});
-renderRecentRepos();const params=new URLSearchParams(location.search);const source=params.get('repo')||params.get('url')||(recentRepoList()[0]?'https://github.com/'+recentRepoList()[0]:'https://github.com/JadanPoll/Kami_Uploads_RSM_Tree');$('source').value=source;loadSource(source).then(()=>{const match=location.hash.match(/^#node=(.+)$/);if(match&&state.index.has(decodeURIComponent(match[1])))select(decodeURIComponent(match[1]))}).catch(err=>{
- setStatus(err.message,true);
- if(/^HTTP 404\b/.test(err.message)&&err.message.includes('api.github.com/repos/'))$('library-dialog').hidden=false;
-})
+// Do not fetch an entire repository when this branch entry is already
+// redirecting to the immutable viewer. If the version check fails, continue
+// normally and keep the diagnostic copyable in the compact activity pane.
+Promise.resolve(window.__viewerVersionRedirect).then(didRedirect=>{
+ if(didRedirect)return;
+ if(window.__viewerVersionError)activity(window.__viewerVersionError,'error');
+ renderRecentRepos();
+ const params=new URLSearchParams(location.search);
+ const source=params.get('repo')||params.get('url')||(recentRepoList()[0]?'https://github.com/'+recentRepoList()[0]:'https://github.com/JadanPoll/Kami_Uploads_RSM_Tree');
+ $('source').value=source;
+ loadSource(source).then(()=>{
+  const match=location.hash.match(/^#node=(.+)$/);
+  if(match&&state.index.has(decodeURIComponent(match[1])))select(decodeURIComponent(match[1]));
+ }).catch(err=>{
+  setStatus(err.message,true);
+  if(/^HTTP 404\b/.test(err.message)&&err.message.includes('api.github.com/repos/'))$('library-dialog').hidden=false;
+ });
+});
 </script></body></html>
