@@ -1640,6 +1640,19 @@ function renderDetail(){
  if(n.kind==='capability'){
   fieldSection('Competence to demonstrate',n.base_confidence);
   fieldSection('Stop when',n.stop_when);
+  if(Array.isArray(n.children)&&n.children.length){
+   const section=el('div','case-section');
+   section.append(el('h3','','Constituent abilities'));
+   for(const child of n.children){
+    if(!child||typeof child!=='object')continue;
+    const item=el('div','case-factor');
+    item.append(el('strong','',child.name||child.id||'Capability'));
+    if(child.base_confidence)item.append(el('p','',child.base_confidence));
+    if(child.stop_when)item.append(el('p','case-source-status','Stop when: '+child.stop_when));
+    section.append(item);
+   }
+   box.append(section);
+  }
  }
  if(n.kind==='project'&&n.big_picture_certification){
   const c=n.big_picture_certification,lab=n.reverse_engineered_virtual_lab||{},
