@@ -162,9 +162,17 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .reference-scan .scan-tabs{display:flex;gap:8px;margin-bottom:10px}
 .reference-scan .scan-tabs button{font-size:12px;padding:6px 10px}
 .reference-scan pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:55vh;overflow:auto;background:#fff;border:1px solid #dce6ef;border-radius:9px;padding:11px;font-size:12px;line-height:1.4}
-.reference-scan .case-section{margin:10px 0}
-.reference-scan .case-section h3{font-size:13px}
-.reference-scan .case-section ul{padding-left:20px}
+/* Source records are scanning surfaces, not spacious article layouts. */
+.reference-scan{font-size:13px;line-height:1.38}
+.reference-scan .case-section{margin:7px 0;padding:6px 0 0;border-top:1px solid #e2eaf1}
+.reference-scan .case-section h3{font-size:12px;line-height:1.3;margin:0 0 4px;padding:0;border:0}
+.reference-scan .case-section ul,.reference-scan ul{padding-left:20px;margin:3px 0 5px}
+.reference-scan li,.reference-scan .case-section li{margin:1px 0!important;padding:0!important;font-size:13px;line-height:1.38}
+.reference-scan li>.case-section{margin:3px 0;padding:2px 0;border:0}
+.reference-scan .case-section p{font-size:13px;line-height:1.4;margin:3px 0}
+.reference-scan li.scan-object-item{margin:8px 0!important;padding:6px 0 7px!important;border-bottom:1px solid #dfeaf2}
+.reference-scan li.scan-object-item:last-child{border-bottom:0}
+.reference-scan pre{line-height:1.32}
 .reference-inline-link{display:inline;border:0;background:none;color:#17619b;text-align:left;text-decoration:underline;font:inherit;cursor:pointer;padding:0;overflow-wrap:anywhere}
 .reference-inline-link:hover{color:#0c446d}
 .reference-scan .scan-tabs button:disabled{opacity:.4;cursor:default}
@@ -1894,7 +1902,8 @@ function renderReferencedData(host,data,r,openLocal,fieldName='',sourcePath=''){
  if(Array.isArray(data)){
   const list=el('ul','');
   for(const item of data.slice(0,100)){
-   const li=el('li','');renderReferencedData(li,item,r,openLocal,fieldName,sourcePath);list.append(li);
+   const li=el('li',item&&typeof item==='object'&&!Array.isArray(item)?'scan-object-item':'');
+   renderReferencedData(li,item,r,openLocal,fieldName,sourcePath);list.append(li);
   }
   host.append(list);
   if(data.length>100)host.append(el('p','muted','Showing the first 100 entries; open source for the full collection.'));
