@@ -2813,6 +2813,9 @@ function readerList(){
   const details=el('details','reader-group');
   details.open=!!query||readerOpenGroups.has(key)||(!readerOpenGroups.size&&groupIndex===0);
   details.ontoggle=()=>{
+   // Search expands matching groups temporarily; it must not turn every
+   // filtered result into a permanently expanded Saved section.
+   if(query)return;
    if(details.open)readerOpenGroups.add(key);
    else readerOpenGroups.delete(key);
   };
