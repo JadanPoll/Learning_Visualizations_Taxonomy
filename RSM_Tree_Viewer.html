@@ -300,7 +300,11 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 #catalog-home{font-weight:680;font-size:12px}
 #history-back,#history-forward{font-size:12px;font-weight:650;white-space:nowrap}
 #history-back:disabled,#history-forward:disabled{opacity:.38;cursor:default}
-@media(max-width:650px){#history-back,#history-forward{font-size:11px;padding:6px 7px}}
+@media(max-width:650px){
+ #history-back,#history-forward{font-size:0;padding:6px 8px;min-width:34px}
+ #history-back::after{content:'↶';font-size:17px}
+ #history-forward::after{content:'↷';font-size:17px}
+}
 #atlas-curiosities{font-size:12px;font-weight:680;min-width:79px}
 .curiosity-index{position:absolute;z-index:12;inset:0;background:#f7fafe;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:0 16px 34px}
 .curiosity-index-heading{position:sticky;z-index:2;top:0;background:#f7fafe;padding:18px 5px 10px;border-bottom:1px solid #d8e5ef}
@@ -1554,7 +1558,9 @@ function commitNavigation(before){
   navigationTrail[navigationCursor]=now;updateNavigationControls();return;
  }
  navigationTrail.splice(navigationCursor+1);
- navigationTrail.push(now);navigationCursor++;updateNavigationControls();
+ navigationTrail.push(now);navigationCursor++;
+ if(navigationTrail.length>48){navigationTrail.shift();navigationCursor--}
+ updateNavigationControls();
 }
 function restoreNavigation(s){
  if(!s)return;
