@@ -1630,6 +1630,60 @@ function renderDetail(){
   }else section.append(el('p','',String(value)));
   box.append(section);
  }
+ // Source-grounded FKEN navigation: a node's meaningful operational fields
+ // should be visible before anyone has to open and decipher its JSON.
+ if(n.kind==='project_alternative'){
+  fieldSection('Role in the landscape',n.relation);
+  fieldSection('What changes if chosen',n.what_changes_if_chosen||n.difference);
+ }
+ if(n.kind==='capability'){
+  fieldSection('Competence to demonstrate',n.base_confidence);
+  fieldSection('Stop when',n.stop_when);
+ }
+ if(n.kind==='project'&&n.big_picture_certification){
+  const c=n.big_picture_certification,lab=n.reverse_engineered_virtual_lab||{},
+        review=n.rem_directional_review||{};
+  fieldSection('Holistic purpose',c.holistic_purpose);
+  fieldSection('Why this question matters',c.why);
+  fieldSection('Research direction',c.judgment);
+  fieldSection('Example to investigate',lab.initial_case);
+  fieldSection('What would demonstrate progress',lab.first_canary);
+  fieldSection('Current development stage',lab.status?.replaceAll('_',' '));
+  fieldSection('Most useful next action',review.next_action);
+ }
+ if(n.kind==='domain'){
+  fieldSection('Field characterization',n.characterization);
+  fieldSection('Useful routes to investigate',n.routes);
+  fieldSection('Navigation context',n.navigation_note);
+ }
+ if(n.kind==='research_question'){
+  box.append(el('p','case-source-status',
+   'An investigation question, not an established answer.'));
+  const parent=state.index.get(state.parent.get(n.id));
+  if(parent?.kind==='domain'){
+   if(parent.characterization)fieldSection('Domain context',parent.characterization);
+   if(parent.routes?.length)fieldSection('Related domain routes (not answers)',parent.routes);
+  }
+ }
+ // Some domainlets are independently actionable, but should not be
+ // misrepresented as a verified investigation or a conclusion.
+ if(n.kind==='domain_concept'&&n.rationale)fieldSection('Why it matters',n.rationale);
+ const leadPaths=(n.kind==='domain'&&Array.isArray(n.centrality_points)?n.centrality_points:
+  n.kind==='research_question'&&Array.isArray(state.index.get(state.parent.get(n.id))?.centrality_points)?
+   state.index.get(state.parent.get(n.id)).centrality_points:null);
+ if(leadPaths?.length&&state.repo){
+  const section=el('div','case-section');
+  section.append(el('h3','',n.kind==='research_question'?'Domain reference leads — not question-specific evidence':'Referenced organizations and tools'));
+  const list=el('ul');
+  for(const item of leadPaths){
+   if(typeof item!=='string')continue;
+   const li=el('li');
+   const href=maybeLink(item,state.repo);
+   li.append(href?link(href,simpleLabel(item)):el('span','',simpleLabel(item)));
+   list.append(li);
+  }
+  section.append(list);box.append(section);
+ }
  if(n.kind==='ai_use_case'){
   // Generic case inspection consumes canonical FKEN records without another viewer.
   if(n.workflow?.steps?.length){
