@@ -1700,6 +1700,74 @@ function makeManufacturingSource(sourceById,sourceId,label,pageInfo,qualifier){
  return item;
 }
 
+// Resolve canonical resource JSON into a readable, on-demand inspector view.
+function localJsonReference(url,r){
+ if(!r||!url)return null;
+ try{
+  const u=new URL(url),bits=u.pathname.split('/').filter(Boolean);
+  if(u.hostname==='github.com'&&bits[0]===r.owner&&bits[1]===r.repo&&bits[2]==='blob'&&bits.length>=5){
+   const p=bits.slice(4).map(decodeURIComponent).join('/');
+   if(p.endsWith('.json')&&!p.split('/').includes('..'))return p;
+  }
+ }catch{}
+ return null;
+}
+function resourceHeading(k){return k.replace(/_/g,' ').replace(/([a-z])([A-Z])/g,'$1 $2').replace(/^./,s=>s.toUpperCase())}
+function renderReferencedData(host,data,r){
+ if(data==null)return;
+ if(typeof data==='string'){
+  const address=safeHref(data),repoPath=!address&&/^(?:Resources|Domains|Glossaries|Collections|Project_Ideas|Practical_Knowledge|Axioms)\/[\w./-]+\.json$/.test(data)&&!data.includes('..');
+  host.append(address?link(address,data):repoPath?link(repoUrl(r,data),simpleLabel(data)):el('span','',data));return;
+ }
+ if(typeof data==='number'||typeof data==='boolean'){host.append(el('span','',String(data)));return}
+ if(Array.isArray(data)){
+  const list=el('ul','');
+  for(const item of data.slice(0,100)){const li=el('li','');renderReferencedData(li,item,r);list.append(li)}
+  host.append(list);
+  if(data.length>100)host.append(el('p','muted','Showing the first 100 entries; open source for the full collection.'));
+  return;
+ }
+ if(typeof data==='object'){
+  const important=['name','title','description','characterization','fken_value','centrality_role','goal','why','purpose','source','url','sources','roles'];
+  const entries=Object.entries(data).sort(([a],[b])=>{
+   const ia=important.indexOf(a),ib=important.indexOf(b);
+   return (ia<0?100:ia)-(ib<0?100:ib);
+  });
+  for(const [key,value] of entries){
+   if(value==null||value===''||(Array.isArray(value)&&!value.length))continue;
+   const section=el('div','case-section');section.append(el('h3','',resourceHeading(key)));
+   const content=el('div','');renderReferencedData(content,value,r);section.append(content);host.append(section);
+  }
+ }
+}
+function appendResourcePreview(box,node){
+ const path=localJsonReference(node.url,state.repo);
+ if(!path)return;
+ const section=el('section','case-section');
+ const open=el('button','case-related-link','Read resource here');
+ open.type='button';const contents=el('div','');contents.hidden=true;
+ open.onclick=async()=>{
+  if(!contents.hidden){contents.hidden=true;open.textContent='Read resource here';return}
+  if(contents.dataset.loaded==='true'){contents.hidden=false;open.textContent='Hide resource details';return}
+  open.disabled=true;open.textContent='Opening reference…';
+  try{
+   const data=await readRepoFile(state.repo,path);
+   if(!data||typeof data!=='object')throw Error('Expected a JSON resource object at '+path);
+   clear(contents);renderReferencedData(contents,data,state.repo);
+   const sourceLink=el('p','case-source');
+   sourceLink.append(link(repoUrl(state.repo,path),'Open original record on GitHub'));
+   contents.append(sourceLink);
+   contents.dataset.loaded='true';contents.hidden=false;open.textContent='Hide resource details';
+  }catch(error){
+   contents.hidden=false;clear(contents);
+   contents.append(el('p','case-source-status','Unable to inspect '+path+': '+error.message));
+   contents.append(link(repoUrl(state.repo,path),'Open source file'));
+   open.textContent='Retry opening resource';
+   activity('Linked resource could not be displayed','error',path+': '+error.message);
+  }finally{open.disabled=false}
+ };
+ section.append(open,contents);box.append(section);
+}
 function renderDetail(){
  const box=$('detail');clear(box);
  box.hidden=!state.detailOpen;
@@ -1739,6 +1807,7 @@ function renderDetail(){
   open.className='case-related-link';
   box.append(open);
  }
+ if(n.url&&state.repo)appendResourcePreview(box,n);
  if(n.kind==='subdomain'&&n.url&&state.repo&&state.views){
   const destination=state.views.find(v=>v.file&&repoUrl(state.repo,v.file)===n.url);
   if(destination){
@@ -2202,7 +2271,7 @@ function renderDetail(){
  if(n.url||n.source_location?.url||state.url){
   const fold=el('details','details-fold');fold.append(el('summary','','Original material'));
   const body=el('div','fold-body');
-  if(n.url)body.append(link(n.url,'Open linked resource'));
+  if(n.url)body.append(link(n.url,localJsonReference(n.url,state.repo)?'Open original resource JSON':'Open linked website or resource'));
   if(n.source_location?.url)body.append(link(n.source_location.url,'Original JSON'));
   if(state.url)body.append(link(state.url,'View source on GitHub'));
   fold.append(body);box.append(fold);
