@@ -374,7 +374,15 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .curiosity-card:not(.curiosity-set-card){flex-direction:column;align-items:flex-start;justify-content:center;gap:5px}
 .question-type-tag{font-size:11px;line-height:1.2;font-weight:650;color:#547c97}
 .chip.question-type-tag{display:inline-block;margin-left:6px;background:#eff5fa;color:#365f7e}
-.curiosity-type-filter{max-width:230px;min-height:35px;font-size:12px;padding:5px 8px;background:white;border:1px solid #bcd4e4;border-radius:9px}
+.curiosity-search-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.curiosity-search-row #curiosity-search{flex:1 1 260px;min-width:0;max-width:none;width:auto;min-height:44px}
+#curiosity-type-filters{display:flex;flex:0 1 auto;flex-wrap:wrap;gap:5px;max-width:100%}
+#curiosity-type-filters[hidden]{display:none!important}
+#curiosity-type-filters button{flex:0 0 auto;min-height:44px;padding:8px 10px;border:1px solid #c5d9e9;border-radius:9px;background:#fff;color:#385f7e;font-size:12px;white-space:nowrap}
+#curiosity-type-filters button[aria-pressed="true"]{background:#dfeffb;border-color:#78a4c3;color:#163d5a;font-weight:700}
+#curiosity-type-filters .type-count{font-size:11px;font-variant-numeric:tabular-nums;opacity:.82}
+#view.question-browse-mode .atlas-heading p{display:none}
+@media(max-width:700px){#curiosity-type-filters{flex:1 1 100%}#curiosity-type-filters button{flex:1 0 auto}}
 .curiosity-card:hover,.curiosity-card:focus-visible{border-color:#72a8cd;background:#edf7ff;outline-offset:2px}
 .curiosity-index .curiosity-empty{padding:22px 8px;color:#4d6d86;font-size:13px}
 @media(min-width:900px){#curiosity-index{right:0}}
@@ -435,15 +443,18 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
       </div>
       <div id="catalog-results" class="curiosity-results"></div>
     </section>
-    <section id="curiosity-index" class="curiosity-index" aria-label="Manufacturing curiosity encyclopedia" hidden>
+    <section id="curiosity-index" class="curiosity-index" aria-label="Question and vocabulary browser" hidden>
       <div class="curiosity-index-heading">
-        <h2>What do you want to understand?</h2>
-        <p>Choose an everyday question or a larger set of questions. Both open technical knowledge and book evidence.</p>
+        <h2>What do you want to explore?</h2>
+        <p>Explore a question or a larger question set.</p>
         <div class="curiosity-modes" role="group" aria-label="Browse by questions or vocabulary">
           <button id="curiosity-mode-questions" type="button" aria-pressed="true">Questions</button>
           <button id="curiosity-mode-terms" type="button" aria-pressed="false" hidden>Vocabulary</button>
         </div>
-        <input id="curiosity-search" type="search" autocomplete="off" spellcheck="false" placeholder="Search questions or technical terms" aria-label="Search questions and linked concepts">
+        <div class="curiosity-search-row">
+          <input id="curiosity-search" type="search" autocomplete="off" spellcheck="false" placeholder="Search questions or technical terms" aria-label="Search questions and linked concepts">
+          <div id="curiosity-type-filters" role="group" aria-label="Filter by question type" hidden></div>
+        </div>
         <nav id="curiosity-family-filters" aria-label="Curiosity families"></nav>
         <p id="curiosity-match-count" aria-live="polite"></p>
       </div>
@@ -1175,12 +1186,40 @@ function renderGlossaryBrowser(){
  if(!matching.length)results.append(el('p','curiosity-empty','No matching term in this glossary.'));
 }
 const QUESTION_TYPE_NAMES={explanation:'Explain',execution:'Execute',verification:'Verify',diagnosis:'Diagnose',decomposition:'Decompose',design:'Design',empirical_investigation:'Experiment',transfer:'Transfer'};
+// Four navigation buckets; the canonical types remain available for audits.
+const QUESTION_BUCKETS={
+ understand:{label:'Understand',types:['explanation']},
+ apply:{label:'Apply',types:['execution','transfer']},
+ design:{label:'Design',types:['design','decomposition']},
+ investigate:{label:'Investigate',types:['verification','diagnosis','empirical_investigation']}
+};
 function questionTypeLabel(type){return QUESTION_TYPE_NAMES[type]||String(type).replaceAll('_',' ')}
+function questionBucket(type){return Object.keys(QUESTION_BUCKETS).find(key=>QUESTION_BUCKETS[key].types.includes(type))||null}
+function questionBucketLabel(type){const bucket=questionBucket(type);return bucket?QUESTION_BUCKETS[bucket].label:questionTypeLabel(type)}
+function matchesQuestionBucket(entry,filter){return !filter||filter==='all'||questionBucket(entry.question_type)===filter}
+function normalizeQuestionBucket(filter){return filter==='all'||Object.prototype.hasOwnProperty.call(QUESTION_BUCKETS,filter)?filter:questionBucket(filter)||'all'}
+function renderQuestionBuckets(container,entries){
+ clear(container);
+ const totals=Object.fromEntries(Object.keys(QUESTION_BUCKETS).map(key=>[key,0]));
+ for(const entry of entries){const bucket=questionBucket(entry.question_type);if(bucket)totals[bucket]++}
+ container.hidden=!Object.values(totals).some(Boolean);
+ if(container.hidden){state.curiosityTypeFilter='all';return}
+ state.curiosityTypeFilter=normalizeQuestionBucket(state.curiosityTypeFilter);
+ for(const [key,label,count] of [['all','All types',entries.length],...Object.entries(QUESTION_BUCKETS).map(([key,bucket])=>[key,bucket.label,totals[key]])]){
+  const button=el('button','',label);button.type='button';
+  button.append(' ',el('span','type-count',String(count)));
+  button.setAttribute('aria-pressed',String(state.curiosityTypeFilter===key));
+  button.setAttribute('aria-label',label+', '+count+' questions');
+  if(key!=='all')button.title=QUESTION_BUCKETS[key].types.map(questionTypeLabel).join(' · ');
+  button.onclick=()=>{state.curiosityTypeFilter=key;renderCuriosityIndex()};
+  container.append(button);
+ }
+}
 function renderCuriosityIndex(){
  const data=state.curiosityData?.curiosity_atlas;
  if(!data)return;
- const families=$('curiosity-family-filters'),results=$('curiosity-results');
- clear(families);clear(results);
+ const families=$('curiosity-family-filters'),types=$('curiosity-type-filters'),results=$('curiosity-results');
+ clear(families);clear(results);types.hidden=true;
  const vocabularyReady=!!state.glossary?.terms?.length;
  $('curiosity-mode-terms').hidden=!vocabularyReady;
  $('curiosity-mode-questions').setAttribute('aria-pressed',String(state.glossaryMode==='questions'));
@@ -1189,23 +1228,7 @@ function renderCuriosityIndex(){
  if(state.glossaryMode==='terms'&&vocabularyReady){renderGlossaryBrowser();return}
  families.hidden=false;
  const familyPool=(data.entries||[]).filter(e=>state.curiosityFamily==='all'||e.family_id===state.curiosityFamily);
- const typeTotals=new Map();
- for(const entry of familyPool)if(entry.question_type)
-  typeTotals.set(entry.question_type,(typeTotals.get(entry.question_type)||0)+1);
- if(!typeTotals.size)state.curiosityTypeFilter='all';
- if(typeTotals.size){
-  const typeSelect=el('select','curiosity-type-filter');
-  typeSelect.setAttribute('aria-label','Filter questions by type');
-  const allOption=el('option','','All question types · '+familyPool.length);allOption.value='all';typeSelect.append(allOption);
-  for(const type of Object.keys(QUESTION_TYPE_NAMES)){
-   if(!typeTotals.has(type))continue;
-   const opt=el('option','',questionTypeLabel(type)+' · '+typeTotals.get(type));opt.value=type;typeSelect.append(opt);
-  }
-  if(!typeTotals.has(state.curiosityTypeFilter))state.curiosityTypeFilter='all';
-  typeSelect.value=state.curiosityTypeFilter||'all';
-  typeSelect.onchange=()=>{state.curiosityTypeFilter=typeSelect.value;renderCuriosityIndex()};
-  families.append(typeSelect);
- }
+ renderQuestionBuckets(types,familyPool);
  for(const family of [{id:'all',label:'All entries'},...(data.families||[])]){
   const btn=el('button','',family.label);btn.type='button';
   btn.setAttribute('aria-pressed',String(state.curiosityFamily===family.id));
@@ -1213,7 +1236,7 @@ function renderCuriosityIndex(){
   families.append(btn);
  }
  let shown=0,shownSets=0;
- if(state.curiosityFamily==='all'){
+ if(state.curiosityFamily==='all'&&state.curiosityTypeFilter==='all'){
   const scopeItems=[...(state.curiosityData?.landscape_views||[])];
   if(state.curiosityData?.fieldwork_nodes?.length)
    scopeItems.push({id:'fieldwork',title:'People, projects and working examples',rationale:'Real workflows, observed achievements, and failures with their evidence limitations.'});
@@ -1237,7 +1260,7 @@ function renderCuriosityIndex(){
  for(const family of data.families||[]){
   if(state.curiosityFamily!=='all'&&state.curiosityFamily!==family.id)continue;
   const entries=(data.entries||[]).filter(e=>e.family_id===family.id&&
-   (state.curiosityTypeFilter==='all'||!state.curiosityTypeFilter||e.question_type===state.curiosityTypeFilter)&&
+   matchesQuestionBucket(e,state.curiosityTypeFilter)&&
    curiosityMatches(e,state.curiositySearch))
    .sort((a,b)=>glossaryScore(b,state.curiositySearch)-glossaryScore(a,state.curiositySearch));
   if(!entries.length)continue;
@@ -1248,7 +1271,7 @@ function renderCuriosityIndex(){
   for(const entry of entries){
    const card=el('button','curiosity-card');card.type='button';
    card.append(el('span','',entry.question));
-   if(entry.question_type)card.append(el('small','question-type-tag',questionTypeLabel(entry.question_type)));
+   if(entry.question_type){const tag=el('small','question-type-tag',questionBucketLabel(entry.question_type));tag.title=questionTypeLabel(entry.question_type);card.append(tag)}
    if(state.curiositySearch.trim()&&state.termById.size){
     const matching=(entry.term_ids||[]).map(id=>state.termById.get(id))
      .filter(term=>term&&glossaryTermMatches(term,state.curiositySearch)).slice(0,2);
@@ -1273,7 +1296,7 @@ function renderCuriosityIndex(){
    results.append(footer);
   }
  }
- $('curiosity-match-count').textContent=shown+' specific questions'+(state.curiosityFamily==='all'?' · '+shownSets+' larger sets':'');
+ $('curiosity-match-count').textContent=shown+' questions'+(state.curiosityFamily==='all'&&state.curiosityTypeFilter==='all'?' · '+shownSets+' larger sets':'');
  if(!shown&&!shownSets)results.append(el('p','curiosity-empty','No matching question. Try a technical term in Vocabulary, an alternate phrase, or another category.'));
 }
 function showCuriosityIndex(open){
@@ -1285,7 +1308,12 @@ function showCuriosityIndex(open){
  btn.hidden=!available||(open&&!state.curiosityEntry);
  btn.textContent=open?'Back to investigation':'Browse questions';
  btn.setAttribute('aria-expanded',String(open));
- if(open&&state.curiosityData)renderCuriosityIndex()
+ if(open&&state.curiosityData){
+  const view=state.activeView;
+  const domain=view?.atlas_file?view.short_title:view?.title?.split(' — ')[0];
+  if(domain)$('collection-title').textContent=domain+' · Questions';
+  renderCuriosityIndex();
+ }else if(state.tree)$('collection-title').textContent=state.tree.title||state.currentSource?.title||'Explore';
 }
 
 /* A question, a set, or an old URL is a projection over one canonical
