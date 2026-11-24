@@ -178,7 +178,10 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .reference-scan .scan-tabs button:disabled{opacity:.4;cursor:default}
 .reference-scan .scan-tabs button[aria-pressed="true"]{background:#e5f2fc;border-color:#8fb9d7}
 .details-fold .fold-body>a{display:block;margin:7px 0;overflow-wrap:anywhere}
-.atlas-item.is-saved::after,.atlas-region.is-saved::after{content:'★';position:absolute;right:8px;bottom:5px;color:#ba8a22;font-size:15px}
+.atlas-item.is-saved::after,.atlas-region.is-saved::after{content:'★';position:absolute;right:8px;bottom:5px;color:#8a5700;font-size:29px;line-height:1;text-shadow:0 0 2px #fff,0 0 4px #fff;pointer-events:none}
+.atlas-overview-card.is-saved{border-color:#d4a64a}
+.atlas-overview-card.is-saved::after{content:'★';position:absolute;right:4px;top:4px;display:grid;place-items:center;min-width:26px;height:26px;padding:0 2px;background:#fff1bf;border:1px solid #ca912d;border-radius:50%;color:#865400;font-size:19px;font-weight:800;line-height:1;box-shadow:0 1px 3px #54350c2a;pointer-events:none}
+.atlas-overview-card.is-saved strong{padding-right:13px}
 .atlas-viewport[data-level="overview"] .atlas-item{visibility:hidden;pointer-events:none}
 .atlas-viewport[data-level="overview"] .atlas-region{background:#fcfeff}
 .atlas-overview-labels{position:absolute;inset:0;z-index:6;pointer-events:none}
@@ -416,7 +419,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 <aside id="activity-pane" class="activity-pane collapsed" aria-label="Recent actions and troubleshooting">
   <div class="activity-heading">
     <button id="activity-toggle" type="button" title="Show activity" aria-expanded="false"><span id="activity-dot" aria-hidden="true">●</span><strong id="activity-title">Ready</strong></button>
-    <div class="activity-controls"><button id="activity-pin" type="button" title="Keep activity expanded" aria-label="Pin activity pane" aria-pressed="false">📌</button><button id="activity-hide" type="button" title="Minimize activity" aria-label="Minimize activity">−</button></div>
+    <div class="activity-controls"><button id="activity-pin" type="button" title="Keep activity expanded" aria-label="Pin activity pane" aria-pressed="false">📌</button></div>
   </div>
   <div class="activity-body">
     <p id="activity-message" role="status" aria-live="polite">The atlas is ready.</p>
@@ -1810,6 +1813,7 @@ function renderLandscape(){
   if(readerFor(region.id)?.interested)section.classList.add('is-saved');
   world.append(section);
   const summary=el('button','atlas-overview-card');
+  if(readerFor(region.id)?.interested)summary.classList.add('is-saved');
   if(state.index.get(region.id)?.mapping_quality)summary.classList.add('mapping-frontier');
   summary.type='button';summary.append(el('strong','',title(state.index.get(region.id))));
   if(region.descendants.length)summary.append(el('small','',region.descendants.length+' nested nodes'));
@@ -2803,7 +2807,8 @@ function activitySync(){
  const pane=$('activity-pane');
  pane.classList.toggle('pinned',activityPinned);
  pane.classList.toggle('attention',activityAttention);
- // Errors stay visible as a compact warning; expanding requires an explicit tap.
+ // Activity logs never expand the pane. It opens only by clicking the
+ // indicator or by an explicit persistent pin.
  pane.classList.toggle('collapsed',!activityPinned&&!pane.classList.contains('expanded'));
  $('activity-toggle').setAttribute('aria-expanded',String(!pane.classList.contains('collapsed')));
  $('activity-pin').setAttribute('aria-pressed',String(activityPinned));
@@ -2847,18 +2852,25 @@ function atlasDiagnostics(){
  return summary.join('\n');
 }
 $('activity-toggle').onclick=()=>{
+ // Clicking the compact activity indicator provides a temporary inspection.
+ // Only an explicit pin keeps it expanded across other interactions.
  const pane=$('activity-pane');
- if(!pane.classList.contains('collapsed')&&!activityAttention&&!activityPinned)pane.classList.remove('expanded');
- else pane.classList.add('expanded');
- activityAttention=false;activitySync();
+ if(activityPinned)return;
+ pane.classList.toggle('expanded');
+ activitySync();
 };
-$('activity-hide').onclick=()=>{activityPinned=false;activityAttention=false;$('activity-pane').classList.remove('expanded');activitySync()};
 $('activity-pin').onclick=()=>{
  activityPinned=!activityPinned;
- if(activityPinned)$('activity-pane').classList.add('expanded');
+ $('activity-pane').classList.toggle('expanded',activityPinned);
  try{localStorage.setItem('knowledge-atlas-activity-pin',activityPinned?'1':'0')}catch{}
  activitySync();
 };
+document.addEventListener('pointerdown',event=>{
+ if(!activityPinned&&$('activity-pane').classList.contains('expanded')&&
+    !$('activity-pane').contains(event.target)){
+  $('activity-pane').classList.remove('expanded');activitySync();
+ }
+},true);
 $('activity-copy').onclick=async()=>{
  const info=atlasDiagnostics();
  try{await navigator.clipboard.writeText(info);activity('Diagnostics copied')}
