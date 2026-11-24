@@ -1755,11 +1755,13 @@ function localJsonReference(url,r){
 }
 function resourceHeading(k){return k.replace(/_/g,' ').replace(/([a-z])([A-Z])/g,'$1 $2').replace(/^./,s=>s.toUpperCase())}
 // Repository references remain inside the inspector. External sites use links.
-function renderReferencedData(host,data,r,openLocal){
+function renderReferencedData(host,data,r,openLocal,fieldName='',sourcePath=''){
  if(data==null)return;
  if(typeof data==='string'){
   const address=safeHref(data),repoPath=!address&&/^(?:Resources|Domains|Glossaries|Collections|Project_Ideas|Practical_Knowledge|Axioms)\/[\w./-]+\.json$/.test(data)&&!data.includes('..')?data:null;
-  const internal=repoPath||localJsonReference(address,r);
+  const domainChild=fieldName==='children'&&sourcePath.endsWith('/domain.json')&&/^[A-Za-z0-9_-]+$/.test(data)?
+   sourcePath.slice(0,sourcePath.lastIndexOf('/')+1)+data+'/domain.json':null;
+  const internal=repoPath||localJsonReference(address,r)||domainChild;
   if(internal&&openLocal){
    const open=el('button','reference-inline-link',simpleLabel(data));open.type='button';
    open.title='Read '+internal+' here, without leaving this map';
@@ -1771,7 +1773,7 @@ function renderReferencedData(host,data,r,openLocal){
  if(Array.isArray(data)){
   const list=el('ul','');
   for(const item of data.slice(0,100)){
-   const li=el('li','');renderReferencedData(li,item,r,openLocal);list.append(li);
+   const li=el('li','');renderReferencedData(li,item,r,openLocal,fieldName,sourcePath);list.append(li);
   }
   host.append(list);
   if(data.length>100)host.append(el('p','muted','Showing the first 100 entries; open source for the full collection.'));
@@ -1786,7 +1788,7 @@ function renderReferencedData(host,data,r,openLocal){
   for(const [key,value] of entries){
    if(value==null||value===''||(Array.isArray(value)&&!value.length))continue;
    const section=el('div','case-section');section.append(el('h3','',resourceHeading(key)));
-   const content=el('div','');renderReferencedData(content,value,r,openLocal);section.append(content);host.append(section);
+   const content=el('div','');renderReferencedData(content,value,r,openLocal,key,sourcePath);section.append(content);host.append(section);
   }
  }
 }
@@ -1838,7 +1840,7 @@ function appendResourcePreview(box,node){
    cacheReference(key,record);data=record;
    heading.textContent=record.name||record.title||simpleLabel(next);
    status.textContent=next;clear(body);
-   renderReferencedData(body,data,r,p=>openPath(p,true));
+   renderReferencedData(body,data,r,p=>openPath(p,true),'',next);
    const source=el('p','case-source');source.append(link(repoUrl(r,next),'Open original JSON on GitHub'));
    body.append(source);tabs.hidden=false;display();
   }catch(error){
