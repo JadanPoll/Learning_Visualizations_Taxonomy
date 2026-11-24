@@ -151,6 +151,14 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .navigation-quality-warning strong{display:block;font-size:14px;margin-bottom:4px}
 .navigation-quality-warning button{margin-top:8px;border-color:#d7b36d;color:#704e1a;background:#fff}
 .navigation-quality-warning textarea{display:block;width:100%;min-height:120px;margin-top:9px;font-size:12px;white-space:pre-wrap}
+.reference-scan{margin:13px 0;padding:12px 14px;border:1px solid #d9e6ef;background:#f8fbfe;border-radius:12px}
+.reference-scan>h3{font-size:15px;margin:0 0 8px;color:#234d6c}
+.reference-scan .scan-tabs{display:flex;gap:8px;margin-bottom:10px}
+.reference-scan .scan-tabs button{font-size:12px;padding:6px 10px}
+.reference-scan pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:55vh;overflow:auto;background:#fff;border:1px solid #dce6ef;border-radius:9px;padding:11px;font-size:12px;line-height:1.4}
+.reference-scan .case-section{margin:10px 0}
+.reference-scan .case-section h3{font-size:13px}
+.reference-scan .case-section ul{padding-left:20px}
 .details-fold .fold-body>a{display:block;margin:7px 0;overflow-wrap:anywhere}
 .atlas-item.is-saved::after,.atlas-region.is-saved::after{content:'★';position:absolute;right:8px;bottom:5px;color:#ba8a22;font-size:15px}
 .atlas-viewport[data-level="overview"] .atlas-item{visibility:hidden;pointer-events:none}
@@ -1740,33 +1748,52 @@ function renderReferencedData(host,data,r){
   }
  }
 }
+// Small in-memory cache avoids repeated JSON fetches when rapidly scanning nodes.
+const referencePreviewCache=new Map();
+const MAX_REFERENCE_CACHE=48;
+function cacheReference(key,value){
+ if(referencePreviewCache.has(key))referencePreviewCache.delete(key);
+ referencePreviewCache.set(key,value);
+ if(referencePreviewCache.size>MAX_REFERENCE_CACHE)referencePreviewCache.delete(referencePreviewCache.keys().next().value);
+}
 function appendResourcePreview(box,node){
  const path=localJsonReference(node.url,state.repo);
  if(!path)return;
- const section=el('section','case-section');
- const open=el('button','case-related-link','Read resource here');
- open.type='button';const contents=el('div','');contents.hidden=true;
- open.onclick=async()=>{
-  if(!contents.hidden){contents.hidden=true;open.textContent='Read resource here';return}
-  if(contents.dataset.loaded==='true'){contents.hidden=false;open.textContent='Hide resource details';return}
-  open.disabled=true;open.textContent='Opening reference…';
+ const r={...state.repo},key=r.owner+'/'+r.repo+'@'+r.branch+':'+path;
+ const section=el('section','reference-scan');
+ section.append(el('h3','','Reference preview'));
+ const status=el('p','case-source-status','Loading linked JSON…');
+ const tabs=el('div','scan-tabs'),readable=el('button','','Readable'),raw=el('button','','JSON');
+ readable.type='button';raw.type='button';tabs.hidden=true;tabs.append(readable,raw);
+ const body=el('div',''),code=el('pre','');code.hidden=true;
+ section.append(status,tabs,body,code);box.append(section);
+ let data=null;
+ function display(mode){
+  if(!data)return;
+  const json=mode==='json';
+  body.hidden=json;code.hidden=!json;
+  readable.setAttribute('aria-pressed',String(!json));
+  raw.setAttribute('aria-pressed',String(json));
+  if(json)code.textContent=JSON.stringify(data,null,2);
+ }
+ readable.onclick=()=>display('readable');
+ raw.onclick=()=>display('json');
+ async function load(){
   try{
-   const data=await readRepoFile(state.repo,path);
-   if(!data||typeof data!=='object')throw Error('Expected a JSON resource object at '+path);
-   clear(contents);renderReferencedData(contents,data,state.repo);
-   const sourceLink=el('p','case-source');
-   sourceLink.append(link(repoUrl(state.repo,path),'Open original record on GitHub'));
-   contents.append(sourceLink);
-   contents.dataset.loaded='true';contents.hidden=false;open.textContent='Hide resource details';
+   if(referencePreviewCache.has(key))data=referencePreviewCache.get(key);
+   else{data=await readRepoFile(r,path);cacheReference(key,data)}
+   if(!data||typeof data!=='object')throw Error('Expected an object or array');
+   status.textContent=path;
+   renderReferencedData(body,data,r);
+   tabs.hidden=false;display('readable');
   }catch(error){
-   contents.hidden=false;clear(contents);
-   contents.append(el('p','case-source-status','Unable to inspect '+path+': '+error.message));
-   contents.append(link(repoUrl(state.repo,path),'Open source file'));
-   open.textContent='Retry opening resource';
-   activity('Linked resource could not be displayed','error',path+': '+error.message);
-  }finally{open.disabled=false}
- };
- section.append(open,contents);box.append(section);
+   status.textContent='Could not preview '+path+': '+error.message;
+   const linkOut=link(repoUrl(r,path),'Open source JSON');
+   body.append(linkOut);
+   activity('Linked record preview failed','error',path+': '+error.message);
+  }
+ }
+ load();
 }
 function renderDetail(){
  const box=$('detail');clear(box);
