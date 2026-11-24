@@ -232,14 +232,14 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 #activity-entries .activity-error{color:#a83b20}
 #activity-copy{margin-top:8px;font-size:12px;padding:6px 9px;min-height:34px}
 .activity-fallback{white-space:pre-wrap;overflow-wrap:anywhere;max-height:160px;overflow:auto;font-size:10px}
-.activity-pane.collapsed:not(:hover):not(:focus-within):not(.attention):not(.pinned){width:210px;height:40px;padding:5px 12px;overflow:hidden}
-.activity-pane.collapsed:not(:hover):not(:focus-within):not(.attention):not(.pinned) .activity-body,
-.activity-pane.collapsed:not(:hover):not(:focus-within):not(.attention):not(.pinned) .activity-controls{display:none}
-.activity-pane.collapsed:hover,.activity-pane.collapsed:focus-within{width:min(340px,calc(100vw - 24px));height:auto;max-height:64dvh}
+.activity-pane.collapsed{width:210px;height:40px;padding:5px 12px;overflow:hidden;pointer-events:none}
+.activity-pane.collapsed #activity-toggle{pointer-events:auto}
+.activity-pane.collapsed .activity-body,.activity-pane.collapsed .activity-controls{display:none}
 @media(max-width:899px){
  .activity-pane{bottom:calc(8px + env(safe-area-inset-bottom));left:8px}
  .activity-pane:not(.collapsed){max-height:36dvh}
- body:has(#detail:not([hidden])) .activity-pane{bottom:auto;top:143px;max-height:30dvh}
+ .activity-pane{max-width:calc(100vw - 16px)}
+ body:has(#detail:not([hidden])) .activity-pane{bottom:calc(8px + env(safe-area-inset-bottom));top:auto;max-height:30dvh}
 }
 
 .case-trace{margin-top:14px!important}
@@ -1607,15 +1607,28 @@ function inspectAdjacent(step){
  const ids=browseNodeOrder(),index=ids.indexOf(state.selected),next=index+step;
  if(index>=0&&next>=0&&next<ids.length)select(ids[next]);
 }
+let lastCardTap={id:null,time:0},lastDomainEntry={id:null,time:0},enteringDomain=false;
+function activateMapCard(id){
+ const node=state.index.get(id),now=Date.now();
+ if(!node)return;
+ if(node.kind==='subdomain'&&lastCardTap.id===id&&now-lastCardTap.time<500){
+  lastCardTap={id:null,time:0};exploreNode(id);return;
+ }
+ lastCardTap={id,time:now};select(id);
+}
 async function exploreNode(id){
- const node=state.index.get(id);
+ const node=state.index.get(id),now=Date.now();
  if(!node||node.kind!=='subdomain'||!node.url||!state.repo||!state.views)return;
+ // Click-pair detection and native dblclick can both fire on desktop.
+ if(enteringDomain||(lastDomainEntry.id===id&&now-lastDomainEntry.time<750))return;
  const view=state.views.find(v=>v.file&&repoUrl(state.repo,v.file)===node.url);
  if(!view){setStatus('Subdomain not indexed in rsm-view.json: '+node.url,true);return}
+ lastDomainEntry={id,time:now};enteringDomain=true;
  try{
   await loadMapped(state.repo,view);$('choices').value=view.id;
   window.scrollTo(0,0);
  }catch(error){setStatus('Cannot open '+title(node)+': '+error.message,true)}
+ finally{enteringDomain=false}
 }
 function select(id){
  if(!state.index.has(id))return;
@@ -1747,10 +1760,13 @@ function renderLandscape(){
   section.style.left=region.x+'px';section.style.top=region.y+'px';
   section.style.width=region.w+'px';section.style.height=region.h+'px';section.dataset.nodeId=region.id;
   const head=el('div','atlas-region-heading'),name=el('button','atlas-region-title',title(state.index.get(region.id)));
-  name.type='button';name.onclick=()=>select(region.id);name.ondblclick=()=>exploreNode(region.id);
+  name.type='button';name.onclick=()=>activateMapCard(region.id);name.ondblclick=e=>{e.preventDefault();exploreNode(region.id)};
   const actions=el('div','atlas-region-actions');
   if(region.descendants.length)actions.append(el('span','',region.descendants.length+' nested nodes'));
   head.append(name,actions);section.append(head);
+  // The whole region is an inspectable card, not only its title text.
+  section.onclick=e=>{if(!e.target.closest('button'))activateMapCard(region.id)};
+  section.ondblclick=e=>{if(!e.target.closest('button')){e.preventDefault();exploreNode(region.id)}};
   for(const item of region.descendants){
    const node=state.index.get(item.id);
    const button=el('button','atlas-item'+(item.depth>1?' is-deep':'')+(node?.mapping_quality?' mapping-frontier':''));
@@ -1758,7 +1774,7 @@ function renderLandscape(){
    button.style.left=item.x+'px';button.style.top=item.y+'px';button.style.width=item.w+'px';button.style.height=item.h+'px';
    button.append(el('span','atlas-item-label',title(node)));
    if(readerFor(item.id)?.interested)button.classList.add('is-saved');
-   button.onclick=()=>select(item.id);button.ondblclick=()=>exploreNode(item.id);section.append(button);
+   button.onclick=()=>activateMapCard(item.id);button.ondblclick=e=>{e.preventDefault();exploreNode(item.id)};section.append(button);
   }
   if(readerFor(region.id)?.interested)section.classList.add('is-saved');
   world.append(section);
@@ -1767,7 +1783,7 @@ function renderLandscape(){
   summary.type='button';summary.append(el('strong','',title(state.index.get(region.id))));
   if(region.descendants.length)summary.append(el('small','',region.descendants.length+' nested nodes'));
   summary.title='Inspect '+title(state.index.get(region.id));
-  summary.onclick=()=>select(region.id);summary.ondblclick=()=>exploreNode(region.id);
+  summary.onclick=()=>activateMapCard(region.id);summary.ondblclick=e=>{e.preventDefault();exploreNode(region.id)};
   labels.append(summary);a.overviewLabels.push({region,el:summary});
  }
  box.append(world,labels);
@@ -2681,7 +2697,8 @@ function activitySync(){
  const pane=$('activity-pane');
  pane.classList.toggle('pinned',activityPinned);
  pane.classList.toggle('attention',activityAttention);
- pane.classList.toggle('collapsed',!activityPinned&&!activityAttention&&!pane.classList.contains('expanded'));
+ // Errors stay visible as a compact warning; expanding requires an explicit tap.
+ pane.classList.toggle('collapsed',!activityPinned&&!pane.classList.contains('expanded'));
  $('activity-toggle').setAttribute('aria-expanded',String(!pane.classList.contains('collapsed')));
  $('activity-pin').setAttribute('aria-pressed',String(activityPinned));
  $('activity-pin').textContent='📌';
