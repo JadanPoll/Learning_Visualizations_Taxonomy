@@ -856,7 +856,8 @@ function mappedQuality(item,kind,rule,linkUrl){
     action:'Correct the rsm-view.json description_field, or explicitly declare suitable description_fallback_fields. Do not duplicate the source.'};
   }
  }
- if(contentFields.length||hasRef||hasChildren)return null;
+ const declaredDescription=field(item,rule?.description_field)||rule?.description_fallback_fields?.map(k=>field(item,k)).find(Boolean);
+ if(contentFields.length||hasRef||hasChildren||(typeof declaredDescription==='string'&&declaredDescription.trim().length>=12))return null;
  if(kind==='domain'&&Object.keys(original).some(k=>Array.isArray(original[k])&&original[k].length))
   return null; // A navigable index is a valid domain, not a failed investigation.
  if(typeof original.name==='string'&&Object.keys(original).length===1)return {
@@ -2307,6 +2308,8 @@ function renderDetail(){
  if(n.kind==='research_question'){
   box.append(el('p','case-source-status',
    'An investigation question, not an established answer.'));
+  fieldSection('Candidate hypotheses',n.hypotheses);
+  fieldSection('Directions to investigate',n.investigate);
   const parent=state.index.get(state.parent.get(n.id));
   if(parent?.kind==='domain'){
    if(parent.characterization)fieldSection('Domain context',parent.characterization);
