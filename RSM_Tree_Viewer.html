@@ -37,7 +37,18 @@ summary{cursor:pointer;font-size:12px;font-weight:600}.fileinput{max-width:175px
 .reader-dialog section{background:#fff;border-radius:12px;padding:19px;width:min(750px,100%);max-height:calc(100vh - 30px);overflow:auto;box-shadow:0 20px 60px #122a4038}
 .reader-dialog h2{font-size:18px;margin:0 0 5px}
 .reader-dialog .reader-top{display:flex;justify-content:space-between;gap:8px;align-items:start}
-.reader-dialog .reader-list{display:grid;gap:7px;max-height:45vh;overflow:auto;margin:12px 0}
+.reader-dialog .reader-list{display:grid;gap:8px;max-height:48vh;overflow:auto;margin:10px 0}
+.reader-filter{display:flex;align-items:center;gap:10px;margin-top:13px}
+.reader-filter input{flex:1;min-width:0;min-height:39px;border:1px solid #b6ccdd;border-radius:9px;padding:8px 10px;font-size:13px}
+.reader-group{border:1px solid #d7e4ee;border-radius:10px;background:#fff;overflow:hidden}
+.reader-group>summary{display:flex;align-items:center;gap:8px;background:#f1f6fa;color:#264a68;padding:10px 12px;font-size:13px;font-weight:700;cursor:pointer}
+.reader-group>summary small{font-weight:450;color:#637e91;margin-left:auto}
+.reader-group:not([open])>summary{border-bottom:0}
+.reader-group .reader-group-body{padding:8px;display:grid;gap:7px}
+.reader-group .reader-entry{margin:0}
+.reader-entry .reader-note-preview{margin:6px 0 0;font-size:12px;line-height:1.4}
+.reader-entry .reader-note-preview>summary{cursor:pointer;color:#426c88}
+.reader-entry .reader-note-preview p{white-space:pre-wrap;overflow-wrap:anywhere}
 .reader-entry{background:#f7fafc;border:1px solid var(--line);border-radius:8px;padding:11px;display:flex;gap:10px;align-items:start}
 .reader-entry .reader-text{flex:1;min-width:0;overflow-wrap:anywhere}
 .reader-entry strong{font-size:13px}.reader-entry small{display:block;color:var(--muted);font-size:11px;margin:4px 0}
@@ -458,6 +469,10 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 <div id="reader-dialog" class="reader-dialog" hidden>
   <section role="dialog" aria-modal="true" aria-labelledby="reader-title">
     <div class="reader-top"><div><h2 id="reader-title">My interests & notes</h2><div class="tiny muted">Only explicitly saved interests and notes. Navigating a question does not mark it as interesting.</div></div><button type="button" id="reader-close">Close</button></div>
+    <div class="reader-filter">
+      <input type="search" id="reader-search" aria-label="Search saved interests and notes" placeholder="Search saved items, notes or domains" autocomplete="off">
+      <span id="reader-count" class="tiny muted"></span>
+    </div>
     <div id="reader-list" class="reader-list"></div>
     <div class="reader-transfer"><p>Export a portable JSON to continue in another browser or ask an LLM what to explore next. The exported file may contain private notes; it is not uploaded automatically.</p>
       <div class="reader-buttons"><button type="button" id="reader-copy">Copy for LLM</button><button type="button" id="reader-export" class="primary">Export JSON</button><button type="button" id="reader-import">Import JSON</button><input id="reader-file" type="file" accept=".json,application/json" hidden></div>
@@ -2745,24 +2760,64 @@ function readerJump(entry){
  href.searchParams.delete('url');href.hash='node='+encodeURIComponent(entry.node_id);
  location.assign(href.href);
 }
+// Searchable groups preserve the existing source identities, notes and
+// portable JSON format. Only the presentation is grouped; no new records.
+const readerOpenGroups=new Set();
 function readerList(){
  const pane=$('reader-list');clear(pane);
  const items=[...readerEntries.values()].sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at)));
- if(!items.length){pane.append(el('p','muted','No saved interests or notes. Select a question and mark it or add a note.'));return}
- for(const entry of items){
-  const row=el('div','reader-entry'),copy=el('div','reader-text');
-  copy.append(el('strong','',entry.label+(entry.interested?' ★':'')));
-  copy.append(el('small','',(entry.origin.title||entry.origin.repo||entry.origin.url||entry.origin.file||'Local source')+' · '+entry.node_id));
-  if(entry.context?.length>1)copy.append(el('small','',entry.context.join(' › ')));
-  if(entry.note)copy.append(el('p','',entry.note));
-  const controls=el('div','reader-controls'),open=el('button','','Open'),remove=el('button','','Remove');
-  open.type=remove.type='button';open.onclick=()=>readerJump(entry);
-  remove.onclick=()=>{
-   if(!confirm('Remove this saved interest/note?'))return;
-   const next=new Map(readerEntries);next.delete(readerKey(entry.origin,entry.node_id));
-   try{readerWrite(next);readerList();render()}catch(e){readerMessage('Could not remove item: '+e.message,true)}
+ const query=$('reader-search').value.trim().toLowerCase();
+ const matching=items.filter(entry=>!query||[
+  entry.label,entry.note,entry.origin.title,entry.origin.repo,
+  entry.origin.file,entry.context?.join(' ')
+ ].some(v=>String(v||'').toLowerCase().includes(query)));
+ $('reader-count').textContent=matching.length===items.length?
+  items.length+' saved':matching.length+' of '+items.length+' saved';
+ if(!matching.length){
+  pane.append(el('p','muted',query?'No saved items match this search.':'No saved interests or notes. Select a question and mark it or add a note.'));
+  return;
+ }
+ const groups=new Map();
+ for(const entry of matching){
+  const o=entry.origin||{};
+  const key=[o.type||'source',o.repo||o.url||'',o.view_id||o.file||o.title||''].join('|');
+  if(!groups.has(key))groups.set(key,{title:o.title||o.file||o.repo||o.url||'Local source',entries:[]});
+  groups.get(key).entries.push(entry);
+ }
+ let groupIndex=0;
+ for(const [key,group] of groups){
+  const details=el('details','reader-group');
+  details.open=!!query||readerOpenGroups.has(key)||(!readerOpenGroups.size&&groupIndex===0);
+  details.ontoggle=()=>{
+   if(details.open)readerOpenGroups.add(key);
+   else readerOpenGroups.delete(key);
   };
-  controls.append(open,remove);row.append(copy,controls);pane.append(row);
+  const summary=el('summary','');
+  summary.append(el('span','',group.title));
+  summary.append(el('small','',group.entries.length+' saved'));
+  details.append(summary);
+  const body=el('div','reader-group-body');
+  for(const entry of group.entries){
+   const row=el('div','reader-entry'),copy=el('div','reader-text');
+   copy.append(el('strong','',entry.label+(entry.interested?' ★':'')));
+   const context=(entry.context||[]).filter(Boolean);
+   if(context.length>1)copy.append(el('small','',context.join(' › ')));
+   if(entry.note){
+    const note=el('details','reader-note-preview');
+    note.append(el('summary','','Note · '+entry.note.slice(0,90).replace(/\s+/g,' ')+(entry.note.length>90?'…':'')));
+    note.append(el('p','',entry.note));copy.append(note);
+   }
+   const controls=el('div','reader-controls'),open=el('button','','Open'),remove=el('button','','Remove');
+   open.type=remove.type='button';open.onclick=()=>readerJump(entry);
+   remove.onclick=()=>{
+    if(!confirm('Remove this saved interest/note?'))return;
+    const next=new Map(readerEntries);next.delete(readerKey(entry.origin,entry.node_id));
+    try{readerWrite(next);readerList();render()}
+    catch(e){readerMessage('Could not remove item: '+e.message,true)}
+   };
+   controls.append(open,remove);row.append(copy,controls);body.append(row);
+  }
+  details.append(body);pane.append(details);groupIndex++;
  }
 }
 function readerOpen(){$('reader-dialog').hidden=false;readerMessage('');readerList()}
@@ -2883,6 +2938,7 @@ window.addEventListener('error',e=>activity('A browser error interrupted an acti
 window.addEventListener('unhandledrejection',e=>activity('An operation failed unexpectedly','error',String(e.reason?.stack||e.reason||'Unknown rejection')));
 activitySync();
 
+$('reader-search').addEventListener('input',readerList);
 $('reader-open').onclick=readerOpen;
 $('reader-close').onclick=()=>{$('reader-dialog').hidden=true};
 $('reader-dialog').addEventListener('click',e=>{if(e.target===$('reader-dialog'))$('reader-dialog').hidden=true});
