@@ -13,10 +13,16 @@ summary{cursor:pointer;font-size:12px;font-weight:600}.fileinput{max-width:175px
 
 /* Personal annotations: deliberate interests are independent of navigation/visits. */
 .reader-head{display:flex;align-items:center;gap:8px}.reader-count:not(:empty){font-size:11px;color:#194f7e;background:#e4f0fb;border-radius:12px;padding:1px 7px}
-.reader-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0 0}
+.reader-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:10px 0 12px}
+.reader-actions button{min-height:36px}
+.reader-actions .inspector-step{min-width:39px;font-size:17px;padding:6px 10px}
+.reader-actions .inspector-step:disabled{opacity:.35;cursor:default}
+.reader-actions .inspector-position{font-size:11px;color:#6c8296;margin-right:auto}
+.reader-actions .inspect-explore{flex:1;min-width:130px;white-space:normal;text-align:center;padding:8px 10px;font-size:12px;font-weight:650;background:#f2f8fd;border:1px solid #c7dcec;color:#295577;border-radius:9px}
+.atlas-region-title,.atlas-item,.atlas-overview-card{touch-action:manipulation}
 .reader-star{font-size:13px;border:1px solid #b7cbdc;background:#fff;border-radius:7px;padding:7px 10px}
 .reader-star.on{background:#fff1c9;border-color:#d9a33c;color:#825514}
-.reader-note-box{margin:12px 0 0;border:1px solid var(--line);background:#f8fbfd;padding:12px;border-radius:9px}
+.reader-note-box{margin:6px 0 14px;border:1px solid var(--line);background:#f8fbfd;padding:12px;border-radius:9px}.reader-note-box[hidden]{display:none}
 .reader-note-box label{display:block;font-size:12px;font-weight:650;margin-bottom:7px}
 .reader-note-box textarea{display:block;width:100%;min-height:94px;max-height:260px;resize:vertical;border:1px solid #b8cadb;border-radius:7px;padding:9px;color:#1b2b3b;font:inherit;font-size:13px;background:#fff;line-height:1.45}
 .reader-note-box button{margin-top:8px}
@@ -1489,11 +1495,34 @@ function openTree(d,guide,source,origin=null){state.currentSource=origin||{type:
   defects.slice(0,3).map(n=>mappingRepairReport(n)).join('\n\n---\n\n'));
 }
 function ancestry(id){const out=[],visited=new Set();let x=id;while(x&&state.index.has(x)&&!visited.has(x)){out.unshift(x);visited.add(x);x=state.parent.get(x)}return out}
+function browseNodeOrder(){
+ const layout=state.atlas.layout;
+ if(!layout?.regions)return [...state.index.keys()];
+ return layout.regions.flatMap(region=>[region.id,...region.descendants.map(item=>item.id)]);
+}
+function inspectAdjacent(step){
+ const ids=browseNodeOrder(),index=ids.indexOf(state.selected),next=index+step;
+ if(index>=0&&next>=0&&next<ids.length)select(ids[next]);
+}
+async function exploreNode(id){
+ const node=state.index.get(id);
+ if(!node||node.kind!=='subdomain'||!node.url||!state.repo||!state.views)return;
+ const view=state.views.find(v=>v.file&&repoUrl(state.repo,v.file)===node.url);
+ if(!view){setStatus('Subdomain not indexed in rsm-view.json: '+node.url,true);return}
+ try{
+  await loadMapped(state.repo,view);$('choices').value=view.id;
+  window.scrollTo(0,0);
+ }catch(error){setStatus('Cannot open '+title(node)+': '+error.message,true)}
+}
 function select(id){
  if(!state.index.has(id))return;
  state.selected=id;state.detailOpen=true;
  activity('Inspecting '+title(state.index.get(id)));
  updateSelection();renderDetail();
+ const pane=$('detail');
+ pane.scrollTop=0;
+ const rail=pane.closest('.atlas-inspector-rail');
+ if(rail)rail.scrollTop=0;
  const u=new URL(location.href);u.hash='node='+encodeURIComponent(id);
  try{history.replaceState(null,'',u.toString())}catch{}
 }
@@ -1615,7 +1644,7 @@ function renderLandscape(){
   section.style.left=region.x+'px';section.style.top=region.y+'px';
   section.style.width=region.w+'px';section.style.height=region.h+'px';section.dataset.nodeId=region.id;
   const head=el('div','atlas-region-heading'),name=el('button','atlas-region-title',title(state.index.get(region.id)));
-  name.type='button';name.onclick=()=>select(region.id);
+  name.type='button';name.onclick=()=>select(region.id);name.ondblclick=()=>exploreNode(region.id);
   const actions=el('div','atlas-region-actions');
   if(region.descendants.length)actions.append(el('span','',region.descendants.length+' nested nodes'));
   head.append(name,actions);section.append(head);
@@ -1626,7 +1655,7 @@ function renderLandscape(){
    button.style.left=item.x+'px';button.style.top=item.y+'px';button.style.width=item.w+'px';button.style.height=item.h+'px';
    button.append(el('span','atlas-item-label',title(node)));
    if(readerFor(item.id)?.interested)button.classList.add('is-saved');
-   button.onclick=()=>select(item.id);section.append(button);
+   button.onclick=()=>select(item.id);button.ondblclick=()=>exploreNode(item.id);section.append(button);
   }
   if(readerFor(region.id)?.interested)section.classList.add('is-saved');
   world.append(section);
@@ -1635,7 +1664,7 @@ function renderLandscape(){
   summary.type='button';summary.append(el('strong','',title(state.index.get(region.id))));
   if(region.descendants.length)summary.append(el('small','',region.descendants.length+' nested nodes'));
   summary.title='Inspect '+title(state.index.get(region.id));
-  summary.onclick=()=>select(region.id);
+  summary.onclick=()=>select(region.id);summary.ondblclick=()=>exploreNode(region.id);
   labels.append(summary);a.overviewLabels.push({region,el:summary});
  }
  box.append(world,labels);
@@ -1808,6 +1837,24 @@ function renderDetail(){
  }
  const marker=el('span','chip',(n.kind||'Question').replace(/_/g,' '));box.append(marker);
  box.append(el('h2','',title(n)));
+ const toolbar=renderReaderDetail(box,n);
+ const order=browseNodeOrder(),position=order.indexOf(n.id);
+ if(position>=0&&order.length>1){
+  const previous=el('button','inspector-step','←'),next=el('button','inspector-step','→');
+  previous.type=next.type='button';previous.title='Previous map card';next.title='Next map card';
+  previous.setAttribute('aria-label','Previous map card');next.setAttribute('aria-label','Next map card');
+  previous.disabled=position===0;next.disabled=position===order.length-1;
+  previous.onclick=()=>inspectAdjacent(-1);next.onclick=()=>inspectAdjacent(1);
+  toolbar.prepend(previous,next,el('span','inspector-position',(position+1)+' / '+order.length));
+ }
+ if(n.kind==='subdomain'&&n.url&&state.repo&&state.views){
+  const destination=state.views.find(v=>v.file&&repoUrl(state.repo,v.file)===n.url);
+  if(destination){
+   const go=el('button','inspect-explore','Explore this domain');go.type='button';
+   go.title='Double-click this map card to enter its domain';
+   go.onclick=()=>exploreNode(n.id);toolbar.append(go);
+  }
+ }
  if(n.mapping_quality){
   const issue=n.mapping_quality,block=el('section','navigation-quality-warning');
   block.append(el('strong','',issue.label));
@@ -1835,17 +1882,7 @@ function renderDetail(){
   box.append(open);
  }
  if(n.url&&state.repo)appendResourcePreview(box,n);
- if(n.kind==='subdomain'&&n.url&&state.repo&&state.views){
-  const destination=state.views.find(v=>v.file&&repoUrl(state.repo,v.file)===n.url);
-  if(destination){
-   const go=el('button','case-related-link','Explore this domain');go.type='button';
-   go.onclick=async()=>{
-    try{await loadMapped(state.repo,destination);$('choices').value=destination.id;window.scrollTo(0,0)}
-    catch(error){setStatus('Cannot open domain: '+error.message,true)}
-   };
-   box.append(go);
-  }
- }
+
  if(n.why_ask||n.why||n.description)box.append(el('p','',n.why_ask||n.why||n.description));
  if(n.actor)box.append(el('div','case-byline',n.actor+(n.evidence_status?' · '+n.evidence_status:'')));
  if(n.term_ids?.length&&state.termById.size){
@@ -2213,7 +2250,6 @@ function renderDetail(){
   }
   box.append(section);
  }
- renderReaderDetail(box,n);
  // Children remain in the landscape; do not duplicate navigation inside the details panel.
  const answers=(state.tree.answer_branches||[]).find(a=>a.question_id===n.id)?.possible_answers||n.candidate_answers||[];
  if(answers.length){
@@ -2420,8 +2456,8 @@ function renderReaderDetail(box,n){
  star.type='button';star.setAttribute('aria-pressed',String(!!prior?.interested));
  star.title=prior?.interested?'Remove saved interest':'Save interest';
  star.setAttribute('aria-label',star.title);star.onclick=()=>readerToggle(n.id);
- wrap.append(star);box.append(wrap);
- const panel=el('div','reader-note-box');
+ wrap.append(star);
+ const panel=el('div','reader-note-box');panel.hidden=true;
  const toggle=el('button','note-show icon-action',prior?.note?'✎':'✎');toggle.type='button';
  toggle.title=prior?.note?'Edit note':'Add note';toggle.setAttribute('aria-label',toggle.title);
  toggle.setAttribute('aria-expanded','false');
@@ -2433,10 +2469,11 @@ function renderReaderDetail(box,n){
  save.title='Save note';save.setAttribute('aria-label','Save note');
  save.onclick=()=>readerSave(n.id,!!readerFor(n.id)?.interested,note.value.trim());
  compose.append(label,note,save);
- toggle.onclick=()=>{compose.hidden=!compose.hidden;toggle.setAttribute('aria-expanded',String(!compose.hidden));if(!compose.hidden)note.focus()};
- panel.append(toggle);
+ toggle.onclick=()=>{panel.hidden=!panel.hidden;compose.hidden=panel.hidden;toggle.setAttribute('aria-expanded',String(!panel.hidden));if(!panel.hidden)note.focus()};
+ wrap.append(toggle);box.append(wrap);
  if(prior?.note)panel.append(el('div','note-preview',prior.note));
  panel.append(compose);box.append(panel);
+ return wrap;
 }
 function readerJump(entry){
  const key=readerSourceKey(entry.origin);
