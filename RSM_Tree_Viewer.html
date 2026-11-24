@@ -700,7 +700,9 @@ function mappedQuality(item,kind,rule,linkUrl){
   'why','rationale','contract','how_it_works','mechanism','evidence','observation',
   'initial_case','practical_effect','claims','first_experiment','distinct_contact',
   'big_picture_certification','reverse_engineered_virtual_lab','qualification',
-  'source_sections','source_ids','routes','source_views','source_urls'];
+  'source_sections','source_ids','routes','source_views','source_urls',
+  'references','sources','existing_implementations_to_investigate',
+  'operations','completion_evidence','examples','relevant_devices'];
  const contentFields=meaningfulFields.filter(k=>{
   const v=original[k];return typeof v==='string'?v.trim().length>=12:
    Array.isArray(v)?v.length>0:!!(v&&typeof v==='object'&&Object.keys(v).length);
@@ -708,8 +710,12 @@ function mappedQuality(item,kind,rule,linkUrl){
  const hasRef=!!linkUrl||['url','source','kami_url','link','reference'].some(k=>safeHref(original[k]))||
   Object.values(original).some(v=>typeof v==='string'&&safeHref(v));
  const hasChildren=Array.isArray(original.children)&&original.children.length>0;
- const placeholders=meaningfulFields.filter(k=>typeof original[k]==='string'&&
-  /^\s*(?:tbd|todo|to be (?:added|written|filled)|coming soon|placeholder(?: text)?|lorem ipsum(?: dolor sit amet)?|fill (?:this )?in|insert (?:text|content|answer) here|n\/a)\s*[.!?]?\s*$/i.test(original[k]));
+ const placeholderPattern=/^\s*(?:tbd|todo|to be (?:added|written|filled)|coming soon|placeholder(?: text)?|lorem ipsum(?: dolor sit amet)?|fill (?:this )?in|insert (?:text|content|answer) here|n\/a)\s*[.!?]?\s*$/i;
+ if(typeof item==='string'&&placeholderPattern.test(item))return {
+  code:'PLACEHOLDER_CONTENT',label:'Placeholder content',
+  message:'This mapped entry is literal placeholder text rather than useful knowledge.',
+  action:'Replace it with a real reference or meaningful question, or remove it if it serves no purpose.'};
+ const placeholders=meaningfulFields.filter(k=>typeof original[k]==='string'&&placeholderPattern.test(original[k]));
  if(placeholders.length)return {code:'PLACEHOLDER_CONTENT',label:'Placeholder content',
   message:'Fields '+placeholders.join(', ')+' contain explicit unfinished placeholder text.',
   action:'Replace each placeholder with actual verified content, a clearly marked open question, or remove the empty entry. Never fabricate evidence.'};
