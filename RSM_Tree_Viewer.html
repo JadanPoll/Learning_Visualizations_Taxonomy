@@ -1073,6 +1073,7 @@ function descriptiveQuestionScore(record,query){
  return score?score+(exact?12:0):0;
 }
 function descriptiveGlossaryScore(term,query){
+ if(!String(query||'').trim())return 1;
  const related=(term.related_ids||[]).map(id=>state.termById.get(id)).filter(Boolean);
  // Definition and neighborhood matter, but the term itself remains the strongest cue.
  const linked=glossaryLinkedRecords(term.id);
@@ -1084,7 +1085,10 @@ function descriptiveGlossaryScore(term,query){
   {weight:2,words:descriptiveTokens(linked.questions.map(q=>[q.question,q.context,...(q.aliases||[])].join(' ')).join(' '))}
  ]);
  const phrase=String(query||'').trim().toLowerCase();
- return score?score+(phrase.length>2&&[term.label,...(term.aliases||[])].some(x=>String(x).toLowerCase().includes(phrase))?12:0):0;
+ // If the description identifies a question rather than a particular word,
+ // expose its vocabulary neighborhood at lower rank than direct concept matches.
+ const neighborhood=Math.max(0,...linked.questions.map(q=>descriptiveQuestionScore(q,query)))*.08;
+ return score?score+(phrase.length>2&&[term.label,...(term.aliases||[])].some(x=>String(x).toLowerCase().includes(phrase))?12:0):Math.min(4,neighborhood);
 }
 function glossaryScore(record,query){
  if(descriptiveSearchEnabled())return descriptiveQuestionScore(record,query);
@@ -1220,7 +1224,7 @@ function renderGlossaryBrowser(){
   for(const id of n.term_ids||[])mapped.add(id);
  for(const b of state.curiosityData?.navigation_bridges||[])
   for(const ch of b.choices||[])for(const id of ch.term_ids||[])mapped.add(id);
- results.append(el('p','glossary-scope-hint','Amber terms have no mapped question, investigation or technical route in this view.'));
+ results.append(el('p','glossary-scope-hint',descriptive&&query?'Direct concept matches and vocabulary connected through relevant questions. Amber terms have no mapped investigation.':'Amber terms have no mapped question, investigation or technical route in this view.'));
  for(const term of matching){
   const category=term.category||'Other';
   if(!groups.has(category))groups.set(category,[]);
@@ -2367,10 +2371,12 @@ function renderDetail(){
 
  if(n.why_ask||n.why||n.description)box.append(el('p','',n.why_ask||n.why||n.description));
  if(n.actor)box.append(el('div','case-byline',n.actor+(n.evidence_status?' · '+n.evidence_status:'')));
- if(n.term_ids?.length&&state.termById.size){
+ const chapterScope=descriptiveSearchEnabled()?(state.curiosityData?.landscape_views||[]).find(l=>l.root_id===n.id):null;
+ const vocabularyIds=chapterScope?[...new Set([...(chapterScope.term_ids||[]),...(state.glossary?.terms||[]).filter(t=>t.category===chapterScope.title).map(t=>t.id)])]:(n.term_ids||[]);
+ if(vocabularyIds.length&&state.termById.size){
   const section=el('div','glossary-detail-terms');
-  section.append(el('span','muted','Concepts'));
-  for(const termId of n.term_ids.slice(0,12)){
+  section.append(el('span','muted',chapterScope?'Chapter vocabulary · '+vocabularyIds.length:'Concepts'));
+  for(const termId of descriptiveSearchEnabled()?vocabularyIds:vocabularyIds.slice(0,12)){
    const term=state.termById.get(termId);if(!term)continue;
    const chip=el('button','glossary-term-chip',term.label);chip.type='button';
    chip.title='Browse concept '+term.label;
