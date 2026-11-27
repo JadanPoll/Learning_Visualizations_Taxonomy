@@ -767,15 +767,17 @@ async function readMappedCorpus(r,view){
   if(choices.length)choicesByBridge.set(bridge.id,{...bridge,choices});
  }
  const entryById=new Map((atlas.curiosity_atlas.entries||[]).map(e=>[e.id,e]));
- const entries=family.question_ids.map(id=>{
+ const redirects=atlas.curiosity_atlas.redirects||{};
+ if(new Set(family.question_ids).size!==family.question_ids.length)
+  throw Error('Repeated question ID in '+view.file);
+ const canonicalIds=[...new Set(family.question_ids.map(id=>redirects[id]||id))];
+ const entries=canonicalIds.map(id=>{
   const entry=entryById.get(id);
   if(!entry)throw Error('Unknown family question ID '+id);
   const bridge_ids=(entry.bridge_ids||[]).filter(id=>choicesByBridge.has(id));
   if(!bridge_ids.length)throw Error('Family question has no local technical route: '+id);
   return {...entry,bridge_ids};
  });
- if(new Set(family.question_ids).size!==entries.length)
-  throw Error('Repeated question ID in '+view.file);
  const familyIds=new Set(entries.map(e=>e.family_id));
  const families=(atlas.curiosity_atlas.families||[]).filter(f=>familyIds.has(f.id));
  const rootId=shared.find(n=>!n.parent_id)?.id||nodes[0]?.id;
@@ -1403,9 +1405,14 @@ function showCuriosityIndex(open){
 function researchEntryProjection(data,selection,r,view){
  if(!selection)return {tree:makeCuriosityProjection(data,null),title:view.title,originViewId:view.id};
  if(selection.kind==='question'){
-  const entry=data.curiosity_atlas?.entries?.find(e=>e.id===selection.id);
+  const atlas=data.curiosity_atlas;
+  const canonicalId=atlas?.redirects?.[selection.id]||selection.id;
+  const entry=atlas?.entries?.find(e=>e.id===canonicalId);
   if(!entry)throw Error('Unknown curiosity question '+selection.id);
-  return {tree:makeCuriosityProjection(data,entry),title:entry.question,originViewId:view.id};
+  // Keep the old projection root ID when following a saved legacy link.
+  // Its content and current navigation routes come from the canonical entry.
+  const selectedEntry=canonicalId===selection.id?entry:{...entry,id:selection.id};
+  return {tree:makeCuriosityProjection(data,selectedEntry),title:entry.question,originViewId:view.id};
  }
  if(selection.kind==='questions'||(selection.kind==='set'&&selection.id==='fieldwork')){
   const fieldwork=selection.kind==='set',records=fieldwork?'fieldwork_nodes':'question_nodes';
