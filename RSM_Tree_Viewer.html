@@ -413,10 +413,47 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .glossary-match{display:block;color:#497a95;margin-top:6px;font-size:11px}
 .glossary-detail-terms{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:14px 0}
 .glossary-detail-terms>.muted{font-size:12px;margin-right:3px}
+/* Kami reading-first layout; the shared graph remains available on demand. */
+.kami-book .brand-icon,.kami-book .top .sub,.kami-book #status:not(.err){display:none}
+.kami-book .top{background:white;border-bottom:1px solid #eee;padding:12px max(18px,calc((100vw - 920px)/2));flex-wrap:nowrap}
+.kami-book .top h1{font-size:20px;color:#161616}
+.kami-book .landscape-heading{display:none}
+.kami-book #curiosity-index{background:white;padding:0 20px 40px;scrollbar-gutter:auto}
+.kami-book .curiosity-index-heading{max-width:880px;margin:auto;background:white;border:0;padding:12px 0 0}
+.kami-book .curiosity-index-heading>h2,.kami-book .curiosity-index-heading>p,.kami-book #curiosity-family-filters,.kami-book #curiosity-type-filters{display:none!important}
+.kami-book .curiosity-results{max-width:880px;padding:0}
+.kami-book .curiosity-modes{gap:8px;margin:14px 0 8px}
+.kami-book .curiosity-modes button{flex:0 0 auto;min-height:42px;border:0;border-radius:24px;background:transparent;color:#747474;font-weight:500;font-size:15px;padding:8px 18px}
+.kami-book .curiosity-modes button[aria-pressed="true"]{background:#f0f0f0;color:#141414;font-weight:650}
+.kami-book .curiosity-card-grid{display:block}
+.kami-book .curiosity-card:not(.curiosity-set-card){display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:16px;min-height:64px;width:100%;padding:16px 2px;text-align:left;border:0;border-bottom:1px solid #ededed;border-radius:0;box-shadow:none;background:white;font-size:16px;font-weight:450;color:#161616}
+.kami-book .curiosity-card:not(.curiosity-set-card):after{content:'›';font-size:24px;color:#777;font-weight:400}
+.kami-book .curiosity-card:not(.curiosity-set-card):hover{background:#f8f8f8}
+.kami-book .curiosity-card .question-type-tag,.kami-book .curiosity-card .case-source-status{display:none}
+.kami-book .kami-domain-row:not([hidden]){display:flex;align-items:center;gap:8px;justify-content:space-between}
+.kami-book .kami-domain-row select{background:white;color:#222;border:0;font-size:16px;max-width:calc(100% - 48px);padding:8px 0}
+.kami-book .kami-icon{border:0;background:transparent;color:#222;min-height:44px;min-width:44px;padding:8px}
+.kami-book .curiosity-search-row{margin:6px 0}
+.kami-book .curiosity-search-row[hidden]{display:none}
+.kami-book #curiosity-search{border:1px solid #ddd;border-radius:10px;color:#222}
+.kami-book .glossary-term-button.unmapped{background:#f7f7f7;border-color:#e7e7e7;color:#333}
+.kami-book .glossary-category{border-color:#e8e8e8}
+.kami-book .glossary-category>summary{color:#333}
+.kami-book.kami-reading #canvas,.kami-book.kami-reading #inspector-empty{display:none!important}
+.kami-book.kami-reading .explore-workspace{display:block!important;overflow:hidden;background:white}
+.kami-book.kami-reading .atlas-inspector-rail{display:block!important;position:relative;width:100%;height:100%;overflow:auto;border:0;background:white}
+.kami-book.kami-reading .atlas-inspector-rail>.journey-content:not([hidden]){position:relative!important;inset:auto!important;width:min(880px,100%)!important;height:auto!important;max-height:none!important;overflow:visible!important;margin:0 auto!important;padding:16px 24px 64px!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+.kami-book.kami-reading .detail h2{font-size:25px;color:#151515;line-height:1.35}
+.kami-book.kami-reading .detail p{font-size:16px;line-height:1.65;color:#252525}
+.kami-book.kami-reading .detail .detail-dismiss,.kami-book.kami-reading .detail .detail-locate,.kami-book.kami-reading .detail .question-type-tag,.kami-book.kami-reading .detail>.chip,.kami-book.kami-reading .detail .inspector-step,.kami-book.kami-reading .detail .inspector-position{display:none}
+.kami-book.kami-map .landscape-heading{display:flex}
+.kami-book .kami-backbar{display:flex;justify-content:space-between;gap:8px;margin:0 0 14px}
+.kami-book .kami-backbar button{border:0;background:transparent;color:#333;font-size:14px;padding:10px 0}
+@media(max-width:600px){.kami-book #curiosity-index{padding:0 16px 32px}.kami-book .top{padding:10px 16px}.kami-book .top-actions button{font-size:12px}.kami-book.kami-reading .atlas-inspector-rail>.journey-content:not([hidden]){padding:14px 17px 50px!important}}
 </style></head>
 <body>
 <header class="top">
-  <div class="brand"><div class="brand-icon" aria-hidden="true">✦</div><div><h1>Explore</h1><div class="sub">Follow what makes you curious</div></div></div>
+  <div class="brand"><div class="brand-icon" aria-hidden="true">✦</div><div><h1 id="viewer-brand">Explore</h1><div class="sub">Follow what makes you curious</div></div></div>
   <div class="top-actions"><button id="reader-open" type="button">★ <span>Saved</span><span class="reader-count" id="reader-count"></span></button><button id="library-open" type="button">☰ <span>Library</span></button></div>
 </header>
 <div class="status" role="status" id="status">Opening your question tree…</div>
@@ -448,11 +485,11 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
     </section>
     <section id="curiosity-index" class="curiosity-index" aria-label="Question and vocabulary browser" hidden>
       <div class="curiosity-index-heading">
-        <h2>What do you want to explore?</h2>
+        <div class="kami-domain-row" id="kami-domain-row" hidden><select id="kami-domain" aria-label="Choose domain"></select><button type="button" class="kami-icon" id="kami-search-toggle" aria-label="Search" title="Search"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg></button></div><h2>What do you want to explore?</h2>
         <p>Explore a question or a larger question set.</p>
         <div class="curiosity-modes" role="group" aria-label="Browse by questions or vocabulary">
           <button id="curiosity-mode-questions" type="button" aria-pressed="true">Questions</button>
-          <button id="curiosity-mode-terms" type="button" aria-pressed="false" hidden>Vocabulary</button>
+          <button id="curiosity-mode-tacits" type="button" aria-pressed="false" hidden>Tacits</button><button id="curiosity-mode-terms" type="button" aria-pressed="false" hidden>Vocabulary</button>
         </div>
         <div class="curiosity-search-row">
           <input id="curiosity-search" type="search" autocomplete="off" spellcheck="false" placeholder="Search questions or technical terms" aria-label="Search questions and linked concepts">
@@ -1169,7 +1206,7 @@ function renderGlossaryBrowser(){
    section.append(el('h3','',term.label));
    if(term.definition)section.append(el('p','',term.definition));
    if(term.aliases?.length)section.append(el('p','muted','Also called: '+term.aliases.join(' · ')));
-   section.append(el('p','muted',term.category+' · '+term.id));
+   section.append(el('p','muted',kamiBook()?term.category:term.category+' · '+term.id));
    const linked=glossaryLinkedRecords(term.id);
    if(linked.questions.length){
     section.append(el('h4','','Questions using this concept ('+linked.questions.length+')'));
@@ -1230,7 +1267,7 @@ function renderGlossaryBrowser(){
   for(const id of n.term_ids||[])mapped.add(id);
  for(const b of state.curiosityData?.navigation_bridges||[])
   for(const ch of b.choices||[])for(const id of ch.term_ids||[])mapped.add(id);
- results.append(el('p','glossary-scope-hint',descriptive&&query?'Direct concept matches and vocabulary connected through relevant questions. Amber terms have no mapped investigation.':'Amber terms have no mapped question, investigation or technical route in this view.'));
+ if(!kamiBook())results.append(el('p','glossary-scope-hint',descriptive&&query?'Direct concept matches and vocabulary connected through relevant questions. Amber terms have no mapped investigation.':'Amber terms have no mapped question, investigation or technical route in this view.'));
  for(const term of matching){
   const category=term.category||'Other';
   if(!groups.has(category))groups.set(category,[]);
@@ -1288,17 +1325,65 @@ function renderQuestionBuckets(container,entries){
   container.append(button);
  }
 }
+function kamiBook(){
+ return state.repo?.owner?.toLowerCase()==='jadanpoll'&&state.repo?.repo?.toLowerCase()==='kami_uploads_rsm_tree'&&!!state.curiosityData?.curiosity_atlas;
+}
+function kamiTacit(entry){return !!(entry.worked_solution?.length||entry.applied_challenge===true)}
+function kamiMode(mode){
+ state.glossaryMode=mode;state.glossarySelected=null;state.curiositySearch='';$('curiosity-search').value='';
+ const url=new URL(location.href);for(const key of ['term','curiosity','set'])url.searchParams.delete(key);url.hash='';
+ try{history.replaceState(null,'',url.toString())}catch{}
+ renderCuriosityIndex();
+}
+function updateKamiChrome(browsing){
+ const enabled=kamiBook();
+ document.body.classList.toggle('kami-book',enabled);
+ $('viewer-brand').textContent=enabled?'Knowledge Atlas':'Explore';
+ $('kami-domain-row').hidden=!enabled;
+ $('curiosity-mode-tacits').hidden=!enabled;
+ $('curiosity-mode-terms').textContent=enabled?'Glossary':'Vocabulary';
+ $('curiosity-search').closest('.curiosity-search-row').hidden=enabled&&!state.curiositySearch&&!state.kamiSearchOpen;
+ if(!enabled){document.body.classList.remove('kami-reading','kami-map');return}
+ if(browsing)document.body.classList.remove('kami-reading','kami-map');
+ const picker=$('kami-domain');clear(picker);
+ for(const v of state.views||[]){
+  if(v.projection?.shape!=='curiosities'||v.atlas_file)continue;
+  const option=el('option','',v.short_title||v.title);option.value=v.id;picker.append(option);
+ }
+ if(state.activeView?.atlas_file){const v=state.activeView,option=el('option','',v.short_title||v.title);option.value=v.id;picker.append(option)}
+ picker.value=state.activeView?.id||'';
+}
+function renderKamiEntries(data,results,families,types){
+ families.hidden=true;types.hidden=true;
+ const entries=(data.entries||[]).filter(e=>state.glossaryMode==='tacits'?kamiTacit(e):!kamiTacit(e)).filter(e=>curiosityMatches(e,state.curiositySearch));
+ if(state.curiositySearch.trim())entries.sort((a,b)=>glossaryScore(b,state.curiositySearch)-glossaryScore(a,state.curiositySearch));
+ const grid=el('div','curiosity-card-grid');
+ for(const entry of entries){const card=el('button','curiosity-card');card.type='button';card.append(el('span','',entry.question));card.onclick=()=>openCuriosityEntry(entry.id);grid.append(card)}
+ results.append(grid);
+ if(!entries.length)results.append(el('p','curiosity-empty',state.glossaryMode==='tacits'&&!state.curiositySearch?'No composed applied challenges have been written for this book yet.':'No matching questions.'));
+ if(state.glossaryMode==='questions'){
+  const scopes=(state.curiosityData?.landscape_views||[]).filter(x=>curiosityMatches(x,state.curiositySearch));
+  const more=el('details','curiosity-group');more.append(el('summary','','Explore larger question sets'));
+  for(const scope of scopes){const b=el('button','curiosity-card',scope.title);b.type='button';b.onclick=()=>openQuestionSet(scope.id);more.append(b)}
+  if(state.curiosityData?.fieldwork_nodes?.length){const b=el('button','curiosity-card','People, projects and working examples');b.onclick=()=>openQuestionSet('fieldwork');more.append(b)}
+  if(state.curiosityData?.question_nodes?.length){const b=el('button','curiosity-card','Original question landscape');b.onclick=()=>openResearchSelection({kind:'questions'});more.append(b)}
+  const b=el('button','curiosity-card','Complete technical landscape');b.onclick=()=>openQuestionSet('all');more.append(b);results.append(more);
+ }
+}
 function renderCuriosityIndex(){
  const data=state.curiosityData?.curiosity_atlas;
  if(!data)return;
  const families=$('curiosity-family-filters'),types=$('curiosity-type-filters'),results=$('curiosity-results');
  clear(families);clear(results);types.hidden=true;
  const vocabularyReady=!!state.glossary?.terms?.length;
+ updateKamiChrome(true);
+ $('curiosity-mode-tacits').setAttribute('aria-pressed',String(state.glossaryMode==='tacits'));
  $('curiosity-mode-terms').hidden=!vocabularyReady;
  $('curiosity-mode-questions').setAttribute('aria-pressed',String(state.glossaryMode==='questions'));
  $('curiosity-mode-terms').setAttribute('aria-pressed',String(state.glossaryMode==='terms'));
  $('curiosity-search').placeholder=descriptiveSearchEnabled()?'Describe a problem, feature or concept':state.glossaryMode==='terms'?'Find a technical term or alias':'Search a question, problem, or technical term';
  if(state.glossaryMode==='terms'&&vocabularyReady){renderGlossaryBrowser();return}
+ if(kamiBook()){renderKamiEntries(data,results,families,types);return}
  families.hidden=false;
  const familyPool=(data.entries||[]).filter(e=>state.curiosityFamily==='all'||e.family_id===state.curiosityFamily);
  renderQuestionBuckets(types,familyPool);
@@ -1390,6 +1475,8 @@ function renderCuriosityIndex(){
 function showCuriosityIndex(open){
  const pane=$('curiosity-index'),btn=$('atlas-curiosities');
  pane.hidden=!open;
+ updateKamiChrome(open);
+ if(kamiBook()&&!open){const reading=state.curiosityEntry?.kind==='question';document.body.classList.toggle('kami-reading',reading);document.body.classList.toggle('kami-map',!reading)}
  $('view').classList.toggle('question-browse-mode',open);
  for(const id of ['atlas-in','atlas-out','atlas-fit'])$(id).hidden=open;
  const available=state.activeView?.projection?.shape==='curiosities'&&!!state.curiosityData?.curiosity_atlas?.entries?.length;
@@ -1448,13 +1535,13 @@ function openResearchSelection(selection){
   const projection=researchEntryProjection(data,selection,r,view);
   if(!isTree(projection.tree))throw Error('The selected entry has no navigable nodes');
   state.curiosityEntry=selection;
-  if(selection){state.glossaryMode='questions';state.glossarySelected=null}
+  if(selection){if(!kamiBook()||state.glossaryMode==='terms')state.glossaryMode='questions';state.glossarySelected=null}
   openTree(projection.tree,projection.tree.routes?.length?projection.tree:null,projection.title,{type:'github',repo:r.owner+'/'+r.repo,
    branch:r.branch,file:view.file,view_id:projection.originViewId,title:projection.title});
   state.url=repoUrl(r,view.file);
   updateLensSelector();showCuriosityIndex(!selection);
   // Read an authored answer immediately, with the technical routes still on the map.
-  if(selection?.kind==='question'&&(projection.tree.nodes[0]?.answer?.length||projection.tree.nodes[0]?.worked_solution?.length))select(projection.tree.root);
+  if(selection?.kind==='question'&&(kamiBook()||projection.tree.nodes[0]?.answer?.length||projection.tree.nodes[0]?.worked_solution?.length))select(projection.tree.root);
   $('choices').value=view.id;
   const url=new URL(location.href),params=url.searchParams;
   params.set('view',view.id);
@@ -1526,6 +1613,7 @@ function openCatalog(){
  if(!state.catalogHome||!state.views)return;
  const navigationBefore=navigationSnapshot();
  state.catalogVisible=true;
+ document.body.classList.remove('kami-book','kami-reading','kami-map');$('viewer-brand').textContent='Explore';
  const home=state.catalogHome;
  $('catalog-title').textContent=home.title||'Explore collections';
  $('catalog-description').textContent=home.description||'Choose a subject or project landscape.';
@@ -1646,7 +1734,7 @@ async function loadMapped(r,view){
  }
  showCuriosityIndex(hasAtlas&&(!selection||!!state.glossarySelected));
  if(selection?.kind==='question'&&!state.glossarySelected&&(!location.hash||location.hash==='#node='+encodeURIComponent(tree.root))&&
-  (tree.nodes[0]?.answer?.length||tree.nodes[0]?.worked_solution?.length))select(tree.root);
+  (kamiBook()||tree.nodes[0]?.answer?.length||tree.nodes[0]?.worked_solution?.length))select(tree.root);
  const params=new URLSearchParams(location.search);
  params.set('repo',`https://github.com/${r.owner}/${r.repo}`);
  params.set('view',view.id);
@@ -2307,6 +2395,12 @@ function renderDetail(){
  if(!state.tree||!state.detailOpen)return;
  const n=state.index.get(state.selected);
  if(!n)return;
+ if(kamiBook()&&document.body.classList.contains('kami-reading')){
+  const bar=el('div','kami-backbar'),back=el('button','','‹ Back to book'),map=el('button','','Technical map ↗');
+  back.type=map.type='button';back.onclick=()=>showCuriosityIndex(true);
+  map.onclick=()=>{document.body.classList.remove('kami-reading');document.body.classList.add('kami-map');renderDetail();requestAnimationFrame(()=>{window.dispatchEvent(new Event('resize'))})};
+  bar.append(back,map);box.append(bar);
+ }
  const dismiss=el('button','detail-dismiss','×');dismiss.type='button';dismiss.title='Close details';dismiss.setAttribute('aria-label','Close details');dismiss.onclick=closeDetail;box.append(dismiss);
  if(state.atlas.layout?.positions.has(n.id)){
   const locate=el('button','detail-locate','Locate on map');locate.type='button';locate.onclick=()=>{focusAtlasNode(n.id);activity('Located '+title(n))};box.append(locate);
@@ -3259,7 +3353,11 @@ $('atlas-curiosities').onclick=()=>{
  if(!state.curiosityData?.curiosity_atlas)return;
  showCuriosityIndex($('curiosity-index').hidden);
 };
+$('kami-domain').onchange=async e=>{const view=state.views?.find(v=>v.id===e.target.value);if(view)try{await loadMapped(state.repo,view)}catch(error){setStatus(error.message,true)}};
+$('kami-search-toggle').onclick=()=>{state.kamiSearchOpen=!state.kamiSearchOpen;const row=$('curiosity-search').closest('.curiosity-search-row');row.hidden=!state.kamiSearchOpen;if(state.kamiSearchOpen)$('curiosity-search').focus();else{state.curiositySearch='';$('curiosity-search').value='';renderCuriosityIndex()}};
+$('curiosity-mode-tacits').onclick=()=>kamiMode('tacits');
 $('curiosity-mode-questions').onclick=()=>{
+ if(kamiBook()){kamiMode('questions');return}
  state.glossaryMode='questions';state.glossarySelected=null;
  const url=new URL(location.href);url.searchParams.delete('term');
  try{history.replaceState(null,'',url.toString())}catch{}
@@ -3267,6 +3365,7 @@ $('curiosity-mode-questions').onclick=()=>{
 };
 $('curiosity-mode-terms').onclick=()=>{
  if(!state.glossary)return;
+ if(kamiBook()){kamiMode('terms');return}
  state.glossaryMode='terms';state.glossarySelected=null;renderCuriosityIndex();
 };
 $('curiosity-search').addEventListener('input',e=>{
