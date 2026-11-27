@@ -1032,7 +1032,62 @@ function glossaryTokens(s){
 function glossaryWordMatch(search,words){
  return words.some(word=>word.includes(search)||search.length>=4&&word.length>=4&&search.includes(word));
 }
+// Opt-in descriptive retrieval for case-study books; existing Kami collections
+// retain their exact search behavior. A score is relevance, never evidence.
+const DESCRIPTIVE_STOP=new Set('a an the how why does do did is are was were of to in on at by for with from about it its my me i we you your our they them this that these those can could would should when while after before what which where and or as not be been being have has had get make use really just something happen happens work works'.split(' '));
+function descriptiveSearchEnabled(){return state.curiosityData?.search_profile==='descriptive'}
+function descriptiveTokens(value){return [...new Set(String(value||'').toLowerCase().match(/[a-z0-9]+/g)?.filter(t=>!DESCRIPTIVE_STOP.has(t)).map(curiosityStem)||[])]}
+function descriptiveMatch(token,words){
+ return words.some(w=>w===token||w.length>=4&&token.length>=4&&Math.abs(w.length-token.length)<=3&&(w.startsWith(token)||token.startsWith(w)));
+}
+function descriptiveTermText(t){return [t?.label,...(t?.aliases||[]),t?.definition].filter(Boolean).join(' ')}
+function descriptiveRank(query,levels){
+ const tokens=descriptiveTokens(query);
+ if(!tokens.length)return String(query||'').trim()?0:1;
+ let matched=0,strong=0,score=0;
+ for(const token of tokens){
+  const hit=levels.find(level=>descriptiveMatch(token,level.words));
+  if(hit){matched++;score+=hit.weight;if(hit.weight>=5)strong++}
+ }
+ // Related terms alone cannot establish a match; require meaningful overlap.
+ // Partial descriptions remain candidates, but complete matches outrank them.
+ const coverage=matched/tokens.length;
+ if(!strong||coverage<.5||(tokens.length>=3&&matched<2))return 0;
+ return score*coverage*coverage;
+}
+function descriptiveQuestionScore(record,query){
+ const linked=(record.term_ids||[]).map(id=>state.termById.get(id)).filter(Boolean);
+ const related=linked.flatMap(t=>(t.related_ids||[]).map(id=>state.termById.get(id)).filter(Boolean));
+ const names=[record.question,record.title,record.short_label,...(record.aliases||[])].filter(Boolean);
+ const context=[record.context,record.rationale,record.why].filter(Boolean);
+ const levels=[
+  {weight:10,words:descriptiveTokens(names.join(' '))},
+  {weight:8,words:descriptiveTokens(linked.map(t=>[t.label,...(t.aliases||[])].join(' ')).join(' '))},
+  {weight:6,words:descriptiveTokens(context.join(' '))},
+  {weight:5,words:descriptiveTokens(linked.map(t=>t.definition||'').join(' '))},
+  {weight:2,words:descriptiveTokens(related.map(t=>descriptiveTermText(t)).join(' '))}
+ ];
+ const score=descriptiveRank(query,levels);
+ const phrase=String(query||'').trim().toLowerCase();
+ const exact=phrase.length>2&&[...names,...linked.flatMap(t=>[t.label,...(t.aliases||[])])].some(x=>String(x).toLowerCase().includes(phrase));
+ return score?score+(exact?12:0):0;
+}
+function descriptiveGlossaryScore(term,query){
+ const related=(term.related_ids||[]).map(id=>state.termById.get(id)).filter(Boolean);
+ // Definition and neighborhood matter, but the term itself remains the strongest cue.
+ const linked=glossaryLinkedRecords(term.id);
+ const score=descriptiveRank(query,[
+  {weight:10,words:descriptiveTokens([term.label,...(term.aliases||[])].join(' '))},
+  {weight:7,words:descriptiveTokens(term.definition)},
+  {weight:5,words:descriptiveTokens(term.category)},
+  {weight:3,words:descriptiveTokens(related.map(descriptiveTermText).join(' '))},
+  {weight:2,words:descriptiveTokens(linked.questions.map(q=>[q.question,q.context,...(q.aliases||[])].join(' ')).join(' '))}
+ ]);
+ const phrase=String(query||'').trim().toLowerCase();
+ return score?score+(phrase.length>2&&[term.label,...(term.aliases||[])].some(x=>String(x).toLowerCase().includes(phrase))?12:0):0;
+}
 function glossaryScore(record,query){
+ if(descriptiveSearchEnabled())return descriptiveQuestionScore(record,query);
  const terms=glossaryTokens(query);
  if(!terms.length)return 1;
  const local=glossaryTokens([record.question,record.title,record.context,record.rationale,record.short_label,...(record.aliases||[])].filter(Boolean).join(' '));
@@ -1062,6 +1117,7 @@ function curiosityStem(token){
 }
 function curiosityMatches(entry,query){return glossaryScore(entry,query)>0}
 function glossaryTermMatches(term,query){
+ if(descriptiveSearchEnabled())return descriptiveGlossaryScore(term,query)>0;
  const words=glossaryTokens([term.label,...(term.aliases||[]),term.category].join(' '));
  return glossaryTokens(query).every(token=>glossaryWordMatch(token,words));
 }
@@ -1154,7 +1210,10 @@ function renderGlossaryBrowser(){
   }
   state.glossarySelected=null;
  }
+ const descriptive=descriptiveSearchEnabled();
  const matching=glossary.terms.filter(t=>glossaryTermMatches(t,query)),groups=new Map();
+ const termScores=descriptive&&query?new Map(matching.map(t=>[t.id,descriptiveGlossaryScore(t,query)])):null;
+ if(termScores)matching.sort((a,b)=>termScores.get(b.id)-termScores.get(a.id));
  const mapped=new Set();
  for(const n of [...(state.curiosityData?.curiosity_atlas?.entries||[]),...(state.curiosityData?.nodes||[]),
                   ...(state.curiosityData?.question_nodes||[]),...(state.curiosityData?.fieldwork_nodes||[])])
@@ -1167,16 +1226,20 @@ function renderGlossaryBrowser(){
   if(!groups.has(category))groups.set(category,[]);
   groups.get(category).push(term);
  }
- for(const [category,terms] of groups){
+ const chapterOrder=new Map((state.curiosityData?.curiosity_atlas?.families||[]).map((f,i)=>[f.label,i]));
+ const chapterTitles=new Map((state.curiosityData?.landscape_views||[]).map((f,i)=>[f.title,i]));
+ const groupEntries=[...groups];
+ if(descriptive&&!query)groupEntries.sort((a,b)=>(chapterTitles.get(a[0])??chapterOrder.get(a[0])??999)-(chapterTitles.get(b[0])??chapterOrder.get(b[0])??999));
+ for(const [category,terms] of groupEntries){
   const section=el('details','glossary-category');
   section.open=!!query||groups.size<=2;
   section.append(el('summary','',category+' · '+terms.length));
   const grid=el('div','glossary-term-list');
-  terms.sort((a,b)=>a.label.localeCompare(b.label));
+  terms.sort((a,b)=>termScores?(termScores.get(b.id)-termScores.get(a.id)||a.label.localeCompare(b.label)):a.label.localeCompare(b.label));
   for(const term of terms){
    const unmatched=!mapped.has(term.id);
    const b=el('button','glossary-term-button'+(unmatched?' unmapped':''),term.label);b.type='button';
-   b.title=(term.aliases?.length?'Also called '+term.aliases.join(', '):term.label)
+   b.title=(term.definition?term.definition+' · ':'')+(term.aliases?.length?'Also called '+term.aliases.join(', '):term.label)
     +(unmatched?' · No mapped research route in this view':'');
    b.onclick=()=>openGlossaryTerm(term.id);grid.append(b);
   }
@@ -1224,7 +1287,7 @@ function renderCuriosityIndex(){
  $('curiosity-mode-terms').hidden=!vocabularyReady;
  $('curiosity-mode-questions').setAttribute('aria-pressed',String(state.glossaryMode==='questions'));
  $('curiosity-mode-terms').setAttribute('aria-pressed',String(state.glossaryMode==='terms'));
- $('curiosity-search').placeholder=state.glossaryMode==='terms'?'Find a technical term or alias':'Search a question, problem, or technical term';
+ $('curiosity-search').placeholder=descriptiveSearchEnabled()?'Describe a problem, feature or concept':state.glossaryMode==='terms'?'Find a technical term or alias':'Search a question, problem, or technical term';
  if(state.glossaryMode==='terms'&&vocabularyReady){renderGlossaryBrowser();return}
  families.hidden=false;
  const familyPool=(data.entries||[]).filter(e=>state.curiosityFamily==='all'||e.family_id===state.curiosityFamily);
@@ -1251,13 +1314,23 @@ function renderCuriosityIndex(){
    for(const scope of scopes){
     const card=el('button','curiosity-card curiosity-set-card');card.type='button';
     card.append(el('strong','',scope.title));card.append(el('span','',scope.rationale));
+    if(descriptiveSearchEnabled()){
+     const records=(state.curiosityData?.nodes||[]).filter(n=>n.id!==scope.root_id&&scope.node_ids?.includes(n.id));
+     const inspected=records.filter(n=>n.status==='source_inspected').length;
+     card.append(el('small','case-source-status',inspected+' inspected · '+(records.length-inspected)+' open · '+(scope.term_ids||[]).length+' mapped concepts'));
+    }
     card.onclick=()=>openQuestionSet(scope.id);
     grid.append(card);
    }
    section.append(grid);results.append(section);
   }
  }
- for(const family of data.families||[]){
+ const familyOrder=[...(data.families||[])];
+ if(descriptiveSearchEnabled()&&state.curiositySearch.trim()){
+  const best=id=>Math.max(0,...(data.entries||[]).filter(e=>e.family_id===id&&matchesQuestionBucket(e,state.curiosityTypeFilter)).map(e=>glossaryScore(e,state.curiositySearch)));
+  familyOrder.sort((a,b)=>best(b.id)-best(a.id));
+ }
+ for(const family of familyOrder){
   if(state.curiosityFamily!=='all'&&state.curiosityFamily!==family.id)continue;
   const entries=(data.entries||[]).filter(e=>e.family_id===family.id&&
    matchesQuestionBucket(e,state.curiosityTypeFilter)&&
@@ -1271,6 +1344,11 @@ function renderCuriosityIndex(){
   for(const entry of entries){
    const card=el('button','curiosity-card');card.type='button';
    card.append(el('span','',entry.question));
+   if(descriptiveSearchEnabled()){
+    const targets=(state.curiosityData?.nodes||[]).filter(n=>entry.target_ids?.includes(n.id));
+    const inspected=targets.some(n=>n.status==='source_inspected');
+    card.append(el('small','case-source-status',inspected?'Source inspected':'Research direction · not yet inspected'));
+   }
    if(entry.question_type){const tag=el('small','question-type-tag',questionBucketLabel(entry.question_type));tag.title=questionTypeLabel(entry.question_type);card.append(tag)}
    if(state.curiositySearch.trim()&&state.termById.size){
     const matching=(entry.term_ids||[]).map(id=>state.termById.get(id))
@@ -1973,7 +2051,7 @@ function entryRow(parent,ref,sources){
   row.append(link(kami,'Open in Kami'));
   if(start!=null)row.append(el('div','meta','Find printed page '+start+' in Kami; direct page navigation is not available yet.'));
   if(src?.url){const fallback=el('div','meta','');fallback.append(link(src.url,'Open original in Drive'));row.append(fallback)}
- }else if(src?.url)row.append(link(src.url,'Open original in Drive'));
+ }else if(src?.url)row.append(link(src.url,src.url.includes('drive.google.com')?'Open original in Drive':'Open original source'));
  parent.append(row);
 }
 
@@ -2192,7 +2270,8 @@ function appendResearchRuns(box,n){
    const data=await readRepoFile(r,path);note.remove();
    for(const id of n.evidence_run_ids){
     const run=data.runs?.find(x=>x.id===id);if(!run)continue;
-    const card=el('div','case-factor');card.append(el('strong','',run.plan?.description||id),el('p','',run.interpretation||''),el('p','meta',run.plan_status||'Preserved investigation plan'));
+    const card=el('div','case-factor');card.append(el('strong','',run.plan?.description||id),el('p','',run.interpretation||''),el('p','meta',run.plan_status||(run.kind==='discovery_context'?'Recorded discovery context':'Preserved investigation plan')));
+    if(run.external_reference)card.append(link(run.external_reference,'External orientation reference'));
     if(run.receipt)card.append(el('p','meta',Object.entries(run.receipt).map(([k,v])=>k+': '+v).join(' · ')));
     if(run.plan){
      const btn=el('button','case-related-link','Copy JSON plan');btn.type='button';btn.onclick=async()=>{const value=JSON.stringify(run.plan,null,2);try{await navigator.clipboard.writeText(value);btn.textContent='Copied'}catch{const text=el('textarea','');text.readOnly=true;text.value=value;card.append(text);text.focus();text.select();btn.textContent='Select and copy plan'}};
