@@ -153,6 +153,9 @@ button{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:tra
 .case-section{margin-top:17px;border-top:1px solid #e7edf3;padding-top:11px}
 .case-section h3{margin:0 0 8px;font-size:14px;color:#274b68}
 .case-section p,.case-section li{font-size:13px;line-height:1.5;color:#4c6071}
+.investigation-answer p{font-size:15px;line-height:1.65;color:inherit;margin:0 0 12px;overflow-wrap:anywhere}
+.investigation-answer h3{margin:16px 0 8px}
+.investigation-code{font-size:12px;line-height:1.5;white-space:pre;overflow:auto;background:#f3f6fa;border:1px solid #dce3eb;border-radius:8px;padding:12px;max-width:100%;color:#1e293b}
 .case-section ul{padding-left:21px;margin:6px 0}
 .case-source{font-size:13px;line-height:1.5;padding:5px 0;overflow-wrap:anywhere}
 .case-source p{font-size:12px;margin:2px 0 6px}
@@ -961,6 +964,7 @@ function makeCuriosityProjection(data,entry){
  nodes.push({id:rootId,parent_id:null,kind:entry?'curiosity_entry':'curiosity_home',
   question:entry?.question||'Explore research questions',why:entry?.context||catalogue.purpose||'Start from an everyday question.',
   question_type:entry?.question_type,task_scope:entry?.task_scope,success_criterion:entry?.success_criterion,
+  answer:entry?.answer,worked_solution:entry?.worked_solution,htmlet:entry?.htmlet,
   status:'navigation_question',term_ids:entry?.term_ids||[]});
  const used=new Set([rootId]),sourceIds=new Set((data.sources||[]).map(s=>s.id)),caseNodes=new Map((data.fieldwork_nodes||[]).map(n=>[n.id,n]));
  if(entry){
@@ -1449,6 +1453,8 @@ function openResearchSelection(selection){
    branch:r.branch,file:view.file,view_id:projection.originViewId,title:projection.title});
   state.url=repoUrl(r,view.file);
   updateLensSelector();showCuriosityIndex(!selection);
+  // Read an authored answer immediately, with the technical routes still on the map.
+  if(selection?.kind==='question'&&(projection.tree.nodes[0]?.answer?.length||projection.tree.nodes[0]?.worked_solution?.length))select(projection.tree.root);
   $('choices').value=view.id;
   const url=new URL(location.href),params=url.searchParams;
   params.set('view',view.id);
@@ -2377,6 +2383,23 @@ function renderDetail(){
  if(n.url&&state.repo)appendResourcePreview(box,n,childThumb);
 
  if(n.why_ask||n.why||n.description)box.append(el('p','',n.why_ask||n.why||n.description));
+ // Reader-facing explanation is distinct from source certificates and technical routes.
+ function readingBlocks(host,blocks){
+  for(const block of blocks||[]){
+   if(typeof block==='string')host.append(el('p','',block));
+   else if(block?.code){const pre=el('pre','investigation-code');pre.textContent=block.code;host.append(pre);}
+   else if(block?.heading)host.append(el('h3','',block.heading));
+  }
+ }
+ if(Array.isArray(n.answer)&&n.answer.length){
+  const section=el('section','case-section investigation-answer');
+  readingBlocks(section,n.answer);box.append(section);
+ }
+ if(Array.isArray(n.worked_solution)&&n.worked_solution.length){
+  const fold=el('details','details-fold');fold.append(el('summary','','Worked solution'));
+  const body=el('div','fold-body case-section investigation-answer');readingBlocks(body,n.worked_solution);
+  fold.append(body);box.append(fold);
+ }
  if(n.actor)box.append(el('div','case-byline',n.actor+(n.evidence_status?' · '+n.evidence_status:'')));
  const chapterScope=descriptiveSearchEnabled()?(state.curiosityData?.landscape_views||[]).find(l=>l.root_id===n.id):null;
  const vocabularyIds=chapterScope?[...new Set([...(chapterScope.term_ids||[]),...(state.glossary?.terms||[]).filter(t=>t.category===chapterScope.title).map(t=>t.id)])]:(n.term_ids||[]);
@@ -2393,7 +2416,7 @@ function renderDetail(){
   if(section.childElementCount>1)box.append(section);
  }
  if(n.kind==='curiosity_entry'){
-  box.append(el('p','case-source-status',n.task_scope==='capability_family'?
+  if(!n.answer?.length&&!n.worked_solution?.length)box.append(el('p','case-source-status',n.task_scope==='capability_family'?
    'Reusable capability family · instantiate with suitable inputs and demonstrate the stated criterion. Source pointers are not evidence of mastery.':
    'Exploratory question · the mapped nodes below are technical explanations and conditional routes, not an automatic diagnosis.'));
   const browse=el('button','case-related-link','Browse other curiosities');
