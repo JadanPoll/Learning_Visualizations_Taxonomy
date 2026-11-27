@@ -429,6 +429,8 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .kami-book .curiosity-index-heading{max-width:880px;margin:auto;background:white;border:0;padding:12px 0 0}
 .kami-book .curiosity-index-heading>h2,.kami-book .curiosity-index-heading>p,.kami-book #curiosity-family-filters,.kami-book #curiosity-type-filters{display:none!important}
 .kami-book .curiosity-results{max-width:880px;padding:0}
+.kami-book .curiosity-group>summary{font-size:15px;color:#666;padding:13px 2px}
+.kami-book .curiosity-modes button[hidden]{display:none!important}
 .kami-book .curiosity-modes{gap:8px;margin:14px 0 8px}
 .kami-book .curiosity-modes button{flex:0 0 auto;min-height:42px;border:0;border-radius:24px;background:transparent;color:#747474;font-weight:500;font-size:15px;padding:8px 18px}
 .kami-book .curiosity-modes button[aria-pressed="true"]{background:#f0f0f0;color:#141414;font-weight:650}
@@ -1335,7 +1337,9 @@ function renderQuestionBuckets(container,entries){
 function kamiBook(){
  return state.repo?.owner?.toLowerCase()==='jadanpoll'&&state.repo?.repo?.toLowerCase()==='kami_uploads_rsm_tree'&&!!state.curiosityData?.curiosity_atlas;
 }
-function kamiTacit(entry){return !!(entry.worked_solution?.length||entry.applied_challenge===true)}
+function kamiConstituent(entry){return entry.task_scope==='capability_family'&&entry.applied_challenge!==true}
+function kamiTacit(entry){return !kamiConstituent(entry)&&!!(entry.worked_solution?.length||entry.applied_challenge===true)}
+function kamiPractice(entry){return kamiTacit(entry)||kamiConstituent(entry)}
 function kamiMode(mode){
  state.glossaryMode=mode;state.glossarySelected=null;state.curiositySearch='';$('curiosity-search').value='';
  const url=new URL(location.href);for(const key of ['term','curiosity','set'])url.searchParams.delete(key);url.hash='';
@@ -1362,12 +1366,22 @@ function updateKamiChrome(browsing){
 }
 function renderKamiEntries(data,results,families,types){
  families.hidden=true;types.hidden=true;
- const entries=(data.entries||[]).filter(e=>state.glossaryMode==='tacits'?kamiTacit(e):!kamiTacit(e)).filter(e=>curiosityMatches(e,state.curiositySearch));
+ const entries=(data.entries||[]).filter(e=>state.glossaryMode==='tacits'?kamiTacit(e):!kamiPractice(e)).filter(e=>curiosityMatches(e,state.curiositySearch));
  if(state.curiositySearch.trim())entries.sort((a,b)=>glossaryScore(b,state.curiositySearch)-glossaryScore(a,state.curiositySearch));
  const grid=el('div','curiosity-card-grid');
  for(const entry of entries){const card=el('button','curiosity-card');card.type='button';card.append(el('span','',entry.question));card.onclick=()=>openCuriosityEntry(entry.id);grid.append(card)}
  results.append(grid);
- if(!entries.length)results.append(el('p','curiosity-empty',state.glossaryMode==='tacits'&&!state.curiositySearch?'No composed applied challenges have been written for this book yet.':'No matching questions.'));
+ if(!entries.length&&state.glossaryMode!=='tacits')results.append(el('p','curiosity-empty','No matching questions.'));
+ if(state.glossaryMode==='tacits'){
+  const constituent=(data.entries||[]).filter(e=>kamiConstituent(e)&&curiosityMatches(e,state.curiositySearch));
+  if(!entries.length&&!constituent.length)results.append(el('p','curiosity-empty',state.curiositySearch?'No matching challenges.':'No applied challenges have been written for this book yet.'));
+  if(constituent.length){
+   const fold=el('details','curiosity-group');fold.open=!!state.curiositySearch.trim()||!entries.length;
+   fold.append(el('summary','','Constituent exercises'));
+   for(const e of constituent){const b=el('button','curiosity-card',e.question);b.type='button';b.onclick=()=>openCuriosityEntry(e.id);fold.append(b)}
+   results.append(fold);
+  }
+ }
  if(state.glossaryMode==='questions'){
   const scopes=(state.curiosityData?.landscape_views||[]).filter(x=>curiosityMatches(x,state.curiositySearch));
   const more=el('details','curiosity-group');more.append(el('summary','','Explore larger question sets'));
@@ -1545,7 +1559,7 @@ function openResearchSelection(selection){
   if(selection){
   if(kamiBook()&&selection.kind==='question'){
    const entry=data.curiosity_atlas.entries.find(e=>e.id===selection.id);
-   if(entry)state.glossaryMode=kamiTacit(entry)?'tacits':'questions';
+   if(entry)state.glossaryMode=kamiPractice(entry)?'tacits':'questions';
   }else if(!kamiBook()||state.glossaryMode==='terms')state.glossaryMode='questions';
   state.glossarySelected=null
  }
@@ -1747,7 +1761,7 @@ async function loadMapped(r,view){
  }
  if(kamiBook()&&selection?.kind==='question'&&!state.glossarySelected){
   const entry=data.curiosity_atlas.entries.find(e=>e.id===selection.id);
-  if(entry)state.glossaryMode=kamiTacit(entry)?'tacits':'questions';
+  if(entry)state.glossaryMode=kamiPractice(entry)?'tacits':'questions';
  }
  showCuriosityIndex(hasAtlas&&(!selection||!!state.glossarySelected));
  if(selection?.kind==='question'&&!state.glossarySelected&&(!location.hash||location.hash==='#node='+encodeURIComponent(tree.root))&&
