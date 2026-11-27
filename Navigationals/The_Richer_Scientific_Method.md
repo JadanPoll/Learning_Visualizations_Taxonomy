@@ -1,6 +1,6 @@
 # The Richer Scientific Method
 ### Asking better questions, investigating possibilities, and building upon what we've learned
-
+This is an exposition of the manner in which this document should be read and how it should be acted upon https://github.com/JadanPoll/FKEN_REA_CaseStudies/blob/main/OPERATIONAL.md
 
 ## How to use and reference RSM
 
