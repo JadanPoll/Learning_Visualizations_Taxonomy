@@ -1962,7 +1962,10 @@ function entryRow(parent,ref,sources){
  const section=ref.section||ref.title||(ref.chapter?'Chapter '+ref.chapter:'');
  if(section)row.append(el('div','',section));
  const start=ref.pages?.start??ref.start,end=ref.pages?.end??ref.end;
- if(start!=null)row.append(el('div','page','Printed pages '+start+(end!=null?'–'+end:'')));
+ if(ref.offsets&&Number.isInteger(ref.offsets.start)&&Number.isInteger(ref.offsets.end)){
+  row.append(el('div','page','Source offsets ['+ref.offsets.start+', '+ref.offsets.end+') · '+(ref.offsets.unit||'UTF-16')));
+  if(src?.sha256)row.append(el('div','meta','SHA-256: '+src.sha256));
+ }else if(start!=null)row.append(el('div','page','Printed pages '+start+(end!=null?'–'+end:'')));
  else row.append(el('div','meta','Page range not verified'));
  if(ref.role)row.append(el('div','meta',ref.role));
  const kami=kamiFileUrl(src);
@@ -2160,6 +2163,44 @@ function appendResourcePreview(box,node,childThumb=null){
  back.onclick=()=>{if(index>0){index--;openPath(historyPaths[index])}};
  forward.onclick=()=>{if(index<historyPaths.length-1){index++;openPath(historyPaths[index])}};
  openPath(path);
+}
+// HTMlets are optional, small educational simulations. A single shared shell
+// provides typography and controls; isolated frames never inherit viewer access.
+const HTMLET_CSS=':root{color-scheme:light;--border:#cbd5e1;--accent:#2563eb}*{box-sizing:border-box}body{font:14px/1.5 system-ui,sans-serif;color:#172033;margin:10px;background:white}p{margin:6px 0 10px}button{font:inherit;color:inherit;background:white;border:1px solid var(--border);border-radius:8px;padding:8px;min-height:44px;cursor:pointer}button:disabled{opacity:.45}.controls,.metrics{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.metrics>span{padding:8px;border:1px solid var(--border);border-radius:8px;flex:1}.tile{display:inline-block;padding:4px 7px;margin:2px;background:#e2e8f0;border:1px solid var(--border);border-radius:5px}input{accent-color:var(--accent)}';
+function appendHtmlet(box,n){
+ const h=n.htmlet;if(!h||typeof h.html!=='string'||h.html.length>24000)return;
+ const section=el('details','details-fold');section.append(el('summary','',h.title||'Interactive explanation'));
+ const body=el('div','fold-body');section.append(body);
+ let frame=null;
+ section.addEventListener('toggle',()=>{
+  if(!section.open||frame)return;
+  frame=document.createElement('iframe');frame.setAttribute('sandbox','allow-scripts');frame.referrerPolicy='no-referrer';
+  frame.title=h.title||'Educational simulation';frame.style.cssText='width:100%;border:1px solid #cbd5e1;border-radius:8px;height:'+Math.min(700,Math.max(200,Number(h.height)||320))+'px;background:white';
+  frame.srcdoc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'unsafe-inline\'; style-src \'unsafe-inline\'; img-src data:; connect-src \'none\'; form-action \'none\'; base-uri \'none\'; object-src \'none\'"><style>'+HTMLET_CSS+'</style></head><body>'+h.html+'</body></html>';
+  body.append(frame);
+ });
+ box.append(section);
+}
+function appendResearchRuns(box,n){
+ const path=state.tree?.evidence_file,r=state.repo;
+ if(!r||typeof path!=='string'||!/^[-\w/]+\.json$/.test(path)||path.split('/').includes('..')||!n.evidence_run_ids?.length)return;
+ const fold=el('details','details-fold');fold.append(el('summary','','Investigation plans & receipts'));const body=el('div','fold-body');body.append(link(repoUrl(r,path),'Open canonical evidence records'));fold.append(body);box.append(fold);
+ let loaded=false;fold.addEventListener('toggle',async()=>{
+  if(!fold.open||loaded)return;loaded=true;
+  const note=el('p','meta','Loading investigation records…');body.append(note);
+  try{
+   const data=await readRepoFile(r,path);note.remove();
+   for(const id of n.evidence_run_ids){
+    const run=data.runs?.find(x=>x.id===id);if(!run)continue;
+    const card=el('div','case-factor');card.append(el('strong','',run.plan?.description||id),el('p','',run.interpretation||''),el('p','meta',run.plan_status||'Preserved investigation plan'));
+    if(run.receipt)card.append(el('p','meta',Object.entries(run.receipt).map(([k,v])=>k+': '+v).join(' · ')));
+    if(run.plan){
+     const btn=el('button','case-related-link','Copy JSON plan');btn.type='button';btn.onclick=async()=>{const value=JSON.stringify(run.plan,null,2);try{await navigator.clipboard.writeText(value);btn.textContent='Copied'}catch{const text=el('textarea','');text.readOnly=true;text.value=value;card.append(text);text.focus();text.select();btn.textContent='Select and copy plan'}};
+     card.append(btn);
+    }body.append(card);
+   }
+  }catch(e){loaded=false;note.textContent='Evidence unavailable: '+e.message+' (reopen to retry)';}
+ });
 }
 function renderDetail(){
  const box=$('detail');clear(box);
@@ -2428,6 +2469,8 @@ function renderDetail(){
   fold.append(list);box.append(fold);
  }
  if(n.transferable_insight)fieldSection('Transferable insight',n.transferable_insight);
+ if(n.htmlet)appendHtmlet(box,n);
+ if(n.evidence_run_ids?.length){fieldSection('Limits of evidence',n.qualification);appendResearchRuns(box,n);}
  fieldSection('Distinctions',n.distinctions);
  if(n.technical_distinctions?.length){
   const section=el('div','case-section');section.append(el('h3','','Mechanisms and discriminating observations'));
