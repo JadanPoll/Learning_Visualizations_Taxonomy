@@ -962,7 +962,7 @@ function makeCuriosityProjection(data,entry){
  const canonical=new Map((data.nodes||[]).map(n=>[n.id,n])),nodes=[],edges=[];
  const rootId=entry?.id||(data.id||'research').toUpperCase()+'-CURI-HOME';
  nodes.push({id:rootId,parent_id:null,kind:entry?'curiosity_entry':'curiosity_home',
-  question:entry?.question||'Explore research questions',why:entry?.context||catalogue.purpose||'Start from an everyday question.',
+  question:entry?.question||'Explore research questions',why:entry?.context||((entry?.answer?.length||entry?.worked_solution?.length)?undefined:catalogue.purpose||'Start from an everyday question.'),
   question_type:entry?.question_type,task_scope:entry?.task_scope,success_criterion:entry?.success_criterion,
   answer:entry?.answer,worked_solution:entry?.worked_solution,htmlet:entry?.htmlet,
   status:'navigation_question',term_ids:entry?.term_ids||[]});
@@ -1645,6 +1645,8 @@ async function loadMapped(r,view){
   state.glossaryMode='terms';state.glossarySelected=selectedTerm;
  }
  showCuriosityIndex(hasAtlas&&(!selection||!!state.glossarySelected));
+ if(selection?.kind==='question'&&!state.glossarySelected&&(!location.hash||location.hash==='#node='+encodeURIComponent(tree.root))&&
+  (tree.nodes[0]?.answer?.length||tree.nodes[0]?.worked_solution?.length))select(tree.root);
  const params=new URLSearchParams(location.search);
  params.set('repo',`https://github.com/${r.owner}/${r.repo}`);
  params.set('view',view.id);
