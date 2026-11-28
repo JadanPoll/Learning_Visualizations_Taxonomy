@@ -458,6 +458,34 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .kami-book.kami-map .landscape-heading{display:flex}
 .kami-book .kami-backbar{display:flex;justify-content:space-between;gap:8px;margin:0 0 14px}
 .kami-book .kami-backbar button{border:0;background:transparent;color:#333;font-size:14px;padding:10px 0}
+/* Kami's reading outline: ordinary text, one disclosure per idea, no nested cards. */
+.kami-book.kami-reading .detail .details-fold{border:0;border-bottom:1px solid #e9e9e9;border-radius:0;background:transparent;margin:4px 0;overflow:visible}
+.kami-book.kami-reading .detail .details-fold>summary,.kami-book.kami-reading .detail .kami-branch>summary{display:flex;align-items:center;gap:9px;list-style:none;min-height:44px;padding:9px 0;font-size:14px;font-weight:550;color:#444;line-height:1.45;cursor:pointer}
+.kami-book.kami-reading .detail .details-fold>summary::-webkit-details-marker,.kami-book.kami-reading .detail .kami-branch>summary::-webkit-details-marker{display:none}
+.kami-book.kami-reading .detail .details-fold>summary::after{content:none}
+.kami-book.kami-reading .detail .details-fold>summary::before,.kami-book.kami-reading .detail .kami-branch>summary::before{content:'›';display:inline-block;flex:0 0 12px;font-size:20px;font-weight:400;line-height:1;color:#777;transform-origin:center}
+.kami-book.kami-reading .detail .details-fold[open]>summary::before,.kami-book.kami-reading .detail .kami-branch[open]>summary::before{transform:rotate(90deg)}
+.kami-book.kami-reading .detail .details-fold>summary:focus-visible,.kami-book.kami-reading .detail .kami-branch>summary:focus-visible{outline:2px solid #87bce8;outline-offset:2px}
+.kami-book.kami-reading .detail .details-fold>.fold-body{padding:2px 0 12px 20px}
+.kami-book.kami-reading .detail .kami-outline{margin:20px 0 12px}
+.kami-book.kami-reading .detail .kami-outline-title{font-size:12px;font-weight:600;color:#777;margin:0 0 3px;letter-spacing:0}
+.kami-book.kami-reading .detail .kami-branch{border-bottom:1px solid #ededed}
+.kami-book.kami-reading .detail .kami-branch>summary{font-size:16px;color:#242424;font-weight:500}
+.kami-book.kami-reading .detail .kami-branch-body{margin:0 0 12px 6px;padding:2px 0 4px 14px;border-left:1px solid #ddd;min-width:0;overflow-wrap:anywhere}
+.kami-book.kami-reading .detail .kami-branch-body .kami-outline{margin:10px 0}
+.kami-book.kami-reading .detail .kami-branch-body .case-section{margin-top:10px;padding-top:4px;border:0}
+.kami-book.kami-reading .detail .kami-branch-body .case-section h3{font-size:13px;color:#555;margin:0 0 5px;font-weight:600}
+.kami-book.kami-reading .detail .kami-branch-body p{margin:5px 0 10px}
+.kami-book.kami-reading .detail .kami-branch-body .reader-actions{margin:4px 0 0;gap:2px}
+.kami-book.kami-reading .detail .kami-branch-body .reader-actions button{border:0;background:transparent;color:#777}
+.kami-book.kami-reading .detail .kami-branch-body .reader-actions button.on{color:#9b650b}
+.kami-book.kami-reading .detail .glossary-detail-terms{gap:2px 10px;margin:9px 0 14px}
+.kami-book.kami-reading .detail .glossary-detail-terms .glossary-term-chip{border:0;border-radius:0;background:transparent;color:#567088;padding:4px 0;min-height:32px;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.kami-book.kami-reading .detail .kami-original{display:flex;flex-wrap:wrap;gap:6px 14px;margin:18px 0 0;padding:2px 0;font-size:11px;line-height:1.4}
+.kami-book.kami-reading .detail .kami-original a{color:#777;text-decoration:none;display:inline-flex;align-items:center;min-height:32px}
+.kami-book.kami-reading .detail .kami-original a:hover,.kami-book.kami-reading .detail .kami-original a:focus-visible{text-decoration:underline}
+.kami-book.kami-reading .detail .note-preview[hidden]{display:none!important}
+@media(max-width:600px){.kami-book.kami-reading .detail .kami-branch-body{margin-left:4px;padding-left:10px}.kami-book.kami-reading .detail .kami-branch>summary{font-size:15px}}
 @media(max-width:600px){.kami-book #curiosity-index{padding:0 16px 32px}.kami-book .top{padding:10px 16px}.kami-book .top-actions button{font-size:12px}.kami-book.kami-reading .atlas-inspector-rail>.journey-content:not([hidden]){padding:14px 17px 50px!important}}
 </style></head>
 <body>
@@ -2419,14 +2447,78 @@ function appendResearchRuns(box,n){
   }catch(e){loaded=false;note.textContent='Evidence unavailable: '+e.message+' (reopen to retry)';}
  });
 }
-function renderDetail(){
- const box=$('detail');clear(box);
- box.hidden=!state.detailOpen;
- $('inspector-empty').hidden=state.detailOpen;
- if(!state.tree||!state.detailOpen)return;
- const n=state.index.get(state.selected);
+function kamiReading(){return kamiBook()&&document.body.classList.contains('kami-reading')}
+function kamiOutlineEntries(n,trail){
+ const entries=new Map(),blocked=new Set([...trail,n.id]);
+ // The tree's parent is not a new idea, even for a direct link to a child.
+ if(state.parent.get(n.id))blocked.add(state.parent.get(n.id));
+ const add=(id,reason)=>{
+  if(!id||blocked.has(id)||!state.index.has(id))return;
+  if(!entries.has(id))entries.set(id,{node:state.index.get(id),reasons:[]});
+  const item=entries.get(id);
+  if(reason&&reason!==item.node.why&&reason!==item.node.mechanism_explanation&&reason!==n.mechanism_explanation&&!item.reasons.includes(reason))item.reasons.push(reason);
+ };
+ for(const id of state.children.get(n.id)||[])add(id);
+ for(const id of [...(n.curiosity_targets||[]),...(n.curiosity_case_ids||[]),...(n.fieldwork_case_ids||[]),...(n.compare_with||[])])add(id);
+ for(const r of state.tree.connections||state.tree.relations||state.tree.edges||[]){
+  const type=r.type||r.relationship;
+  if(type==='contains')continue;
+  if(r.from===n.id)add(r.to,r.reason||r.why);
+  else if(r.to===n.id&&!['investigate','explained_by','related_mechanism'].includes(type))add(r.from,r.reason||r.why);
+ }
+ return [...entries.values()];
+}
+function appendKamiOutline(box,n,trail){
+ const entries=kamiOutlineEntries(n,trail);
+ if(!entries.length)return;
+ const outline=el('section','kami-outline');outline.append(el('h3','kami-outline-title',trail.length===1?'Explore further':''));
+ if(trail.length>1)outline.firstElementChild.remove();
+ for(const {node,reasons} of entries){
+  const branch=el('details','kami-branch');branch.dataset.nodeId=node.id;
+  const label=title(node).replace(/^Relevant technical route:\s*/,'');
+  branch.append(el('summary','',label));
+  const body=el('div','kami-branch-body');branch.append(body);
+  let loaded=false;
+  branch.addEventListener('toggle',()=>{
+   if(!branch.open||loaded)return;
+   loaded=true;
+   for(const reason of reasons)body.append(el('p','case-source-status',reason));
+   // Expand the same canonical record without changing selection, URL or sibling disclosures.
+   renderDetail(body,node,[...trail,node.id]);
+  });
+  outline.append(branch);
+ }
+ box.append(outline);
+}
+function appendKamiBookSources(box,n){
+ if(n.kind!=='curiosity_entry')return;
+ const refs=new Map();
+ for(const id of state.children.get(n.id)||[])for(const loc of state.index.get(id)?.curiosity_refs||[]){
+  const key=JSON.stringify([loc.source_id,loc.ref,loc.why,loc.level]);if(!refs.has(key))refs.set(key,loc);
+ }
+ if(!refs.size)return;
+ const fold=el('details','details-fold');fold.append(el('summary','','Books and source passages'));
+ const body=el('div','fold-body'),byId=new Map((state.tree.sources||[]).map(s=>[s.id,s]));
+ for(const loc of refs.values()){
+  const source=byId.get(loc.source_id);
+  body.append(makeManufacturingSource(byId,loc.source_id,source?.title||loc.source_id,
+   [loc.ref?'Section/chapter '+loc.ref:null,loc.why].filter(Boolean).join(' · '),
+   loc.level==='inspected'?'Selected passage examined':'Candidate reading; not established evidence'));
+ }
+ fold.append(body);box.append(fold);
+}
+function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
+ const inline=!!inlineBox,box=inline?inlineBox:$('detail');
+ if(!inline){
+  clear(box);box.hidden=!state.detailOpen;
+  $('inspector-empty').hidden=state.detailOpen;
+  if(!state.tree||!state.detailOpen)return;
+ }
+ const n=inline?inlineNode:state.index.get(state.selected);
  if(!n)return;
- if(kamiBook()&&document.body.classList.contains('kami-reading')){
+ const reading=kamiReading();
+ if(!inline)trail=[n.id];
+ if(reading&&!inline){
   const bar=el('div','kami-backbar'),back=el('button','','‹ Back to book'),map=el('button','','Technical map ↗');
   back.type=map.type='button';back.onclick=()=>openResearchSelection(null);
   map.onclick=()=>{document.body.classList.remove('kami-reading');document.body.classList.add('kami-map');renderDetail();requestAnimationFrame(()=>{renderLandscape();fitAtlas(false)})};
@@ -2434,6 +2526,8 @@ function renderDetail(){
   if(n.id!==state.tree.root){const root=el('button','','‹ Question');root.type='button';root.onclick=()=>select(state.tree.root);bar.append(root)}
   bar.append(map);box.append(bar);
  }
+ let childThumb=null;
+ if(!inline){
  const dismiss=el('button','detail-dismiss','×');dismiss.type='button';dismiss.title='Close details';dismiss.setAttribute('aria-label','Close details');dismiss.onclick=closeDetail;box.append(dismiss);
  if(state.atlas.layout?.positions.has(n.id)){
   const locate=el('button','detail-locate','Locate on map');locate.type='button';locate.onclick=()=>{focusAtlasNode(n.id);activity('Located '+title(n))};box.append(locate);
@@ -2443,7 +2537,6 @@ function renderDetail(){
  box.append(el('h2','',title(n)));
  const toolbar=renderReaderDetail(box,n);
  const isChildDeck=n.kind==='subdomain'&&!!localJsonReference(n.url,state.repo);
- let childThumb=null;
  if(isChildDeck){
   const previous=el('button','inspector-step','←'),next=el('button','inspector-step','→');
   const count=el('span','inspector-position','Children…');
@@ -2482,6 +2575,7 @@ function renderDetail(){
    go.title='Double-click this map card to enter its domain';
    go.onclick=()=>exploreNode(n.id);toolbar.append(go);
   }
+ }
  }
  if(n.mapping_quality){
   const issue=n.mapping_quality,block=el('section','navigation-quality-warning');
@@ -2529,36 +2623,6 @@ function renderDetail(){
   const body=el('div','fold-body case-section investigation-answer');readingBlocks(body,n.worked_solution);
   fold.append(body);box.append(fold);
  }
- if(kamiBook()&&document.body.classList.contains('kami-reading')){
-  const children=(state.children.get(n.id)||[]).map(id=>state.index.get(id)).filter(Boolean);
-  if(children.length){
-   const deeper=el('details','details-fold');
-   deeper.open=!n.answer?.length&&!n.worked_solution?.length;
-   deeper.append(el('summary','','Explore the mechanisms'));
-   const body=el('div','fold-body');
-   for(const child of children){
-    const b=el('button','curiosity-card',title(child));b.type='button';b.onclick=()=>select(child.id);body.append(b);
-   }
-   deeper.append(body);box.append(deeper);
-  }
-  if(n.kind==='curiosity_entry'){
-   const refs=new Map();
-   for(const child of children)for(const loc of child.curiosity_refs||[]){
-    const key=JSON.stringify([loc.source_id,loc.ref,loc.why,loc.level]);if(!refs.has(key))refs.set(key,loc);
-   }
-   if(refs.size){
-    const fold=el('details','details-fold');fold.append(el('summary','','Books and source passages'));
-    const body=el('div','fold-body'),byId=new Map((state.tree.sources||[]).map(s=>[s.id,s]));
-    for(const loc of refs.values()){
-     const source=byId.get(loc.source_id);
-     body.append(makeManufacturingSource(byId,loc.source_id,source?.title||loc.source_id,
-      [loc.ref?'Section/chapter '+loc.ref:null,loc.why].filter(Boolean).join(' · '),
-      loc.level==='inspected'?'Selected passage examined':'Candidate reading; not established evidence'));
-    }
-    fold.append(body);box.append(fold);
-   }
-  }
- }
  if(n.actor)box.append(el('div','case-byline',n.actor+(n.evidence_status?' · '+n.evidence_status:'')));
  const chapterScope=descriptiveSearchEnabled()?(state.curiosityData?.landscape_views||[]).find(l=>l.root_id===n.id):null;
  const vocabularyIds=chapterScope?[...new Set([...(chapterScope.term_ids||[]),...(state.glossary?.terms||[]).filter(t=>t.category===chapterScope.title).map(t=>t.id)])]:(n.term_ids||[]);
@@ -2575,7 +2639,7 @@ function renderDetail(){
   if(section.childElementCount>1)box.append(section);
  }
  if(n.kind==='curiosity_entry'){
-  if(kamiBook()&&!n.answer?.length&&!n.worked_solution?.length)box.append(el('p','case-source-status','Direct explanation not yet written. The existing technical routes are available above.'));
+  if(kamiBook()&&!n.answer?.length&&!n.worked_solution?.length)box.append(el('p','case-source-status','Direct explanation not yet written. Explore the existing technical routes below.'));
   else if(!n.answer?.length&&!n.worked_solution?.length)box.append(el('p','case-source-status',n.task_scope==='capability_family'?
    'Reusable capability family · instantiate with suitable inputs and demonstrate the stated criterion. Source pointers are not evidence of mastery.':
    'Exploratory question · the mapped nodes below are technical explanations and conditional routes, not an automatic diagnosis.'));
@@ -2759,7 +2823,7 @@ function renderDetail(){
   box.append(section);
  }
  if(n.kind==='technical_branch'){
-  if(n.curiosity_targets?.length){
+  if(!reading&&n.curiosity_targets?.length){
    const sec=el('section','case-section');sec.append(el('h3','','Underlying technical studies'));
    const buttons=el('div','case-factor-paths');
    for(const id of n.curiosity_targets){
@@ -2972,7 +3036,7 @@ function renderDetail(){
   }
   fold.append(body);box.append(fold);
  }
- const linkedCases=n.fieldwork_case_ids||[];
+ const linkedCases=(n.fieldwork_case_ids||[]).filter(id=>!reading||!state.index.has(id));
  if(linkedCases.length&&state.curiosityData?.fieldwork_nodes?.length){
   const fold=el('details','details-fold');fold.append(el('summary','','Related fieldwork · '+linkedCases.length+' cases'));
   const body=el('div','fold-body case-related');
@@ -3005,7 +3069,7 @@ function renderDetail(){
 
  const relations=(state.tree.connections||state.tree.relations||state.tree.edges||[]).filter(r=>
   (r.from===n.id||r.to===n.id)&&(r.type||r.relationship)!=='contains');
- if(relations.length){
+ if(relations.length&&!reading){
   const fold=el('details','details-fold');fold.append(el('summary','','Related ideas'));
   const body=el('div','fold-body');
   for(const r of relations){
@@ -3016,7 +3080,20 @@ function renderDetail(){
   }
   fold.append(body);box.append(fold);
  }
- if(n.url||n.source_location?.url||state.url){
+ if(reading){
+  appendKamiOutline(box,n,trail);
+  appendKamiBookSources(box,n);
+  if(inline)renderReaderDetail(box,n);
+  const links=new Map();
+  if(n.url)links.set(n.url,'Original resource');
+  if(n.source_location?.url)links.set(n.source_location.url,'Original record');
+  if(!inline&&state.url&&!links.has(state.url))links.set(state.url,'Source on GitHub');
+  if(links.size){
+   const footer=el('footer','kami-original');
+   for(const [url,label] of links)footer.append(link(url,label+' ↗'));
+   box.append(footer);
+  }
+ }else if(n.url||n.source_location?.url||state.url){
   const fold=el('details','details-fold');fold.append(el('summary','','Original material'));
   const body=el('div','fold-body');
   if(n.url)body.append(link(n.url,localJsonReference(n.url,state.repo)?'Open original resource JSON':'Open linked website or resource'));
@@ -3121,7 +3198,7 @@ function readerSave(id,interest,note){
   interested:interest,note,updated_at:new Date().toISOString()};
  if(!entry.interested&&!entry.note)next.delete(k);else next.set(k,entry);
  try{
-  readerWrite(next);render();
+  readerWrite(next);if(kamiReading())refreshKamiReaderControls(id);else render();
   const changedNote=note!==(prior?.note||''),changedInterest=interest!==!!prior?.interested;
   activity(changedNote?(note?'Note saved':'Note removed'):changedInterest?(interest?'Interest saved':'Interest removed'):'Saved');
   readerMessage('Saved to this browser. Export JSON to move to another device.');
@@ -3135,19 +3212,37 @@ function readerMessage(message,error=false){
 function readerToggle(id){
  const x=readerFor(id);readerSave(id,!x?.interested,x?.note||'');
 }
+let readerNoteSerial=0;
+function refreshKamiReaderControls(id){
+ const prior=readerFor(id),interested=!!prior?.interested,note=prior?.note||'';
+ for(const wrap of $('detail').querySelectorAll('.reader-actions[data-reader-node-id]')){
+  if(wrap.dataset.readerNodeId!==id)continue;
+  const star=wrap.querySelector('.reader-star'),toggle=wrap.querySelector('.note-show');
+  if(star){
+   star.classList.toggle('on',interested);star.textContent=interested?'★':'☆';
+   star.setAttribute('aria-pressed',String(interested));star.title=interested?'Remove saved interest':'Save interest';star.setAttribute('aria-label',star.title);
+  }
+  if(toggle){toggle.title=note?'Edit note':'Add note';toggle.setAttribute('aria-label',toggle.title)}
+ }
+ for(const panel of $('detail').querySelectorAll('.reader-note-box[data-reader-node-id]')){
+  if(panel.dataset.readerNodeId!==id)continue;
+  const preview=panel.querySelector('.note-preview');
+  if(preview){preview.textContent=note;preview.hidden=!note}
+ }
+}
 function renderReaderDetail(box,n){
- const wrap=el('div','reader-actions'),prior=readerFor(n.id);
+ const wrap=el('div','reader-actions'),prior=readerFor(n.id);wrap.dataset.readerNodeId=n.id;
  const star=el('button','reader-star icon-action'+(prior?.interested?' on':''),prior?.interested?'★':'☆');
  star.type='button';star.setAttribute('aria-pressed',String(!!prior?.interested));
  star.title=prior?.interested?'Remove saved interest':'Save interest';
  star.setAttribute('aria-label',star.title);star.onclick=()=>readerToggle(n.id);
  wrap.append(star);
- const panel=el('div','reader-note-box');panel.hidden=true;
+ const panel=el('div','reader-note-box');panel.hidden=true;panel.dataset.readerNodeId=n.id;
  const toggle=el('button','note-show icon-action',prior?.note?'✎':'✎');toggle.type='button';
  toggle.title=prior?.note?'Edit note':'Add note';toggle.setAttribute('aria-label',toggle.title);
  toggle.setAttribute('aria-expanded','false');
  const compose=el('div','note-compose');compose.hidden=true;
- const label=el('label','','Your note'),note=el('textarea');note.id='reader-note-input';note.maxLength=16000;
+ const label=el('label','','Your note'),note=el('textarea');note.id='reader-note-input-'+(++readerNoteSerial);note.maxLength=16000;
  note.placeholder='Why is this interesting? What might you explore next?';
  label.htmlFor=note.id;note.value=prior?.note||'';
  const save=el('button','primary icon-action','✓');save.type='button';
@@ -3156,7 +3251,7 @@ function renderReaderDetail(box,n){
  compose.append(label,note,save);
  toggle.onclick=()=>{panel.hidden=!panel.hidden;compose.hidden=panel.hidden;toggle.setAttribute('aria-expanded',String(!panel.hidden));if(!panel.hidden)note.focus()};
  wrap.append(toggle);box.append(wrap);
- if(prior?.note)panel.append(el('div','note-preview',prior.note));
+ const preview=el('div','note-preview',prior?.note||'');preview.hidden=!prior?.note;panel.append(preview);
  panel.append(compose);box.append(panel);
  return wrap;
 }
