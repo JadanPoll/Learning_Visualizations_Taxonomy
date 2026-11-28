@@ -451,37 +451,45 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .kami-book.kami-reading #canvas,.kami-book.kami-reading #inspector-empty{display:none!important}
 .kami-book.kami-reading .explore-workspace{display:block!important;overflow:hidden;background:white}
 .kami-book.kami-reading .atlas-inspector-rail{display:block!important;position:relative;width:100%;height:100%;overflow:auto;border:0;background:white}
-.kami-book.kami-reading .atlas-inspector-rail>.journey-content:not([hidden]){position:relative!important;inset:auto!important;width:min(880px,100%)!important;height:auto!important;max-height:none!important;overflow:visible!important;margin:0 auto!important;padding:16px 24px 64px!important;border:0!important;border-radius:0!important;box-shadow:none!important}
-.kami-book.kami-reading .detail h2{font-size:25px;color:#151515;line-height:1.35}
-.kami-book.kami-reading .detail p{font-size:16px;line-height:1.65;color:#252525}
+/* One article measure and type scale, independent of graph depth. */
+.kami-book.kami-reading .atlas-inspector-rail>.journey-content:not([hidden]){position:relative!important;inset:auto!important;width:100%!important;max-width:calc(80ch + 48px)!important;height:auto!important;max-height:none!important;overflow:visible!important;margin:0 auto!important;padding:16px 24px 64px!important;border:0!important;border-radius:0!important;box-shadow:none!important;font-size:16px;line-height:1.65;color:#202122}
+.kami-book.kami-reading .detail{font-size:16px;line-height:1.65;color:#202122;--reading-indent:12px}
+.kami-book.kami-reading .detail h2{font-size:clamp(24px,3.5vw,30px);font-weight:500;letter-spacing:-.35px;color:inherit;line-height:1.3;margin:8px 0 12px;padding-bottom:9px;border-bottom:1px solid #dedede}
+.kami-book.kami-reading .detail p,.kami-book.kami-reading .detail .case-section li{font-family:inherit;font-size:inherit;line-height:inherit;color:inherit;margin:0 0 .8em}
+.kami-book.kami-reading .detail .case-section{margin:14px 0 0;padding:0;border:0}
+.kami-book.kami-reading .detail .case-section h3{font-size:1em;line-height:1.4;color:inherit;margin:0 0 .45em;font-weight:600;border:0;padding:0;letter-spacing:0}
+.kami-book.kami-reading .detail .investigation-answer p{margin:0 0 .8em}
+.kami-book.kami-reading .detail .case-section li{margin:0 0 .35em}
+.kami-book.kami-reading .detail .case-trace-step p{font-size:1em!important;line-height:1.65!important;margin:0 0 .4em!important}
+.kami-book.kami-reading .detail .case-factor p.case-source-status{font-size:1em!important;line-height:1.65!important;color:inherit!important;margin:.35em 0 .8em!important}
 .kami-book.kami-reading .detail .detail-dismiss,.kami-book.kami-reading .detail .detail-locate,.kami-book.kami-reading .detail .question-type-tag,.kami-book.kami-reading .detail>.chip,.kami-book.kami-reading .detail .inspector-step,.kami-book.kami-reading .detail .inspector-position{display:none}
 .kami-book.kami-map .landscape-heading{display:flex}
 .kami-book .kami-backbar{display:flex;justify-content:space-between;gap:8px;margin:0 0 14px}
 .kami-book .kami-backbar button{border:0;background:transparent;color:#333;font-size:14px;padding:10px 0}
-/* Kami's reading outline: ordinary text, one disclosure per idea, no nested cards. */
-.kami-book.kami-reading .detail .details-fold{border:0;border-bottom:1px solid #e9e9e9;border-radius:0;background:transparent;margin:4px 0;overflow:visible}
-.kami-book.kami-reading .detail .details-fold>summary,.kami-book.kami-reading .detail .kami-branch>summary{display:flex;align-items:center;gap:9px;list-style:none;min-height:44px;padding:9px 0;font-size:14px;font-weight:550;color:#444;line-height:1.45;cursor:pointer}
+/* Article-style sections; the outline is interaction, not a second reading type scale. */
+.kami-book.kami-reading .detail .details-fold{border:0;border-radius:0;background:transparent;margin:6px 0;overflow:visible}
+.kami-book.kami-reading .detail .details-fold>summary,.kami-book.kami-reading .detail .kami-branch>summary{display:flex;align-items:baseline;gap:7px;list-style:none;min-height:44px;padding:9px 0;font-family:inherit;font-size:1em;font-weight:500;color:inherit;line-height:1.4;cursor:pointer}
 .kami-book.kami-reading .detail .details-fold>summary::-webkit-details-marker,.kami-book.kami-reading .detail .kami-branch>summary::-webkit-details-marker{display:none}
 .kami-book.kami-reading .detail .details-fold>summary::after{content:none}
-.kami-book.kami-reading .detail .details-fold>summary::before,.kami-book.kami-reading .detail .kami-branch>summary::before{content:'›';display:inline-block;flex:0 0 12px;font-size:20px;font-weight:400;line-height:1;color:#777;transform-origin:center}
+.kami-book.kami-reading .detail .details-fold>summary::before,.kami-book.kami-reading .detail .kami-branch>summary::before{content:'›';display:inline-block;flex:0 0 10px;font-size:1.1em;font-weight:400;line-height:1;color:#72777d;transform-origin:center}
 .kami-book.kami-reading .detail .details-fold[open]>summary::before,.kami-book.kami-reading .detail .kami-branch[open]>summary::before{transform:rotate(90deg)}
 .kami-book.kami-reading .detail .details-fold>summary:focus-visible,.kami-book.kami-reading .detail .kami-branch>summary:focus-visible{outline:2px solid #87bce8;outline-offset:2px}
-.kami-book.kami-reading .detail .details-fold>.fold-body{padding:2px 0 12px 20px}
-.kami-book.kami-reading .detail .kami-outline{margin:20px 0 12px}
-.kami-book.kami-reading .detail .kami-outline-title{font-size:12px;font-weight:600;color:#777;margin:0 0 3px;letter-spacing:0}
-.kami-book.kami-reading .detail .kami-branch{border-bottom:1px solid #ededed}
-.kami-book.kami-reading .detail .kami-branch>summary{font-size:16px;color:#242424;font-weight:500}
-.kami-book.kami-reading .detail .kami-branch-body{margin:0 0 12px 6px;padding:2px 0 4px 14px;border-left:1px solid #ddd;min-width:0;overflow-wrap:anywhere}
-.kami-book.kami-reading .detail .kami-branch-body .kami-outline{margin:10px 0}
-.kami-book.kami-reading .detail .kami-branch-body .case-section{margin-top:10px;padding-top:4px;border:0}
-.kami-book.kami-reading .detail .kami-branch-body .case-section h3{font-size:13px;color:#555;margin:0 0 5px;font-weight:600}
-.kami-book.kami-reading .detail .kami-branch-body p{margin:5px 0 10px}
-.kami-book.kami-reading .detail .kami-branch-body .kami-route-question{color:#626262;font-size:14px;line-height:1.5;margin:2px 0 7px}
-.kami-book.kami-reading .detail .kami-branch-body .case-factor{padding:6px 0;border:0}
-.kami-book.kami-reading .detail .kami-branch-body .case-factor strong{font-size:15px;color:#333}
-.kami-book.kami-reading .detail .kami-branch-body .case-factor p{margin:3px 0 8px}
-.kami-book.kami-reading .detail .kami-branch-body .kami-mechanism{margin:5px 0 10px}
-.kami-book.kami-reading .detail .kami-record-status{font-size:12px;line-height:1.45;color:#737373;margin:7px 0}
+.kami-book.kami-reading .detail .details-fold>.fold-body{padding:2px 0 10px var(--reading-indent)}
+.kami-book.kami-reading .detail .kami-outline{margin:18px 0 10px}
+.kami-book.kami-reading .detail .kami-outline-title{font-size:.8em;font-weight:500;color:#72777d;margin:0 0 3px;border:0;padding:0;letter-spacing:0}
+.kami-book.kami-reading .detail .kami-branch{border:0;margin:3px 0 8px}
+.kami-book.kami-reading .detail .kami-branch>summary{font-size:1.125em;font-weight:500}
+.kami-book.kami-reading .detail>.kami-outline>.kami-branch>summary{border-bottom:1px solid #eaecf0}
+.kami-book.kami-reading .detail .kami-branch-body{margin:0 0 10px;padding:6px 0 2px var(--reading-indent);border:0;min-width:0;overflow-wrap:anywhere}
+.kami-book.kami-reading .detail .kami-branch-body .kami-branch>summary{font-size:1em;font-weight:600}
+.kami-book.kami-reading .detail .kami-branch-body .kami-outline{margin:6px 0}
+/* The first two levels indent; deeper branches share the same article measure. */
+.kami-book.kami-reading .detail .kami-branch-body .kami-branch-body .kami-branch-body{padding-left:0}
+.kami-book.kami-reading .detail .kami-branch-body .kami-route-question{font-size:inherit;line-height:inherit;color:inherit;margin:0 0 .8em}
+.kami-book.kami-reading .detail .case-factor{padding:4px 0;border:0}
+.kami-book.kami-reading .detail .case-factor strong{font-size:1em;line-height:1.4;color:inherit;font-weight:600}
+.kami-book.kami-reading .detail .case-factor p,.kami-book.kami-reading .detail .kami-mechanism{font-size:inherit;line-height:inherit;color:inherit;margin:0 0 .8em}
+.kami-book.kami-reading .detail .kami-record-status{font-size:12px;line-height:1.45;color:#72777d;margin:5px 0}
 .kami-book.kami-reading .detail .kami-aux{display:flex;align-items:flex-start;flex-wrap:wrap;column-gap:10px;row-gap:0;margin:4px 0 8px}
 .kami-book.kami-reading .detail .kami-aux .reader-actions{margin:0;gap:0;align-items:center}
 .kami-book.kami-reading .detail .kami-aux .reader-actions button{border:0;background:transparent;color:#777}
@@ -489,6 +497,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .kami-book.kami-reading .detail .kami-aux .note-preview{margin-top:3px}
 .kami-book.kami-reading .detail .kami-aux .reader-note-box:has(.note-compose:not([hidden])){flex-basis:100%}
 .kami-book.kami-reading .detail .kami-reference{min-width:0;max-width:100%;flex:1 1 145px}
+.kami-book.kami-reading .detail .kami-reference[open]{flex-basis:100%}
 .kami-book.kami-reading .detail .kami-reference>summary{list-style:none;display:flex;align-items:center;gap:6px;min-height:42px;color:#707070;font-size:12px;font-weight:500;cursor:pointer}
 .kami-book.kami-reading .detail .kami-reference>summary::-webkit-details-marker{display:none}
 .kami-book.kami-reading .detail .kami-reference>summary::before{content:'›';font-size:17px;line-height:1}
@@ -501,8 +510,6 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .kami-book.kami-reading .detail .kami-reference-body .case-source,.kami-book.kami-reading .detail .kami-reference-body .case-route-resource{font-size:13px}
 .kami-book.kami-reading .detail .kami-reference-body .case-source p,.kami-book.kami-reading .detail .kami-reference-body .case-route-resource p{font-size:12px;line-height:1.45}
 .kami-book.kami-reading .detail .kami-reference-body .details-fold>summary{font-size:12px;min-height:38px}
-.kami-book.kami-reading .detail .kami-branch-body .kami-outline{margin:4px 0}
-.kami-book.kami-reading .detail .kami-branch-body .kami-branch-body{margin-bottom:7px}
 .kami-book.kami-reading .detail .kami-aux .kami-original{margin:0;align-items:center;min-height:42px}
 .kami-book.kami-reading .detail .kami-branch-body .reader-actions{margin:4px 0 0;gap:2px}
 .kami-book.kami-reading .detail .kami-branch-body .reader-actions button{border:0;background:transparent;color:#777}
@@ -513,7 +520,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .kami-book.kami-reading .detail .kami-original a{color:#777;text-decoration:none;display:inline-flex;align-items:center;min-height:32px}
 .kami-book.kami-reading .detail .kami-original a:hover,.kami-book.kami-reading .detail .kami-original a:focus-visible{text-decoration:underline}
 .reader-note-box .note-preview[hidden]{display:none!important}
-@media(max-width:600px){.kami-book.kami-reading .detail .kami-branch-body{margin-left:4px;padding-left:10px}.kami-book.kami-reading .detail .kami-branch>summary{font-size:15px}}
+@media(max-width:600px){.kami-book.kami-reading .detail{--reading-indent:8px}}
 @media(max-width:600px){.kami-book #curiosity-index{padding:0 16px 32px}.kami-book .top{padding:10px 16px}.kami-book .top-actions button{font-size:12px}.kami-book.kami-reading .atlas-inspector-rail>.journey-content:not([hidden]){padding:14px 17px 50px!important}}
 </style></head>
 <body>
