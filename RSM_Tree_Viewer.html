@@ -414,12 +414,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .glossary-detail-terms{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:14px 0}
 .glossary-detail-terms>.muted{font-size:12px;margin-right:3px}
 /* Kami reading-first layout; the shared graph remains available on demand. */
-.kami-book .brand-icon,.kami-book .top .sub,.kami-book #status:not(.err){display:none}
-.kami-book .top{background:white;border-bottom:1px solid #eee;padding:12px max(18px,calc((100vw - 920px)/2));flex-wrap:nowrap}
-.kami-book .top h1{font-size:20px;color:#161616}
 .kami-book .explore-workspace{background:white}
-.kami-book .activity-pane.collapsed:not(.error){width:auto;max-width:42px;height:40px;padding:4px 8px}
-.kami-book .activity-pane.collapsed:not(.error) #activity-title{display:none}
 .kami-book .glossary-term-detail .curiosity-card{font-size:15px}
 .kami-book .detail .details-fold>summary{font-size:15px;color:#333;padding:14px 12px}
 .kami-book .detail .fold-body .curiosity-card{font-size:15px;min-height:52px}
@@ -2584,6 +2579,7 @@ function kamiReading(){return readerSurface()&&document.body.classList.contains(
 function backFromReader(){
  if(hasQuestionBook()){openResearchSelection(null);return}
  if(state.selected!==state.tree?.root){select(state.tree.root);return}
+ if(navigationCursor>0){navigateHistory(-1);return}
  if(state.catalogHome){openCatalog();return}
  $('library-dialog').hidden=false;
 }
@@ -2829,7 +2825,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
 
  if(!inline)trail=[n.id];
  if(reading&&!inline){
-  const record=hasRecordReader(),bar=el('div','kami-backbar'),back=el('button','',record?(n.id!==state.tree.root?'‹ Overview':state.catalogHome?'‹ Collections':'‹ Library'):'‹ Back to book'),map=el('button','','Map');
+  const record=hasRecordReader(),bar=el('div','kami-backbar'),back=el('button','',record?(n.id!==state.tree.root?'‹ Overview':'‹ Back'):'‹ Back to book'),map=el('button','','Map');
   back.type=map.type='button';back.onclick=backFromReader;
   map.onclick=showTechnicalMap;
   bar.append(back);
@@ -2971,15 +2967,15 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
  }
  const unestablished=n.status&&/^(?:candidate|provisional|active_question|pending_investigation|not investigated)/.test(n.status);
  if(unestablished&&!reading)box.append(el('p','case-source-status','Question or proposed investigation · no established finding yet'));
- function fieldSection(label,value){
+ function fieldSection(label,value,host=box){
   if(value==null||value===''||(Array.isArray(value)&&!value.length))return;
   const section=el('div','case-section');section.append(el('h3','',label));
   if(Array.isArray(value)){
    const list=el('ul');
    for(const item of value)list.append(el('li','',typeof item==='string'?item:JSON.stringify(item)));
    section.append(list);
-  }else section.append(el('p','',String(value)));
-  box.append(section);
+  }else section.append(el('p','',typeof value==='object'?JSON.stringify(value):String(value)));
+  host.append(section);
  }
  fieldSection('Demonstrate competence',n.success_criterion);
  // Source-grounded FKEN navigation: a node's meaningful operational fields
@@ -3009,14 +3005,18 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
  if(n.kind==='project'&&n.big_picture_certification){
   const c=n.big_picture_certification,lab=n.reverse_engineered_virtual_lab||{},
         review=n.rem_directional_review||{};
-  fieldSection('Holistic purpose',c.holistic_purpose);
-  fieldSection('Why this question matters',c.why);
-  fieldSection('Research direction',c.judgment);
-  fieldSection('Existing tools to examine',lab.reuse_first);
-  fieldSection('Example to investigate',lab.initial_case);
-  fieldSection('What would demonstrate progress',lab.first_canary);
-  fieldSection('Current development stage',lab.status?.replaceAll('_',' '));
-  fieldSection('Most useful next action',review.next_action);
+  // Keep methodological context available, without putting it ahead of the actual problem.
+  const details=el('details','details-fold'),body=el('div','fold-body');
+  details.append(el('summary','','Project notes and experimental routes'),body);
+  fieldSection('Holistic purpose',c.holistic_purpose,body);
+  fieldSection('Why this question matters',c.why,body);
+  fieldSection('Research direction',c.judgment,body);
+  fieldSection('Existing tools to examine',lab.reuse_first,body);
+  fieldSection('Example to investigate',lab.initial_case,body);
+  fieldSection('What would demonstrate progress',lab.first_canary,body);
+  fieldSection('Current development stage',lab.status?.replaceAll('_',' '),body);
+  fieldSection('Most useful next action',review.next_action,body);
+  if(body.childElementCount)(reading?references:box).append(details);
   if(n.focal_project&&n.source_location?.url){
    try{
     const url=new URL(n.focal_project,n.source_location.url);
@@ -3031,7 +3031,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
  }
  if(n.kind==='domain'){
   if(n.characterization!==n.description)fieldSection('Field characterization',n.characterization);
-  if(!reading)fieldSection('Navigation context',n.navigation_note);
+  if(!reading){fieldSection('Useful routes to investigate',n.routes);fieldSection('Navigation context',n.navigation_note)}
  }
  if(n.kind==='research_question'){
   if(!n.answer&&!n.description)box.append(el('p','case-source-status','Open investigation question.'));
@@ -3904,7 +3904,7 @@ $('curiosity-search').addEventListener('input',e=>{
  }
  renderCuriosityIndex();
 });
-$('local').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!isTree(d))throw Error('This JSON has no recognized nodes collection');state.url=null;state.glossary=null;state.termById=new Map();state.glossaryMode='questions';state.glossarySelected=null;openTree(d,null,f.name,{type:'local',file:f.name,size:f.size,title:d.title||f.name});$('library-dialog').hidden=true;setStatus('Loaded local '+f.name+' · '+state.index.size+' nodes. For book references, import reference_guide.json too.')}catch(err){setStatus(err.message,true)}});
+$('local').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!isTree(d))throw Error('This JSON has no recognized nodes collection');state.url=null;state.repo=null;state.views=null;state.activeView=null;state.catalogHome=null;state.curiosityData=null;state.curiosityEntry=null;state.recordMap=false;state.glossary=null;state.termById=new Map();state.glossaryMode='questions';state.glossarySelected=null;closeCatalog();showCuriosityIndex(false);updateLensSelector();openTree(d,null,f.name,{type:'local',file:f.name,size:f.size,title:d.title||f.name});$('library-dialog').hidden=true;setStatus('Loaded local '+f.name+' · '+state.index.size+' nodes. For book references, import reference_guide.json too.')}catch(err){setStatus(err.message,true)}});
 $('addRef').onclick=()=>$('localRef').click();$('localRef').onchange=async e=>{try{const f=e.target.files?.[0];if(!f)return;state.guide=JSON.parse(await f.text());render();setStatus('Loaded local reference guide '+f.name)}catch(err){setStatus(err.message,true)}};
 // The canvas is a stable, pan-and-zoom viewport. Item selection itself does not move it.
 $('atlas-fit').onclick=()=>{fitAtlas();activity('Overview restored')};
