@@ -565,10 +565,41 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 @media(max-width:480px){.kami-book.kami-reading .detail .kami-article-heading{gap:2px}.kami-book.kami-reading .detail .reader-actions .icon-action{width:34px;min-width:34px}}
 @media(max-width:600px){.kami-book.kami-reading .detail{--reading-indent:8px}}
 @media(max-width:600px){.kami-book #curiosity-index{padding:0 16px 32px}.kami-book .top{padding:10px 16px}.kami-book .top-actions button{font-size:12px}.kami-book.kami-reading .atlas-inspector-rail>.journey-content:not([hidden]){padding:14px 17px 50px!important}}
+/* Shared Atlas shell; reading and catalog are variations of one interface. */
+.atlas-shell{background:white;color:#202122}
+.atlas-shell .brand-icon,.atlas-shell .top .sub,.atlas-shell #status:not(.err){display:none}
+.atlas-shell .top{background:white;border-bottom:1px solid #eee;padding:12px max(18px,calc((100vw - 920px)/2));flex-wrap:nowrap}
+.atlas-shell .top h1{font-size:20px;color:#161616}
+.atlas-shell .activity-pane.collapsed:not(.error){width:auto;max-width:42px;height:40px;padding:4px 8px}
+.atlas-shell .activity-pane.collapsed:not(.error) #activity-title{display:none}
+.atlas-shell.catalog-browse .atlas-heading{display:none}
+.atlas-shell.catalog-browse .landscape-heading{justify-content:flex-end;padding:4px max(18px,calc((100vw - 920px)/2));border:0;background:white}
+.atlas-shell.catalog-browse .landscape-heading:has(#history-back:disabled):has(#history-forward:disabled){display:none}
+.atlas-shell.catalog-browse #collection-index{background:white;padding:0 20px 40px;scrollbar-gutter:auto}
+.atlas-shell.catalog-browse .curiosity-index-heading{max-width:880px;margin:auto;background:white;border:0;padding:18px 0 5px}
+.atlas-shell.catalog-browse .curiosity-index-heading h2{font-size:22px;font-weight:550;color:#161616}
+.atlas-shell.catalog-browse #catalog-description{color:#666;font-size:14px}
+.atlas-shell.catalog-browse #catalog-search{border:1px solid #ddd;color:#222;max-width:none}
+.atlas-shell.catalog-browse #catalog-results{max-width:880px;padding:0}
+.atlas-shell.catalog-browse #catalog-count{color:#666}
+.atlas-shell.catalog-browse .catalog-section{margin:16px 0 24px}
+.atlas-shell.catalog-browse .catalog-section h3,.atlas-shell.catalog-browse .catalog-section details>summary{font-size:15px;font-weight:600;color:#666}
+.atlas-shell.catalog-browse .curiosity-card-grid{display:block}
+.atlas-shell.catalog-browse .curiosity-set-card{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;position:relative;width:100%;min-height:62px;padding:14px 28px 14px 2px;border:0;border-bottom:1px solid #ededed;border-radius:0;box-shadow:none;background:white;text-align:left;color:#161616;font-size:16px;font-weight:450}
+.atlas-shell.catalog-browse .curiosity-set-card strong{font-size:16px;font-weight:500;color:#161616}
+.atlas-shell.catalog-browse .curiosity-set-card span{font-size:13px;color:#666}
+.atlas-shell.catalog-browse .curiosity-set-card:after{content:'›';position:absolute;right:4px;top:50%;transform:translateY(-50%);color:#777;font-size:24px}
+.atlas-shell.catalog-browse .curiosity-set-card:hover{background:#f8f8f8}
+.atlas-shell .atlas-outline-group{margin:22px 0 12px}
+.atlas-shell .atlas-outline-title{font-size:14px!important;color:#666!important;font-weight:550!important;margin:0 0 4px!important}
+.atlas-shell .atlas-outline-link{display:block;text-align:left;width:100%;min-height:44px;padding:10px 0;border:0;border-bottom:1px solid #eee;border-radius:0;background:white;color:#222;font:inherit;text-decoration:none;cursor:pointer}
+.atlas-shell .atlas-outline-link:after{content:'›';float:right;color:#777}
+.atlas-shell .atlas-outline-link:hover{background:#f8f8f8}
+@media(max-width:600px){.atlas-shell .top{padding:10px 16px}.atlas-shell.catalog-browse #collection-index{padding:0 16px 32px}}
 </style></head>
-<body>
+<body class="atlas-shell">
 <header class="top">
-  <div class="brand"><div class="brand-icon" aria-hidden="true">✦</div><div><h1 id="viewer-brand">Explore</h1><div class="sub">Follow what makes you curious</div></div></div>
+  <div class="brand"><div class="brand-icon" aria-hidden="true">✦</div><div><h1 id="viewer-brand">Knowledge Atlas</h1><div class="sub">Follow what makes you curious</div></div></div>
   <div class="top-actions"><button id="reader-open" type="button">★ <span>Saved</span><span class="reader-count" id="reader-count"></span></button><button id="library-open" type="button">☰ <span>Library</span></button></div>
 </header>
 <div class="status" role="status" id="status">Opening your question tree…</div>
@@ -1105,7 +1136,7 @@ function mappedView(data,view,r){const spec=view.projection||{},shape=spec.shape
 }
 function globMatch(pattern,path){const parts=pattern.split(/(\*\*|\*)/),re='^'+parts.map(x=>x==='**'?'.*':x==='*'?'[^/]*':x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('')+'$';return new RegExp(re).test(path)}
 async function discover(r){const data=await fetchJson(api(r,'git/trees/'+encodeURIComponent(r.branch)+'?recursive=1'));if(data.truncated)throw Error('Repository listing truncated; open a specific JSON file instead');return (data.tree||[]).filter(x=>x.type==='blob').map(x=>x.path)}
-function viewList(manifest,paths){if(manifest.mapping_version!=='0.1'||!Array.isArray(manifest.views))throw Error('Unsupported mapping manifest');const views=[];for(const template of manifest.views){if(template.file){if(!paths||paths.includes(template.file))views.push(template);continue}if(template.glob){for(const file of paths.filter(p=>globMatch(template.glob,p)&&!(template.exclude||[]).some(ex=>globMatch(ex,p)))){const name=simpleLabel(file.endsWith('/domain.json')?file.split('/').slice(-2,-1)[0]:file);views.push({...template,id:template.id+':'+file,title:template.title+' · '+name,file})}}}return views}
+function viewList(manifest,paths){if(manifest.mapping_version!=='0.1'||!Array.isArray(manifest.views))throw Error('Unsupported mapping manifest');const views=[];for(const template of manifest.views){if(template.file){views.push(template);continue}if(template.glob){for(const file of paths.filter(p=>globMatch(template.glob,p)&&!(template.exclude||[]).some(ex=>globMatch(ex,p)))){const name=simpleLabel(file.endsWith('/domain.json')?file.split('/').slice(-2,-1)[0]:file);views.push({...template,id:template.id+':'+file,title:template.title+' · '+name,file})}}}return views}
 
 /* The entry layer is purposely ordinary language. A selected entry generates a
    temporary technical hierarchy from canonical studies and sourced bridges. */
@@ -1321,7 +1352,7 @@ function renderGlossaryBrowser(){
    section.append(el('h3','',term.label));
    if(term.definition)section.append(el('p','',term.definition));
    if(term.aliases?.length)section.append(el('p','muted','Also called: '+term.aliases.join(' · ')));
-   section.append(el('p','muted',kamiBook()?term.category:term.category+' · '+term.id));
+   section.append(el('p','muted',hasQuestionBook()?term.category:term.category+' · '+term.id));
    const linked=glossaryLinkedRecords(term.id);
    if(linked.questions.length){
     section.append(el('h4','','Questions using this concept ('+linked.questions.length+')'));
@@ -1382,7 +1413,7 @@ function renderGlossaryBrowser(){
   for(const id of n.term_ids||[])mapped.add(id);
  for(const b of state.curiosityData?.navigation_bridges||[])
   for(const ch of b.choices||[])for(const id of ch.term_ids||[])mapped.add(id);
- if(!kamiBook())results.append(el('p','glossary-scope-hint',descriptive&&query?'Direct concept matches and vocabulary connected through relevant questions. Amber terms have no mapped investigation.':'Amber terms have no mapped question, investigation or technical route in this view.'));
+ if(!hasQuestionBook())results.append(el('p','glossary-scope-hint',descriptive&&query?'Direct concept matches and vocabulary connected through relevant questions. Amber terms have no mapped investigation.':'Amber terms have no mapped question, investigation or technical route in this view.'));
  for(const term of matching){
   const category=term.category||'Other';
   if(!groups.has(category))groups.set(category,[]);
@@ -1440,8 +1471,21 @@ function renderQuestionBuckets(container,entries){
   container.append(button);
  }
 }
-function kamiBook(){
- return state.repo?.owner?.toLowerCase()==='jadanpoll'&&state.repo?.repo?.toLowerCase()==='kami_uploads_rsm_tree'&&!!state.curiosityData?.curiosity_atlas;
+function hasQuestionBook(){
+ return state.activeView?.projection?.shape==='curiosities'&&!!state.curiosityData?.curiosity_atlas;
+}
+function hasRecordReader(){return state.activeView?.projection?.shape==='record'}
+function readerSurface(){return hasQuestionBook()||hasRecordReader()}
+function mappedDestination(node){
+ if(!node?.url||!state.repo)return null;
+ return (state.views||[]).find(v=>v.file&&repoUrl(state.repo,v.file)===node.url&&v.id!==state.activeView?.id)||null;
+}
+function bookPickerGroups(views){
+ const books=(views||[]).filter(v=>v.projection?.shape==='curiosities');
+ const roots=books.filter(v=>!v.atlas_file),groups=[],used=new Set();
+ for(const v of roots){const children=books.filter(c=>c.atlas_file===v.file);groups.push({root:v,children});used.add(v.id);for(const c of children)used.add(c.id)}
+ for(const v of books)if(!used.has(v.id))groups.push({root:v,children:[]});
+ return groups;
 }
 function kamiConstituent(entry){return entry.task_scope==='capability_family'&&entry.applied_challenge!==true}
 function kamiTacit(entry){return !kamiConstituent(entry)&&!!(entry.worked_solution?.length||entry.applied_challenge===true)}
@@ -1453,21 +1497,23 @@ function kamiMode(mode){
  renderCuriosityIndex();
 }
 function updateKamiChrome(browsing){
- const enabled=kamiBook();
- document.body.classList.toggle('kami-book',enabled);
- $('viewer-brand').textContent=enabled?'Knowledge Atlas':'Explore';
+ const enabled=hasQuestionBook();
+ document.body.classList.toggle('kami-book',readerSurface());
+ $('viewer-brand').textContent='Knowledge Atlas';
  $('kami-domain-row').hidden=!enabled;
- $('curiosity-mode-tacits').hidden=!enabled;
- $('curiosity-mode-terms').textContent=enabled?'Glossary':'Vocabulary';
+ $('curiosity-mode-tacits').hidden=!enabled||!(state.curiosityData?.curiosity_atlas?.entries||[]).some(kamiPractice);
+ $('curiosity-mode-terms').textContent='Glossary';
  $('curiosity-search').closest('.curiosity-search-row').hidden=enabled&&!state.curiositySearch&&!state.kamiSearchOpen;
- if(!enabled){document.body.classList.remove('kami-reading','kami-map');return}
+ if(!enabled){if(!hasRecordReader())document.body.classList.remove('kami-reading','kami-map');return}
  if(browsing)document.body.classList.remove('kami-reading','kami-map');
  const picker=$('kami-domain');clear(picker);
- for(const v of state.views||[]){
-  if(v.projection?.shape!=='curiosities'||v.atlas_file)continue;
-  const option=el('option','',v.short_title||v.title);option.value=v.id;picker.append(option);
+ const option=(v,host,label)=>{const o=el('option','',label||v.short_title||v.title);o.value=v.id;host.append(o)};
+ if(state.catalogHome)option({id:'__catalog'},picker,'All collections…');
+ for(const {root,children} of bookPickerGroups(state.views)){
+  if(!children.length){option(root,picker);continue}
+  const group=el('optgroup');group.label=root.short_title||root.title;picker.append(group);
+  option(root,group,(root.short_title||root.title)+' — all');for(const child of children)option(child,group);
  }
- if(state.activeView?.atlas_file){const v=state.activeView,option=el('option','',v.short_title||v.title);option.value=v.id;picker.append(option)}
  picker.value=state.activeView?.id||'';
 }
 function renderKamiEntries(data,results,families,types){
@@ -1510,7 +1556,7 @@ function renderCuriosityIndex(){
  $('curiosity-mode-terms').setAttribute('aria-pressed',String(state.glossaryMode==='terms'));
  $('curiosity-search').placeholder=descriptiveSearchEnabled()?'Describe a problem, feature or concept':state.glossaryMode==='terms'?'Find a technical term or alias':'Search a question, problem, or technical term';
  if(state.glossaryMode==='terms'&&vocabularyReady){renderGlossaryBrowser();return}
- if(kamiBook()){renderKamiEntries(data,results,families,types);return}
+ if(hasQuestionBook()){renderKamiEntries(data,results,families,types);return}
  families.hidden=false;
  const familyPool=(data.entries||[]).filter(e=>state.curiosityFamily==='all'||e.family_id===state.curiosityFamily);
  renderQuestionBuckets(types,familyPool);
@@ -1603,12 +1649,12 @@ function showCuriosityIndex(open){
  const pane=$('curiosity-index'),btn=$('atlas-curiosities');
  pane.hidden=!open;
  updateKamiChrome(open);
- if(kamiBook()&&!open){const reading=state.curiosityEntry?.kind==='question';document.body.classList.toggle('kami-reading',reading);document.body.classList.toggle('kami-map',!reading)}
+ if(readerSurface()&&!open){const reading=hasRecordReader()?!state.recordMap:state.curiosityEntry?.kind==='question';document.body.classList.toggle('kami-reading',reading);document.body.classList.toggle('kami-map',!reading)}
  $('view').classList.toggle('question-browse-mode',open);
  for(const id of ['atlas-in','atlas-out','atlas-fit'])$(id).hidden=open;
  const available=state.activeView?.projection?.shape==='curiosities'&&!!state.curiosityData?.curiosity_atlas?.entries?.length;
- btn.hidden=!available||(open&&!state.curiosityEntry);
- btn.textContent=open?'Back to investigation':'Browse questions';
+ btn.hidden=hasRecordReader()?!state.recordMap:!available||(open&&!state.curiosityEntry);
+ btn.textContent=hasRecordReader()?'Read':open?'Back to investigation':'Questions';
  btn.setAttribute('aria-expanded',String(open));
  if(open&&state.curiosityData){
   const view=state.activeView;
@@ -1663,10 +1709,10 @@ function openResearchSelection(selection){
   if(!isTree(projection.tree))throw Error('The selected entry has no navigable nodes');
   state.curiosityEntry=selection;
   if(selection){
-  if(kamiBook()&&selection.kind==='question'){
+  if(hasQuestionBook()&&selection.kind==='question'){
    const entry=data.curiosity_atlas.entries.find(e=>e.id===selection.id);
    if(entry)state.glossaryMode=kamiPractice(entry)?'tacits':'questions';
-  }else if(!kamiBook()||state.glossaryMode==='terms')state.glossaryMode='questions';
+  }else if(!hasQuestionBook()||state.glossaryMode==='terms')state.glossaryMode='questions';
   state.glossarySelected=null
  }
   openTree(projection.tree,projection.tree.routes?.length?projection.tree:null,projection.title,{type:'github',repo:r.owner+'/'+r.repo,
@@ -1674,7 +1720,7 @@ function openResearchSelection(selection){
   state.url=repoUrl(r,view.file);
   updateLensSelector();showCuriosityIndex(!selection);
   // Read an authored answer immediately, with the technical routes still on the map.
-  if(selection?.kind==='question'&&(kamiBook()||projection.tree.nodes[0]?.answer?.length||projection.tree.nodes[0]?.worked_solution?.length))select(projection.tree.root);
+  if(selection?.kind==='question'&&(hasQuestionBook()||projection.tree.nodes[0]?.answer?.length||projection.tree.nodes[0]?.worked_solution?.length))select(projection.tree.root);
   $('choices').value=view.id;
   const url=new URL(location.href),params=url.searchParams;
   params.set('view',view.id);
@@ -1695,6 +1741,7 @@ function setChoices(choices,mapped){state.files=choices;clear($('choices'));for(
 // files and does not make a recursive GitHub discovery request.
 function closeCatalog(){
  state.catalogVisible=false;
+ document.body.classList.remove('catalog-browse');
  $('collection-index').hidden=true;
  $('catalog-home').hidden=!state.catalogHome;
 }
@@ -1722,7 +1769,7 @@ function renderCatalog(){
   const grid=el('div','curiosity-card-grid');
   for(const v of selected){
    const card=el('button','curiosity-card curiosity-set-card');card.type='button';
-   card.append(el('strong','',v.home_label||v.short_title||v.title));
+   card.append(el('strong','',v.home_label||v.short_title||v.title.replace(/^Domain · /,'').replace(/^Project landscape · /,'')));
    if(v.home_description)card.append(el('span','',v.home_description));
    card.onclick=async()=>{
     try{await loadMapped(state.repo,v);$('choices').value=v.id;window.scrollTo(0,0)}
@@ -1732,11 +1779,13 @@ function renderCatalog(){
   }
   host.append(grid);results.append(section);
  }
+ const featuredIds=new Set(featured.map(v=>v.id));
+ const remaining=items=>query?items:items.filter(v=>!featuredIds.has(v.id));
  if(!query)group('Start exploring',featured,{featured:true});
- group('Domains',top);
+ group('Domains',remaining(top));
+ group('Investigations and collections',remaining(other));
  group('Specialized domains',sub,{collapsed:!query});
  group('Project landscapes',projects,{collapsed:!query});
- group('Investigations and other collections',other,{collapsed:!query});
  $('catalog-count').textContent=query?
   views.filter(matches).length+' matching collections':
   top.length+' major domains · '+sub.length+' specialized domains · '+projects.length+' project landscapes · '+other.length+' other views';
@@ -1746,7 +1795,7 @@ function openCatalog(){
  if(!state.catalogHome||!state.views)return;
  const navigationBefore=navigationSnapshot();
  state.catalogVisible=true;
- document.body.classList.remove('kami-book','kami-reading','kami-map');$('viewer-brand').textContent='Explore';
+ document.body.classList.remove('kami-book','kami-reading','kami-map');document.body.classList.add('catalog-browse');$('viewer-brand').textContent='Knowledge Atlas';
  const home=state.catalogHome;
  $('catalog-title').textContent=home.title||'Explore collections';
  $('catalog-description').textContent=home.description||'Choose a subject or project landscape.';
@@ -1782,7 +1831,7 @@ function updateLensSelector(){
  $('catalog-home').hidden=!state.catalogHome;
  if(curiosityAvailable)curiosities.textContent='Browse questions';
  const rootButton=$('atlas-about');
- rootButton.hidden=isCuriosityView;
+ rootButton.hidden=isCuriosityView||hasRecordReader();
  rootButton.textContent='ⓘ';rootButton.title='About this investigation';
  rootButton.setAttribute('aria-label',rootButton.title);
 }
@@ -1860,18 +1909,23 @@ async function loadMapped(r,view){
  closeCatalog();
  openTree(tree,guide,projected?.title||view.title,{type:'github',repo:r.owner+'/'+r.repo,
   branch:r.branch,file:view.file,view_id:projected?.originViewId||view.id,title:projected?.title||view.title});
- state.activeView=view;state.url=repoUrl(r,view.file);state.repo=r;updateLensSelector();
+ state.activeView=view;state.url=repoUrl(r,view.file);state.repo=r;state.recordMap=false;updateLensSelector();
  const selectedTerm=hasAtlas&&!switching?query.get('term'):null;
  if(selectedTerm&&state.termById.has(selectedTerm)){
   state.glossaryMode='terms';state.glossarySelected=selectedTerm;
  }
- if(kamiBook()&&selection?.kind==='question'&&!state.glossarySelected){
+ if(hasQuestionBook()&&selection?.kind==='question'&&!state.glossarySelected){
   const entry=data.curiosity_atlas.entries.find(e=>e.id===selection.id);
   if(entry)state.glossaryMode=kamiPractice(entry)?'tacits':'questions';
  }
  showCuriosityIndex(hasAtlas&&(!selection||!!state.glossarySelected));
+ if(hasRecordReader()){
+  let target=state.tree.root;const hash=location.hash.match(/^#node=(.+)$/);
+  if(!switching&&urlBelongsToView&&hash){try{const id=decodeURIComponent(hash[1]);if(state.index.has(id))target=id}catch{}}
+  select(target);
+ }
  if(selection?.kind==='question'&&!state.glossarySelected&&(!location.hash||location.hash==='#node='+encodeURIComponent(tree.root))&&
-  (kamiBook()||tree.nodes[0]?.answer?.length||tree.nodes[0]?.worked_solution?.length))select(tree.root);
+  (hasQuestionBook()||tree.nodes[0]?.answer?.length||tree.nodes[0]?.worked_solution?.length))select(tree.root);
  const params=new URLSearchParams(location.search);
  params.set('repo',`https://github.com/${r.owner}/${r.repo}`);
  params.set('view',view.id);
@@ -1904,7 +1958,8 @@ async function tryManifest(r){
 }
 async function loadSource(raw){
  navigationTrail.length=0;navigationCursor=-1;updateNavigationControls();
- state.catalogHome=null;state.catalogVisible=false;
+ state.catalogHome=null;state.catalogVisible=false;state.recordMap=false;
+ document.body.classList.remove('catalog-browse','kami-book','kami-reading','kami-map');
  $('collection-index').hidden=true;$('catalog-home').hidden=true;
  setStatus('Opening '+raw+'…');const r=parseGithub(raw);
  restoreGitHubReadToken(r);
@@ -1946,7 +2001,7 @@ async function loadSource(raw){
    'human-ai-fieldwork':'human-ai-curiosities'};
   const alias=wanted?.startsWith('manufacturing-')?'manufacturing-curiosities':aliases[wanted];
   const selected=state.views.find(v=>v.id===wanted)||state.views.find(v=>v.id===alias)||state.views[0];
-  if(state.catalogHome&&!wanted&&!r.path&&!(r.owner?.toLowerCase()==='jadanpoll'&&r.repo?.toLowerCase()==='kami_uploads_rsm_tree')){openCatalog();return}
+  if(state.catalogHome&&!wanted&&!r.path){openCatalog();return}
   $('choices').value=selected.id;await loadMapped(r,selected);return;
  }
  // Generic older repositories without an explicit mapping retain discovery fallback.
@@ -1977,7 +2032,7 @@ function navigationSnapshot(){
  if(!state.repo||(!state.activeView&&!state.catalogVisible))return null;
  const a=state.atlas||{};
  return {repo:state.repo,views:state.views,catalogHome:state.catalogHome,
-  catalogVisible:!!state.catalogVisible,activeView:state.activeView,
+  catalogVisible:!!state.catalogVisible,activeView:state.activeView,recordMap:!!state.recordMap,
   tree:state.tree,guide:state.guide,source:state.currentSource,
   selected:state.selected,detailOpen:!!state.detailOpen,
   atlas:{x:a.x,y:a.y,z:a.z},url:state.url,href:location.href,
@@ -2020,7 +2075,7 @@ function commitNavigation(before){
 function restoreNavigation(s){
  if(!s)return;
  state.repo=s.repo;state.views=s.views;state.catalogHome=s.catalogHome;
- state.activeView=s.activeView;state.url=s.url;
+ state.activeView=s.activeView;state.url=s.url;state.recordMap=!!s.recordMap;
  state.curiosityData=s.curiosityData;state.curiosityEntry=s.curiosityEntry;
  state.glossary=s.glossary;state.termById=glossaryIndex(s.glossary);
  state.glossaryMode=s.glossaryMode;state.glossarySelected=s.glossarySelected;
@@ -2104,7 +2159,7 @@ function select(id){
  const u=new URL(location.href);u.hash='node='+encodeURIComponent(id);
  try{history.replaceState(null,'',u.toString())}catch{}
 }
-function closeDetail(){if(kamiBook()&&document.body.classList.contains('kami-reading')){openResearchSelection(null);return}state.detailOpen=false;$('detail').hidden=true;$('inspector-empty').hidden=false;updateSelection()}
+function closeDetail(){if(kamiReading()){backFromReader();return}state.detailOpen=false;$('detail').hidden=true;$('inspector-empty').hidden=false;updateSelection()}
 
 function updateSelection(){
  for(const n of $('canvas').querySelectorAll('[data-node-id]')){
@@ -2301,7 +2356,7 @@ function entryRow(parent,ref,sources){
 
 
 function openResearchTarget(id){
- if(state.index.has(id)){if(kamiBook()&&!$('curiosity-index').hidden)showCuriosityIndex(false);select(id);return}
+ if(state.index.has(id)){if(hasQuestionBook()&&!$('curiosity-index').hidden)showCuriosityIndex(false);select(id);return}
  const data=state.curiosityData,origin=state.selected;
  if(!state.repo||!data){setStatus('Research source unavailable',true);return}
  if(data.fieldwork_nodes?.some(x=>x.id===id))openResearchSelection({kind:'set',id:'fieldwork'});
@@ -2525,7 +2580,20 @@ function appendResearchRuns(box,n){
   }catch(e){loaded=false;note.textContent='Evidence unavailable: '+e.message+' (reopen to retry)';}
  });
 }
-function kamiReading(){return kamiBook()&&document.body.classList.contains('kami-reading')}
+function kamiReading(){return readerSurface()&&document.body.classList.contains('kami-reading')}
+function backFromReader(){
+ if(hasQuestionBook()){openResearchSelection(null);return}
+ if(state.selected!==state.tree?.root){select(state.tree.root);return}
+ if(state.catalogHome){openCatalog();return}
+ $('library-dialog').hidden=false;
+}
+function showTechnicalMap(){
+ if(hasRecordReader())state.recordMap=true;
+ document.body.classList.remove('kami-reading');document.body.classList.add('kami-map');
+ const b=$('atlas-curiosities');b.hidden=false;b.textContent='Read';
+ renderDetail();requestAnimationFrame(()=>{renderLandscape();fitAtlas(false)});
+}
+function readMappedDestination(view){return loadMapped(state.repo,view).catch(error=>setStatus(error.message,true))}
 function kamiOutlineEntries(n,trail){
  const entries=new Map(),blocked=new Set([...trail,n.id]);
  // The tree's parent is not a new idea, even for a direct link to a child.
@@ -2550,7 +2618,16 @@ function appendKamiOutline(box,n,trail,article){
  const entries=kamiOutlineEntries(n,trail);
  if(!entries.length)return;
  const outline=el('section','kami-outline');
+ const record=hasRecordReader(),isRoot=record&&n.id===state.tree.root;
+ const groupNames={research_question:'Questions',subdomain:'Domains',research_view:'Investigative books',project_alternative:'Project possibilities',capability:'Constituent capabilities',project_archetype:'Projects',project_idea:'Projects',glossary:'Glossary',operator_basis:'Axioms',reference:'Resources',publication:'Publications',core_reference:'Resources',community:'Communities',researcher:'People',domain_concept:'Concepts'};
+ const rank=['Questions','Domains','Investigative books','Project possibilities','Projects','Glossary','Axioms','Constituent capabilities','Resources','Publications','People','Communities','Concepts','Related material'];
+ let group=null,lastGroup=null;
+ if(isRoot)entries.sort((a,b)=>rank.indexOf(groupNames[a.node.kind]||'Related material')-rank.indexOf(groupNames[b.node.kind]||'Related material'));
  for(const {node,reasons} of entries){
+  if(isRoot){const name=groupNames[node.kind]||'Related material';if(name!==lastGroup){group=el('section','atlas-outline-group');group.append(el('h3','atlas-outline-title',name));outline.append(group);lastGroup=name}}
+  const host=group||outline,destination=record&&mappedDestination(node);
+  if(destination){const button=el('button','curiosity-card atlas-outline-link',title(node));button.type='button';button.onclick=()=>readMappedDestination(destination);host.append(button);continue}
+  if(record&&node.kind==='research_view'&&node.url){const a=link(node.url,title(node));a.className='atlas-outline-link';host.append(a);continue}
   const branch=el('details','kami-branch');branch.dataset.nodeId=node.id;
   const label=title(node).replace(/^Relevant technical route:\s*/,'');
   const summary=el('summary',''),heading=el('span','kami-branch-heading',label);summary.append(heading);
@@ -2566,7 +2643,7 @@ function appendKamiOutline(box,n,trail,article){
    // Expand the same canonical record without changing selection, URL or sibling disclosures.
    renderDetail(body,node,[...trail,node.id],article);
   });
-  outline.append(branch);
+  host.append(branch);
  }
  box.append(outline);
 }
@@ -2752,11 +2829,11 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
 
  if(!inline)trail=[n.id];
  if(reading&&!inline){
-  const bar=el('div','kami-backbar'),back=el('button','','‹ Back to book'),map=el('button','','Technical map ↗');
-  back.type=map.type='button';back.onclick=()=>openResearchSelection(null);
-  map.onclick=()=>{document.body.classList.remove('kami-reading');document.body.classList.add('kami-map');renderDetail();requestAnimationFrame(()=>{renderLandscape();fitAtlas(false)})};
+  const record=hasRecordReader(),bar=el('div','kami-backbar'),back=el('button','',record?(n.id!==state.tree.root?'‹ Overview':state.catalogHome?'‹ Collections':'‹ Library'):'‹ Back to book'),map=el('button','','Map');
+  back.type=map.type='button';back.onclick=backFromReader;
+  map.onclick=showTechnicalMap;
   bar.append(back);
-  if(n.id!==state.tree.root){const root=el('button','','‹ Question');root.type='button';root.onclick=()=>select(state.tree.root);bar.append(root)}
+  if(!record&&n.id!==state.tree.root){const root=el('button','','‹ Question');root.type='button';root.onclick=()=>select(state.tree.root);bar.append(root)}
   bar.append(map);box.append(bar);
  }
  let childThumb=null;
@@ -2840,9 +2917,15 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
   open.className='case-related-link';
   box.append(open);
  }
- if(n.url&&state.repo)appendResourcePreview(box,n,childThumb);
+ if(n.url&&state.repo){
+  if(hasRecordReader()&&n.source_location?.pointer==='/'){
+   const fold=el('details','details-fold');fold.append(el('summary','','Original source fields'));let loaded=false;
+   fold.addEventListener('toggle',()=>{if(fold.open&&!loaded){loaded=true;appendResourcePreview(fold,n,childThumb)}});
+   references.append(fold);
+  }else appendResourcePreview(box,n,childThumb);
+ }
 
- if((n.why_ask||n.why||n.description)&&!(kamiBook()&&n.answer?.length&&n.kind==='curiosity_entry'))box.append(el('p',reading&&n.kind==='technical_branch'?'kami-route-question':'',n.why_ask||n.why||n.description));
+ if((n.why_ask||n.why||n.description)&&!(hasQuestionBook()&&n.answer?.length&&n.kind==='curiosity_entry'))box.append(el('p',reading&&n.kind==='technical_branch'?'kami-route-question':'',n.why_ask||n.why||n.description));
  // Reader-facing explanation is distinct from source certificates and technical routes.
  function readingBlocks(host,blocks){
   for(const block of blocks||[]){
@@ -2881,7 +2964,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
    'Reusable capability family · instantiate with suitable inputs and demonstrate the stated criterion. Source pointers are not evidence of mastery.':
    'Exploratory question · the mapped nodes below are technical explanations and conditional routes, not an automatic diagnosis.'));
   const browse=el('button','case-related-link','Browse other curiosities');
-  browse.type='button';browse.onclick=()=>kamiBook()?openResearchSelection(null):showCuriosityIndex(true);if(!kamiBook())box.append(browse);
+  browse.type='button';browse.onclick=()=>hasQuestionBook()?openResearchSelection(null):showCuriosityIndex(true);if(!hasQuestionBook())box.append(browse);
  }
  if(n.kind==='technical_branch'&&!reading){
   box.append(el('p','case-source-status','Conditional mechanism · investigate whether this explanation fits the observed failure or desired behavior.'));
@@ -2902,13 +2985,14 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
  // Source-grounded FKEN navigation: a node's meaningful operational fields
  // should be visible before anyone has to open and decipher its JSON.
  if(n.kind==='project_alternative'){
-  fieldSection('Role in the landscape',n.relation);
-  fieldSection('What changes if chosen',n.what_changes_if_chosen||n.difference);
+  if(!reading)fieldSection('Role in the landscape',n.relation);
+  const explanation=n.what_changes_if_chosen||n.difference;
+  if(explanation!==n.description)fieldSection('What changes if chosen',explanation);
  }
  if(n.kind==='capability'){
   fieldSection('Competence to demonstrate',n.base_confidence);
   fieldSection('Stop when',n.stop_when);
-  if(Array.isArray(n.children)&&n.children.length){
+  if(!reading&&Array.isArray(n.children)&&n.children.length){
    const section=el('div','case-section');
    section.append(el('h3','','Constituent abilities'));
    for(const child of n.children){
@@ -2946,17 +3030,15 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
   }
  }
  if(n.kind==='domain'){
-  fieldSection('Field characterization',n.characterization);
-  fieldSection('Useful routes to investigate',n.routes);
-  fieldSection('Navigation context',n.navigation_note);
+  if(n.characterization!==n.description)fieldSection('Field characterization',n.characterization);
+  if(!reading)fieldSection('Navigation context',n.navigation_note);
  }
  if(n.kind==='research_question'){
-  box.append(el('p','case-source-status',
-   'An investigation question, not an established answer.'));
+  if(!n.answer&&!n.description)box.append(el('p','case-source-status','Open investigation question.'));
   fieldSection('Candidate hypotheses',n.hypotheses);
   fieldSection('Directions to investigate',n.investigate);
   const parent=state.index.get(state.parent.get(n.id));
-  if(parent?.kind==='domain'){
+  if(!reading&&parent?.kind==='domain'){
    if(parent.characterization)fieldSection('Domain context',parent.characterization);
    if(parent.routes?.length)fieldSection('Related domain routes (not answers)',parent.routes);
   }
@@ -2967,7 +3049,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
  const leadPaths=(n.kind==='domain'&&Array.isArray(n.centrality_points)?n.centrality_points:
   n.kind==='research_question'&&Array.isArray(state.index.get(state.parent.get(n.id))?.centrality_points)?
    state.index.get(state.parent.get(n.id)).centrality_points:null);
- if(leadPaths?.length&&state.repo){
+ if(leadPaths?.length&&state.repo&&!reading){
   const section=el('div','case-section');
   section.append(el('h3','',n.kind==='research_question'?'Domain reference leads — not question-specific evidence':'Referenced organizations and tools'));
   const list=el('ul');
@@ -3445,7 +3527,7 @@ function readerSave(id,interest,note){
   interested:interest,note,updated_at:new Date().toISOString()};
  if(!entry.interested&&!entry.note)next.delete(k);else next.set(k,entry);
  try{
-  readerWrite(next);if(kamiReading())refreshKamiReaderControls(id);else{render();if(kamiBook())refreshKamiReaderControls(id)}
+  readerWrite(next);if(kamiReading())refreshKamiReaderControls(id);else{render();if(hasQuestionBook())refreshKamiReaderControls(id)}
   const changedNote=note!==(prior?.note||''),changedInterest=interest!==!!prior?.interested;
   activity(changedNote?(note?'Note saved':'Note removed'):changedInterest?(interest?'Interest saved':'Interest removed'):'Saved');
   readerMessage('Saved to this browser. Export JSON to move to another device.');return true;
@@ -3609,7 +3691,7 @@ function readerList(){
    remove.onclick=()=>{
     if(!confirm('Remove this saved interest/note?'))return;
     const next=new Map(readerEntries);next.delete(readerKey(entry.origin,entry.node_id));
-    try{readerWrite(next);readerList();if(kamiReading())refreshKamiReaderControls();else{render();if(kamiBook())refreshKamiReaderControls()}}
+    try{readerWrite(next);readerList();if(kamiReading())refreshKamiReaderControls();else{render();if(hasQuestionBook())refreshKamiReaderControls()}}
     catch(e){readerMessage('Could not remove item: '+e.message,true)}
    };
    controls.append(open,remove);row.append(copy,controls);body.append(row);
@@ -3644,7 +3726,7 @@ async function readerImport(file){
  const overlap=[...incoming.keys()].filter(k=>readerEntries.has(k)).length;
  if(!confirm('Import '+incoming.size+' saved interests/notes? '+overlap+' matching records will be replaced; unrelated saved items stay.'))return;
  const next=new Map(readerEntries);for(const [k,x] of incoming)next.set(k,x);
- readerWrite(next);if(kamiReading())refreshKamiReaderControls();else{render();if(kamiBook())refreshKamiReaderControls()}readerList();
+ readerWrite(next);if(kamiReading())refreshKamiReaderControls();else{render();if(hasQuestionBook())refreshKamiReaderControls()}readerList();
  readerMessage('Imported '+incoming.size+' records. '+overlap+' matching records were updated.');
 }
 
@@ -3793,14 +3875,16 @@ $('atlas-lens').addEventListener('change',async e=>{
 });
 $('atlas-about').onclick=()=>{if(state.tree?.root&&state.index.has(state.tree.root))select(state.tree.root)};
 $('atlas-curiosities').onclick=()=>{
+ if(hasRecordReader()){state.recordMap=false;showCuriosityIndex(false);select(state.selected||state.tree.root);return}
  if(!state.curiosityData?.curiosity_atlas)return;
+ if(document.body.classList.contains('kami-map')&&state.curiosityEntry?.kind==='question'){showCuriosityIndex(false);select(state.selected||state.tree.root);return}
  showCuriosityIndex($('curiosity-index').hidden);
 };
-$('kami-domain').onchange=async e=>{const view=state.views?.find(v=>v.id===e.target.value);if(view)try{await loadMapped(state.repo,view)}catch(error){setStatus(error.message,true)}};
+$('kami-domain').onchange=async e=>{if(e.target.value==='__catalog'){openCatalog();return}const view=state.views?.find(v=>v.id===e.target.value);if(view)try{await loadMapped(state.repo,view)}catch(error){setStatus(error.message,true)}};
 $('kami-search-toggle').onclick=()=>{state.kamiSearchOpen=!state.kamiSearchOpen;const row=$('curiosity-search').closest('.curiosity-search-row');row.hidden=!state.kamiSearchOpen;if(state.kamiSearchOpen)$('curiosity-search').focus();else{state.curiositySearch='';$('curiosity-search').value='';renderCuriosityIndex()}};
 $('curiosity-mode-tacits').onclick=()=>kamiMode('tacits');
 $('curiosity-mode-questions').onclick=()=>{
- if(kamiBook()){kamiMode('questions');return}
+ if(hasQuestionBook()){kamiMode('questions');return}
  state.glossaryMode='questions';state.glossarySelected=null;
  const url=new URL(location.href);url.searchParams.delete('term');
  try{history.replaceState(null,'',url.toString())}catch{}
@@ -3808,7 +3892,7 @@ $('curiosity-mode-questions').onclick=()=>{
 };
 $('curiosity-mode-terms').onclick=()=>{
  if(!state.glossary)return;
- if(kamiBook()){kamiMode('terms');return}
+ if(hasQuestionBook()){kamiMode('terms');return}
  state.glossaryMode='terms';state.glossarySelected=null;renderCuriosityIndex();
 };
 $('curiosity-search').addEventListener('input',e=>{
