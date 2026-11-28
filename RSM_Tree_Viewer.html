@@ -163,7 +163,8 @@ button{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:tra
 /* Spatial atlas: the underlying topology and region coordinates never reflow with selection. */
 html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .top{height:72px;min-height:72px}
-.status.err{position:absolute;top:72px;left:0;right:0;z-index:70}
+/* Status messages are mirrored into the activity log, not overlaid on content. */
+#status,#status.err{position:absolute!important;top:0!important;left:0!important;width:1px!important;height:1px!important;min-height:0!important;padding:0!important;border:0!important;overflow:hidden!important;clip-path:inset(50%);pointer-events:none!important;white-space:nowrap;display:block!important}
 .journey,.journey:has(.landscape-grid){width:100%;max-width:none;height:calc(100dvh - 72px);min-height:0;margin:0;padding:0;display:flex;flex-direction:column}
 .landscape-heading{flex:0 0 auto;min-height:63px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 15px;margin:0;background:#fff;border-bottom:1px solid #e3eaf2}
 .landscape-heading h2{font-size:clamp(14px,2vw,18px);font-weight:720;line-height:1.28;margin:0;max-width:65vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -629,7 +630,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
         <div class="kami-domain-row" id="kami-domain-row" hidden><select id="kami-domain" aria-label="Choose domain"></select><button type="button" class="kami-icon" id="kami-search-toggle" aria-label="Search" title="Search"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg></button></div><h2>What do you want to explore?</h2>
         <p>Explore a question or a larger question set.</p>
         <div class="curiosity-modes" role="group" aria-label="Browse by questions or vocabulary">
-          <button id="curiosity-mode-questions" type="button" aria-pressed="true">Questions</button>
+          <button id="curiosity-mode-cases" type="button" aria-pressed="false" hidden>Cases</button><button id="curiosity-mode-questions" type="button" aria-pressed="true">Questions</button>
           <button id="curiosity-mode-tacits" type="button" aria-pressed="false" hidden>Tacits</button><button id="curiosity-mode-terms" type="button" aria-pressed="false" hidden>Vocabulary</button>
         </div>
         <div class="curiosity-search-row">
@@ -979,7 +980,7 @@ function isTree(d){return d&&typeof d==='object'&&nodesOf(d).length>0}
 // A manifest describes *how to read* source JSON, without changing that JSON.
 // The output is a provisional navigation graph: nodes + typed links + provenance.
 function field(obj,key){if(!key)return undefined;return String(key).split('.').reduce((o,k)=>o==null?undefined:o[k],obj)}
-function simpleLabel(value){if(typeof value!=='string')return String(value??'Untitled');if(/^https?:\/\//.test(value)){try{const u=new URL(value);if(u.hostname==='github.com')return u.pathname.replace(/^\//,'')||'GitHub';if(u.hostname.includes('drive.google.com'))return 'Google Drive';return u.hostname.replace(/^www\./,'')}catch{}}const parts=value.split('/');if(parts.length>1&&parts[parts.length-1]==='domain.json'&&parts[parts.length-2]!=='.'&&parts[parts.length-2]!=='..')return parts[parts.length-2].replace(/_/g,' ');return value.split('/').pop().replace(/\.json$/,'').replace(/_/g,' ')}
+function simpleLabel(value){if(typeof value!=='string')return String(value??'Untitled');if(/^https?:\/\//.test(value)){try{const u=new URL(value);if(u.hostname==='github.com')return u.pathname.replace(/^\//,'')||'GitHub';if(u.hostname.includes('drive.google.com'))return 'Google Drive';return u.hostname.replace(/^www\./,'')}catch{}}if(!/^[\w./-]+\.json$/.test(value))return /^[\w-]+$/.test(value)?value.replace(/_/g,' '):value;const parts=value.split('/');if(parts.length>1&&parts[parts.length-1]==='domain.json'&&parts[parts.length-2]!=='.'&&parts[parts.length-2]!=='..')return parts[parts.length-2].replace(/_/g,' ');return value.split('/').pop().replace(/\.json$/,'').replace(/_/g,' ')}
 function hashKey(s){let h=2166136261;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0).toString(36)}
 function repoUrl(r,path){return `https://github.com/${encodeURIComponent(r.owner)}/${encodeURIComponent(r.repo)}/blob/${encodeURIComponent(r.branch)}/${encodePath(path)}`}
 function maybeLink(value,r){if(typeof value!=='string')return null;if(safeHref(value))return value;if(/^[\w.\-\/]+\.json$/.test(value)&&!value.includes('..'))return repoUrl(r,value);return null}
@@ -1131,7 +1132,7 @@ function mappedView(data,view,r){const spec=view.projection||{},shape=spec.shape
 }
 function globMatch(pattern,path){const parts=pattern.split(/(\*\*|\*)/),re='^'+parts.map(x=>x==='**'?'.*':x==='*'?'[^/]*':x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('')+'$';return new RegExp(re).test(path)}
 async function discover(r){const data=await fetchJson(api(r,'git/trees/'+encodeURIComponent(r.branch)+'?recursive=1'));if(data.truncated)throw Error('Repository listing truncated; open a specific JSON file instead');return (data.tree||[]).filter(x=>x.type==='blob').map(x=>x.path)}
-function viewList(manifest,paths){if(manifest.mapping_version!=='0.1'||!Array.isArray(manifest.views))throw Error('Unsupported mapping manifest');const views=[];for(const template of manifest.views){if(template.file){views.push(template);continue}if(template.glob){for(const file of paths.filter(p=>globMatch(template.glob,p)&&!(template.exclude||[]).some(ex=>globMatch(ex,p)))){const name=simpleLabel(file.endsWith('/domain.json')?file.split('/').slice(-2,-1)[0]:file);views.push({...template,id:template.id+':'+file,title:template.title+' · '+name,file})}}}return views}
+function viewList(manifest,paths){if(manifest.mapping_version!=='0.1'||!Array.isArray(manifest.views))throw Error('Unsupported mapping manifest');const views=[];for(const template of manifest.views){if(template.file){views.push(template);continue}if(template.glob){for(const file of paths.filter(p=>globMatch(template.glob,p)&&!(template.exclude||[]).some(ex=>globMatch(ex,p)))){const name=simpleLabel(file.endsWith('/domain.json')?file.split('/').slice(-2,-1)[0]:file);views.push({...template,id:template.id+':'+file,title:template.title+' · '+name,file})}}}return views.map(v=>({...v,aliases:Object.entries(manifest.record_aliases||{}).filter(([from,to])=>to===v.file).map(([from])=>from)}))}
 
 /* The entry layer is purposely ordinary language. A selected entry generates a
    temporary technical hierarchy from canonical studies and sourced bridges. */
@@ -1473,7 +1474,7 @@ function hasRecordReader(){return state.activeView?.projection?.shape==='record'
 function readerSurface(){return hasQuestionBook()||hasRecordReader()}
 function mappedDestination(node){
  if(!node?.url||!state.repo)return null;
- return (state.views||[]).find(v=>v.file&&repoUrl(state.repo,v.file)===node.url&&v.id!==state.activeView?.id)||null;
+ return (state.views||[]).find(v=>v.file&&[v.file,...(v.aliases||[])].some(p=>repoUrl(state.repo,p)===node.url)&&v.id!==state.activeView?.id)||null;
 }
 function bookPickerGroups(views){
  const books=(views||[]).filter(v=>v.projection?.shape==='curiosities');
@@ -1482,6 +1483,7 @@ function bookPickerGroups(views){
  for(const v of books)if(!used.has(v.id))groups.push({root:v,children:[]});
  return groups;
 }
+function caseSurvey(view=state.activeView){return view?.default_mode==='cases'}
 function kamiConstituent(entry){return entry.task_scope==='capability_family'&&entry.applied_challenge!==true}
 function kamiTacit(entry){return !kamiConstituent(entry)&&!!(entry.worked_solution?.length||entry.applied_challenge===true)}
 function kamiPractice(entry){return kamiTacit(entry)||kamiConstituent(entry)}
@@ -1496,6 +1498,7 @@ function updateKamiChrome(browsing){
  document.body.classList.toggle('kami-book',readerSurface());
  $('viewer-brand').textContent='Knowledge Atlas';
  $('kami-domain-row').hidden=!enabled;
+ $('curiosity-mode-cases').hidden=!enabled||!caseSurvey();
  $('curiosity-mode-tacits').hidden=!enabled||!(state.curiosityData?.curiosity_atlas?.entries||[]).some(kamiPractice);
  $('curiosity-mode-terms').textContent='Glossary';
  $('curiosity-search').closest('.curiosity-search-row').hidden=enabled&&!state.curiositySearch&&!state.kamiSearchOpen;
@@ -1510,6 +1513,21 @@ function updateKamiChrome(browsing){
   option(root,group,(root.short_title||root.title)+' — all');for(const child of children)option(child,group);
  }
  picker.value=state.activeView?.id||'';
+}
+function renderCaseSurvey(results){
+ const cases=(state.curiosityData?.nodes||[]).filter(n=>n.kind==='ai_use_case');
+ const q=state.curiositySearch.trim().toLowerCase();
+ const labels=['Everyday AI use','Practical tools and builds','Exceptional independent builders and cross-domain work','Frontier breakthroughs'];
+ const matching=cases.filter(n=>!q||[title(n),n.actor,n.mechanism,n.evidence,n.domains?.join(' ')].some(v=>String(v||'').toLowerCase().includes(q)));
+ if(!matching.length){results.append(el('p','curiosity-empty','No matching cases.'));return}
+ for(let tier=1;tier<=4;tier++){
+  const entries=matching.filter(n=>Number(n.tier)===tier);if(!entries.length)continue;
+  const host=el('details','curiosity-group');host.open=!!q||new Set(cases.map(n=>n.tier)).size===1;
+  host.append(el('summary','','Tier '+tier+' — '+labels[tier-1]+' ('+entries.length+')'));
+  for(const n of entries){const card=el('button','curiosity-card');card.type='button';card.append(el('span','kami-question-label',title(n)));appendKamiReaderMarks(card,n.id);card.onclick=()=>openCuriosityEntry(n.id);host.append(card)}
+  if(tier===1){const basis=(state.views||[]).find(v=>v.id==='cool-ai-generating-set');if(basis){const b=el('button','curiosity-card','Workflow generating set');b.type='button';b.onclick=()=>readMappedDestination(basis);host.append(b)}}
+  results.append(host);
+ }
 }
 function renderKamiEntries(data,results,families,types){
  families.hidden=true;types.hidden=true;
@@ -1545,12 +1563,14 @@ function renderCuriosityIndex(){
  clear(families);clear(results);types.hidden=true;
  const vocabularyReady=!!state.glossary?.terms?.length;
  updateKamiChrome(true);
+ $('curiosity-mode-cases').setAttribute('aria-pressed',String(state.glossaryMode==='cases'));
  $('curiosity-mode-tacits').setAttribute('aria-pressed',String(state.glossaryMode==='tacits'));
  $('curiosity-mode-terms').hidden=!vocabularyReady;
  $('curiosity-mode-questions').setAttribute('aria-pressed',String(state.glossaryMode==='questions'));
  $('curiosity-mode-terms').setAttribute('aria-pressed',String(state.glossaryMode==='terms'));
  $('curiosity-search').placeholder=descriptiveSearchEnabled()?'Describe a problem, feature or concept':state.glossaryMode==='terms'?'Find a technical term or alias':'Search a question, problem, or technical term';
  if(state.glossaryMode==='terms'&&vocabularyReady){renderGlossaryBrowser();return}
+ if(caseSurvey()&&state.glossaryMode==='cases'){families.hidden=true;types.hidden=true;renderCaseSurvey(results);return}
  if(hasQuestionBook()){renderKamiEntries(data,results,families,types);return}
  families.hidden=false;
  const familyPool=(data.entries||[]).filter(e=>state.curiosityFamily==='all'||e.family_id===state.curiosityFamily);
@@ -1667,7 +1687,11 @@ function researchEntryProjection(data,selection,r,view){
   const atlas=data.curiosity_atlas;
   const canonicalId=atlas?.redirects?.[selection.id]||selection.id;
   const entry=atlas?.entries?.find(e=>e.id===canonicalId);
-  if(!entry)throw Error('Unknown curiosity question '+selection.id);
+  if(!entry){
+   const record=caseSurvey(view)&&(data.nodes||[]).find(n=>n.id===selection.id&&n.kind==='ai_use_case');
+   if(record)return {tree:{...data,root:record.id,nodes:[{...record,parent_id:null}],edges:[],connections:[],relations:[]},title:title(record),originViewId:view.id};
+   throw Error('Unknown curiosity question '+selection.id);
+  }
   // Keep the old projection root ID when following a saved legacy link.
   // Its content and current navigation routes come from the canonical entry.
   const selectedEntry=canonicalId===selection.id?entry:{...entry,id:selection.id};
@@ -1706,7 +1730,7 @@ function openResearchSelection(selection){
   if(selection){
   if(hasQuestionBook()&&selection.kind==='question'){
    const entry=data.curiosity_atlas.entries.find(e=>e.id===selection.id);
-   if(entry)state.glossaryMode=kamiPractice(entry)?'tacits':'questions';
+   if(entry)state.glossaryMode=kamiPractice(entry)?'tacits':'questions';else if(caseSurvey(view))state.glossaryMode='cases';
   }else if(!hasQuestionBook()||state.glossaryMode==='terms')state.glossaryMode='questions';
   state.glossarySelected=null
  }
@@ -1776,11 +1800,13 @@ function renderCatalog(){
  }
  const featuredIds=new Set(featured.map(v=>v.id));
  const remaining=items=>query?items:items.filter(v=>!featuredIds.has(v.id));
- if(!query)group('Start exploring',featured,{featured:true});
- group('Domains',remaining(top));
- group('Investigations and collections',remaining(other));
- group('Specialized domains',sub,{collapsed:!query});
- group('Project landscapes',projects,{collapsed:!query});
+ const featuredCollections=featured.filter(v=>!domain.some(d=>d.id===v.id));
+ group('Survey books',top.map(v=>featured.find(f=>f.id===v.id)||v));
+ if(!query)group('Collections',featuredCollections,{featured:true});
+ const nested=new Set(other.filter(v=>v.atlas_file).map(v=>v.id));
+ group('Other collections',remaining(other).filter(v=>query||(!nested.has(v.id)&&!v.shared_reader_id)),{collapsed:!query});
+ group('Specialized surveys',sub,{collapsed:!query});
+ group('Applied surveys',projects,{collapsed:!query});
  $('catalog-count').textContent=query?
   views.filter(matches).length+' matching collections':
   top.length+' major domains · '+sub.length+' specialized domains · '+projects.length+' project landscapes · '+other.length+' other views';
@@ -1904,14 +1930,16 @@ async function loadMapped(r,view){
  closeCatalog();
  openTree(tree,guide,projected?.title||view.title,{type:'github',repo:r.owner+'/'+r.repo,
   branch:r.branch,file:view.file,view_id:projected?.originViewId||view.id,title:projected?.title||view.title});
- state.activeView=view;state.url=repoUrl(r,view.file);state.repo=r;state.recordMap=false;updateLensSelector();
+ state.activeView=view;state.url=repoUrl(r,view.file);state.repo=r;state.recordMap=false;
+ if(caseSurvey(view)&&!selection)state.glossaryMode='cases';else if(state.glossaryMode==='cases'&&!caseSurvey(view))state.glossaryMode='questions';
+ updateLensSelector();
  const selectedTerm=hasAtlas&&!switching?query.get('term'):null;
  if(selectedTerm&&state.termById.has(selectedTerm)){
   state.glossaryMode='terms';state.glossarySelected=selectedTerm;
  }
  if(hasQuestionBook()&&selection?.kind==='question'&&!state.glossarySelected){
   const entry=data.curiosity_atlas.entries.find(e=>e.id===selection.id);
-  if(entry)state.glossaryMode=kamiPractice(entry)?'tacits':'questions';
+  if(entry)state.glossaryMode=kamiPractice(entry)?'tacits':'questions';else if(caseSurvey(view))state.glossaryMode='cases';
  }
  showCuriosityIndex(hasAtlas&&(!selection||!!state.glossarySelected));
  if(hasRecordReader()){
@@ -2460,6 +2488,24 @@ function mappedChildEntries(data,sourcePath,r){
  }
  return entries.slice(0,250);
 }
+function appendReaderResource(box,node){
+ const path=localJsonReference(node.url,state.repo);if(!path)return;
+ const r={...state.repo},key=r.owner+'/'+r.repo+'@'+r.branch+':'+path,host=el('section','reader-resource');
+ box.append(host);
+ const openLocal=p=>{const destination=mappedDestination({url:repoUrl(r,p)});if(destination){readMappedDestination(destination);return}const child=el('details','details-fold');child.append(el('summary','',simpleLabel(p)));host.append(child);child.open=true;appendReaderResource(child,{url:repoUrl(r,p)})};
+ const load=async()=>{try{
+   const data=referencePreviewCache.has(key)?referencePreviewCache.get(key):await readRepoFile(r,path);
+   if(!host.isConnected)return;cacheReference(key,data);clear(host);
+   const primary=['description','definition','characterization','purpose','goal','overview','summary','why','mechanism','how_it_works','contributions','works','sources','source','url','references','terms','axioms','entries','recurring_project_patterns','resources','projects'];
+   if(!data||typeof data!=='object'||Array.isArray(data)){renderReferencedData(host,data,r,openLocal,'',path);return}
+   const direct=Object.fromEntries(primary.filter(k=>Object.hasOwn(data,k)).map(k=>[k,data[k]]));
+   const rest=Object.fromEntries(Object.entries(data).filter(([k])=>!Object.hasOwn(direct,k)&&!['id','name','title','type','version','schema','schema_version'].includes(k)));
+   for(const [k,v] of Object.entries(direct)){if(typeof v==='string'&&['description','definition','characterization','purpose','goal','overview','summary','why','mechanism','how_it_works'].includes(k)){host.append(el('p','',v));continue}renderReferencedData(host,{[k]:v},r,openLocal,'',path)}
+   if(Object.keys(rest).length){if(!Object.keys(direct).length)renderReferencedData(host,rest,r,openLocal,'',path);else{const more=el('details','details-fold'),body=el('div','fold-body');more.append(el('summary','','More source material'),body);let loaded=false;more.addEventListener('toggle',()=>{if(more.open&&!loaded){loaded=true;renderReferencedData(body,rest,r,openLocal,'',path)}});host.append(more)}}
+  }catch(error){if(host.isConnected){clear(host);host.append(link(repoUrl(r,path),'Open original source'));activity('Could not read linked material','error',path+': '+error.message)}}};
+ // Defer until the inline disclosure is attached; the same reader owns its content.
+ Promise.resolve().then(load);
+}
 function appendResourcePreview(box,node,childThumb=null){
  const path=localJsonReference(node.url,state.repo);
  if(!path)return;
@@ -2830,7 +2876,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
   map.onclick=showTechnicalMap;
   bar.append(back);
   if(!record&&n.id!==state.tree.root){const root=el('button','','‹ Question');root.type='button';root.onclick=()=>select(state.tree.root);bar.append(root)}
-  bar.append(map);box.append(bar);
+  if(state.index.size>1)bar.append(map);box.append(bar);
  }
  let childThumb=null;
  if(!inline){
@@ -2918,7 +2964,8 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
    const fold=el('details','details-fold');fold.append(el('summary','','Original source fields'));let loaded=false;
    fold.addEventListener('toggle',()=>{if(fold.open&&!loaded){loaded=true;appendResourcePreview(fold,n,childThumb)}});
    references.append(fold);
-  }else appendResourcePreview(box,n,childThumb);
+  }else if(reading&&localJsonReference(n.url,state.repo))appendReaderResource(box,n);
+  else appendResourcePreview(box,n,childThumb);
  }
 
  if((n.why_ask||n.why||n.description)&&!(hasQuestionBook()&&n.answer?.length&&n.kind==='curiosity_entry'))box.append(el('p',reading&&n.kind==='technical_branch'?'kami-route-question':'',n.why_ask||n.why||n.description));
@@ -2986,7 +3033,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
   if(explanation!==n.description)fieldSection('What changes if chosen',explanation);
  }
  if(n.kind==='capability'){
-  fieldSection('Competence to demonstrate',n.base_confidence);
+  if(n.base_confidence!==n.description)fieldSection('Competence to demonstrate',n.base_confidence);
   fieldSection('Stop when',n.stop_when);
   if(!reading&&Array.isArray(n.children)&&n.children.length){
    const section=el('div','case-section');
@@ -3024,7 +3071,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
      const section=el('div','case-section');
      section.append(el('h3','','Core project record'));
      section.append(link(url.href,'Open the related project idea'));
-     box.append(section);
+     (reading?references:box).append(section);
     }
    }catch{}
   }
@@ -3063,7 +3110,9 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
   section.append(list);box.append(section);
  }
  if(n.kind==='ai_use_case'){
-  // Generic case inspection consumes canonical FKEN records without another viewer.
+  // Accomplishment and mechanism first; candidate successor projects stay secondary.
+  if(n.mechanism)box.append(el('p','',n.mechanism));
+  fieldSection('AI’s role',n.ai_role);
   if(n.workflow?.steps?.length){
    const section=el('div','case-section');section.append(el('h3','','Workflow'));
    const list=el('ol');
@@ -3075,12 +3124,11 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
   }
   fieldSection('Typical tools',n.typical_tools);
   fieldSection('Why this tier',n.why_this_tier);
-  fieldSection('First experiment',n.first_experiment);
   fieldSection('Reported result',n.claims);
   fieldSection('Demonstrated stage',n.demonstrated_stage?.replaceAll('_',' '));
   fieldSection('Evidence',n.evidence);
-  fieldSection('What we could build',n.possible_project);
   fieldSection('Important qualification',n.qualification);
+  if(n.first_experiment||n.possible_project){const fold=el('details','details-fold'),body=el('div','fold-body');fold.append(el('summary','','Experiments and successor projects'),body);fieldSection('First experiment',n.first_experiment,body);if(n.possible_project!==n.first_experiment)fieldSection('Possible project',n.possible_project,body);box.append(fold)}
   if(Array.isArray(n.source_urls)&&n.source_urls.length){
    const section=el('div','case-section');section.append(el('h3','','Sources'));
    for(const url of n.source_urls){
@@ -3882,6 +3930,7 @@ $('atlas-curiosities').onclick=()=>{
 };
 $('kami-domain').onchange=async e=>{if(e.target.value==='__catalog'){openCatalog();return}const view=state.views?.find(v=>v.id===e.target.value);if(view)try{await loadMapped(state.repo,view)}catch(error){setStatus(error.message,true)}};
 $('kami-search-toggle').onclick=()=>{state.kamiSearchOpen=!state.kamiSearchOpen;const row=$('curiosity-search').closest('.curiosity-search-row');row.hidden=!state.kamiSearchOpen;if(state.kamiSearchOpen)$('curiosity-search').focus();else{state.curiositySearch='';$('curiosity-search').value='';renderCuriosityIndex()}};
+$('curiosity-mode-cases').onclick=()=>kamiMode('cases');
 $('curiosity-mode-tacits').onclick=()=>kamiMode('tacits');
 $('curiosity-mode-questions').onclick=()=>{
  if(hasQuestionBook()){kamiMode('questions');return}
