@@ -539,7 +539,30 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .kami-book.kami-reading .detail .kami-endnote-group{margin:12px 0}
 .kami-book.kami-reading .detail .kami-endnote-group>h3{font-size:14px;font-weight:550;color:inherit;border:0;padding:0;margin:0 0 4px}
 @media(max-width:600px){.kami-book.kami-reading .detail .kami-reference-context{margin-left:6px}}
-.reader-note-box .note-preview[hidden]{display:none!important}
+.reader-note-box .note-preview[hidden],.reader-note-box[hidden],.kami-reader-marks[hidden]{display:none!important}
+.reader-note-edit-actions{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:8px}
+.reader-note-edit-actions button{font-size:13px;min-height:36px;margin:0;padding:6px 12px}
+.reader-note-cancel{background:none;border:0;color:#666}
+.kami-book .kami-question-label{flex:1;min-width:0}
+.kami-book .kami-reader-marks{display:inline-flex;align-items:center;gap:6px;flex:none;margin-left:auto;line-height:1}
+.kami-book .kami-reader-marks span{display:inline-flex;align-items:center}
+.kami-book .kami-reader-marks svg{width:14px;height:14px}
+.kami-book .kami-star-mark{color:#a16c12}
+.kami-book .kami-note-mark{color:#3366a0}
+.kami-book.kami-reading .detail .kami-article-heading{display:flex;gap:6px;align-items:flex-start;border-bottom:1px solid #dedede;margin:8px 0 12px}
+.kami-book.kami-reading .detail .kami-article-heading h2{flex:1;min-width:0;margin:0;border:0;padding:0 0 9px}
+.kami-book.kami-reading .detail .reader-actions{flex:none;display:inline-flex;gap:0;margin:0;align-items:center}
+.kami-book.kami-reading .detail .reader-actions .icon-action{width:38px;height:44px;min-width:38px;min-height:44px;border:0;border-radius:0!important;background:none;padding:0!important;box-shadow:none;color:#72777d}
+.kami-book.kami-reading .detail .reader-actions .reader-star.on{color:#a16c12}
+.kami-book.kami-reading .detail .reader-actions .note-show.on{color:#3366a0}
+.kami-book.kami-reading .detail .reader-note-box:not([hidden]){display:block;width:100%;margin:0 0 14px}
+.kami-book.kami-reading .detail .reader-note-box .note-compose{border:0;border-left:2px solid #b9cce0;border-radius:0;margin:0;padding:2px 0 2px 10px}
+.kami-book.kami-reading .detail .reader-note-box label{font-size:12px;color:#64676b;font-weight:500}
+.kami-book.kami-reading .detail .reader-note-box textarea{min-height:82px;border:1px solid #c8cdd2;border-radius:4px;color:inherit;font:inherit;padding:8px}
+.kami-book.kami-reading .detail .reader-note-save{background:#3366a0;border:0;color:white;border-radius:4px}
+.kami-book.kami-reading .detail .kami-branch>summary .kami-reader-marks{align-self:center}
+.kami-book.kami-reading .detail .kami-aux{margin:0;align-items:center}
+@media(max-width:480px){.kami-book.kami-reading .detail .kami-article-heading{gap:2px}.kami-book.kami-reading .detail .reader-actions .icon-action{width:34px;min-width:34px}}
 @media(max-width:600px){.kami-book.kami-reading .detail{--reading-indent:8px}}
 @media(max-width:600px){.kami-book #curiosity-index{padding:0 16px 32px}.kami-book .top{padding:10px 16px}.kami-book .top-actions button{font-size:12px}.kami-book.kami-reading .atlas-inspector-rail>.journey-content:not([hidden]){padding:14px 17px 50px!important}}
 </style></head>
@@ -642,7 +665,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
     <div class="reader-top"><div><h2 id="reader-title">My interests & notes</h2><div class="tiny muted">Only explicitly saved interests and notes. Navigating a question does not mark it as interesting.</div></div><button type="button" id="reader-close">Close</button></div>
     <div class="reader-filter">
       <input type="search" id="reader-search" aria-label="Search saved interests and notes" placeholder="Search saved items, notes or domains" autocomplete="off">
-      <span id="reader-count" class="tiny muted"></span>
+      <span id="reader-dialog-count" class="tiny muted"></span>
     </div>
     <div id="reader-list" class="reader-list"></div>
     <div class="reader-transfer"><p>Export a portable JSON to continue in another browser or ask an LLM what to explore next. The exported file may contain private notes; it is not uploaded automatically.</p>
@@ -1452,7 +1475,7 @@ function renderKamiEntries(data,results,families,types){
  const entries=(data.entries||[]).filter(e=>state.glossaryMode==='tacits'?kamiTacit(e):!kamiPractice(e)).filter(e=>curiosityMatches(e,state.curiositySearch));
  if(state.curiositySearch.trim())entries.sort((a,b)=>glossaryScore(b,state.curiositySearch)-glossaryScore(a,state.curiositySearch));
  const grid=el('div','curiosity-card-grid');
- for(const entry of entries){const card=el('button','curiosity-card');card.type='button';card.append(el('span','',entry.question));card.onclick=()=>openCuriosityEntry(entry.id);grid.append(card)}
+ for(const entry of entries){const card=el('button','curiosity-card');card.type='button';card.append(el('span','kami-question-label',entry.question));appendKamiReaderMarks(card,entry.id);card.onclick=()=>openCuriosityEntry(entry.id);grid.append(card)}
  results.append(grid);
  if(!entries.length&&state.glossaryMode!=='tacits')results.append(el('p','curiosity-empty','No matching questions.'));
  if(state.glossaryMode==='tacits'){
@@ -1461,7 +1484,7 @@ function renderKamiEntries(data,results,families,types){
   if(constituent.length){
    const fold=el('details','curiosity-group');fold.open=!!state.curiositySearch.trim()||!entries.length;
    fold.append(el('summary','','Constituent exercises'));
-   for(const e of constituent){const b=el('button','curiosity-card',e.question);b.type='button';b.onclick=()=>openCuriosityEntry(e.id);fold.append(b)}
+   for(const e of constituent){const b=el('button','curiosity-card');b.type='button';b.append(el('span','kami-question-label',e.question));appendKamiReaderMarks(b,e.id);b.onclick=()=>openCuriosityEntry(e.id);fold.append(b)}
    results.append(fold);
   }
  }
@@ -2532,6 +2555,7 @@ function appendKamiOutline(box,n,trail,article){
   const label=title(node).replace(/^Relevant technical route:\s*/,'');
   const summary=el('summary',''),heading=el('span','kami-branch-heading',label);summary.append(heading);
   if(article)article.mark(heading,node.id);
+  appendKamiReaderMarks(summary,node.id);
   branch.append(summary);
   const body=el('div','kami-branch-body');branch.append(body);
   let loaded=false;
@@ -2743,8 +2767,12 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
  }
  const marker=el('span','chip',(n.kind||'Question').replace(/_/g,' '));box.append(marker);
  if(n.question_type)box.append(el('span','chip question-type-tag',questionTypeLabel(n.question_type)));
- const heading=el('h2','',title(n));if(article)article.mark(heading,n.id,true);box.append(heading);
- const toolbar=renderReaderDetail(box,n);
+ const heading=el('h2','',title(n));if(article)article.mark(heading,n.id,true);
+ let toolbar;
+ if(reading){
+  const head=el('div','kami-article-heading');head.append(heading);box.append(head);
+  toolbar=renderReaderDetail(box,n,head);
+ }else{box.append(heading);toolbar=renderReaderDetail(box,n);}
  const isChildDeck=n.kind==='subdomain'&&!!localJsonReference(n.url,state.repo);
  if(isChildDeck){
   const previous=el('button','inspector-step','←'),next=el('button','inspector-step','→');
@@ -3372,7 +3400,7 @@ function readerFor(id){
  }
  return null;
 }
-function readerCount(){return [...readerEntries.values()].filter(x=>x.interested).length}
+function readerCount(){return [...readerEntries.values()].filter(x=>x.interested||x.note).length}
 function readerUpdateCount(){$('reader-count').textContent=readerCount()?' '+readerCount():''}
 function readerValidate(x){
  return x&&typeof x==='object'&&x.origin&&['github','url','local'].includes(x.origin.type)&&
@@ -3407,8 +3435,8 @@ function readerCapture(id){
   interested:false,note:'',updated_at:new Date().toISOString()};
 }
 function readerSave(id,interest,note){
- if(!state.currentSource||!state.index.has(id))return;
- if(readerStoreError){readerMessage('Saved annotations are unreadable. Import a backup to repair before making changes.',true);return}
+ if(!state.currentSource||!state.index.has(id))return false;
+ if(readerStoreError){readerMessage('Saved annotations are unreadable. Import a backup to repair before making changes.',true);return false}
  const next=new Map(readerEntries),k=readerKey(state.currentSource,id);
  const aliases=legacyReaderKeys(id).filter(key=>key!==k);
  const prior=next.get(k)||aliases.map(key=>next.get(key)).find(Boolean)||null;
@@ -3417,12 +3445,12 @@ function readerSave(id,interest,note){
   interested:interest,note,updated_at:new Date().toISOString()};
  if(!entry.interested&&!entry.note)next.delete(k);else next.set(k,entry);
  try{
-  readerWrite(next);if(kamiReading())refreshKamiReaderControls(id);else render();
+  readerWrite(next);if(kamiReading())refreshKamiReaderControls(id);else{render();if(kamiBook())refreshKamiReaderControls(id)}
   const changedNote=note!==(prior?.note||''),changedInterest=interest!==!!prior?.interested;
   activity(changedNote?(note?'Note saved':'Note removed'):changedInterest?(interest?'Interest saved':'Interest removed'):'Saved');
-  readerMessage('Saved to this browser. Export JSON to move to another device.');
+  readerMessage('Saved to this browser. Export JSON to move to another device.');return true;
  }
- catch(e){readerMessage('Unable to save: '+e.message,true)}
+ catch(e){readerMessage('Unable to save: '+e.message,true);return false}
 }
 function readerMessage(message,error=false){
  const box=$('reader-message');box.textContent=message;box.classList.toggle('error',error);
@@ -3432,46 +3460,81 @@ function readerToggle(id){
  const x=readerFor(id);readerSave(id,!x?.interested,x?.note||'');
 }
 let readerNoteSerial=0;
-function refreshKamiReaderControls(id){
- const prior=readerFor(id),interested=!!prior?.interested,note=prior?.note||'';
+function readerIcon(kind,filled=false){
+ const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
+ for(const [k,v] of Object.entries({viewBox:'0 0 24 24',width:'18',height:'18',fill:'none',stroke:'currentColor','stroke-width':'1.6','stroke-linecap':'round','stroke-linejoin':'round','aria-hidden':'true'}))svg.setAttribute(k,v);
+ const shape=(tag,attrs)=>{const p=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))p.setAttribute(k,v);svg.append(p)};
+ if(kind==='star')shape('path',{d:'m12 3 2.8 5.7 6.3.9-4.6 4.4 1.1 6.3-5.6-3-5.6 3 1.1-6.3L3 9.6l6.2-.9Z',fill:filled?'currentColor':'none'});
+ else if(kind==='note'){
+  shape('path',{d:'M6 3h8l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z',fill:filled?'currentColor':'none'});
+  shape('path',{d:'M14 3v5h4M8 12h6M8 16h6',stroke:filled?'white':'currentColor'});
+ }
+ else shape('path',{d:'m5 12 4 4L19 6'});
+ return svg;
+}
+function paintReaderIcon(button,kind,on){
+ clear(button);button.append(readerIcon(kind,on));button.classList.toggle('on',!!on);
+}
+function appendKamiReaderMarks(host,id){
+ const marks=el('span','kami-reader-marks');marks.dataset.readerMarkId=id;
+ host.append(marks);paintKamiReaderMarks(marks,readerFor(id));
+}
+function paintKamiReaderMarks(marks,prior){
+ clear(marks);marks.hidden=!(prior?.interested||prior?.note);
+ if(prior?.interested){const star=el('span','kami-star-mark');star.title='Starred';star.setAttribute('aria-label','Starred');star.append(readerIcon('star',true));marks.append(star)}
+ if(prior?.note){const note=el('span','kami-note-mark');note.title='Has a note';note.setAttribute('aria-label','Has a note');note.append(readerIcon('note',true));marks.append(note)}
+}
+function refreshKamiReaderControls(id=null){
+ const matches=(el,key)=>id===null||el.dataset[key]===id;
+ for(const mark of document.querySelectorAll('.kami-reader-marks[data-reader-mark-id]')){
+  if(matches(mark,'readerMarkId'))paintKamiReaderMarks(mark,readerFor(mark.dataset.readerMarkId));
+ }
  for(const wrap of $('detail').querySelectorAll('.reader-actions[data-reader-node-id]')){
-  if(wrap.dataset.readerNodeId!==id)continue;
+  if(!matches(wrap,'readerNodeId'))continue;
+  const prior=readerFor(wrap.dataset.readerNodeId),interested=!!prior?.interested,note=prior?.note||'';
   const star=wrap.querySelector('.reader-star'),toggle=wrap.querySelector('.note-show');
   if(star){
-   star.classList.toggle('on',interested);star.textContent=interested?'★':'☆';
+   paintReaderIcon(star,'star',interested);
    star.setAttribute('aria-pressed',String(interested));star.title=interested?'Remove saved interest':'Save interest';star.setAttribute('aria-label',star.title);
   }
-  if(toggle){toggle.title=note?'Edit note':'Add note';toggle.setAttribute('aria-label',toggle.title)}
+  if(toggle){paintReaderIcon(toggle,'note',!!note);toggle.title=note?'Edit saved note':'Add note';toggle.setAttribute('aria-label',toggle.title)}
  }
  for(const panel of $('detail').querySelectorAll('.reader-note-box[data-reader-node-id]')){
-  if(panel.dataset.readerNodeId!==id)continue;
+  if(!matches(panel,'readerNodeId'))continue;
+  const note=readerFor(panel.dataset.readerNodeId)?.note||'';
   const preview=panel.querySelector('.note-preview');
   if(preview){preview.textContent=note;preview.hidden=!note}
   const draft=panel.querySelector('textarea');if(draft&&panel.hidden)draft.value=note;
  }
 }
-function renderReaderDetail(box,n){
- const wrap=el('div','reader-actions'),prior=readerFor(n.id);wrap.dataset.readerNodeId=n.id;
- const star=el('button','reader-star icon-action'+(prior?.interested?' on':''),prior?.interested?'★':'☆');
+function renderReaderDetail(box,n,actionHost=box){
+ const compact=kamiReading(),wrap=el('div','reader-actions'),prior=readerFor(n.id);wrap.dataset.readerNodeId=n.id;
+ const star=el('button','reader-star icon-action');paintReaderIcon(star,'star',!!prior?.interested);
  star.type='button';star.setAttribute('aria-pressed',String(!!prior?.interested));
  star.title=prior?.interested?'Remove saved interest':'Save interest';
  star.setAttribute('aria-label',star.title);star.onclick=()=>readerToggle(n.id);
  wrap.append(star);
  const panel=el('div','reader-note-box');panel.hidden=true;panel.dataset.readerNodeId=n.id;
- const toggle=el('button','note-show icon-action',prior?.note?'✎':'✎');toggle.type='button';
- toggle.title=prior?.note?'Edit note':'Add note';toggle.setAttribute('aria-label',toggle.title);
+ const toggle=el('button','note-show icon-action');toggle.type='button';paintReaderIcon(toggle,'note',!!prior?.note);
+ toggle.title=prior?.note?'Edit saved note':'Add note';toggle.setAttribute('aria-label',toggle.title);
  toggle.setAttribute('aria-expanded','false');
  const compose=el('div','note-compose');compose.hidden=true;
  const label=el('label','','Your note'),note=el('textarea');note.id='reader-note-input-'+(++readerNoteSerial);note.maxLength=16000;
+ panel.id='reader-note-panel-'+readerNoteSerial;toggle.setAttribute('aria-controls',panel.id);
  note.placeholder='Why is this interesting? What might you explore next?';
  label.htmlFor=note.id;note.value=prior?.note||'';
- const save=el('button','primary icon-action','✓');save.type='button';
+ function closeEditor(){panel.hidden=true;compose.hidden=true;toggle.setAttribute('aria-expanded','false');note.value=readerFor(n.id)?.note||''}
+ const save=el('button','primary reader-note-save','Save');save.type='button';
  save.title='Save note';save.setAttribute('aria-label','Save note');
- save.onclick=()=>readerSave(n.id,!!readerFor(n.id)?.interested,note.value.trim());
- compose.append(label,note,save);
- toggle.onclick=()=>{panel.hidden=!panel.hidden;compose.hidden=panel.hidden;toggle.setAttribute('aria-expanded',String(!panel.hidden));if(!panel.hidden)note.focus()};
- wrap.append(toggle);box.append(wrap);
- const preview=el('div','note-preview',prior?.note||'');preview.hidden=!prior?.note;panel.append(preview);
+ save.onclick=()=>{if(readerSave(n.id,!!readerFor(n.id)?.interested,note.value.trim())){closeEditor();if(toggle.isConnected)toggle.focus({preventScroll:true})}};
+ const cancel=el('button','reader-note-cancel','Cancel');cancel.type='button';cancel.onclick=()=>{closeEditor();toggle.focus({preventScroll:true})};
+ const actions=el('div','reader-note-edit-actions');actions.append(cancel,save);compose.append(label,note,actions);
+ toggle.onclick=()=>{
+  if(!panel.hidden){closeEditor();return}
+  note.value=readerFor(n.id)?.note||'';panel.hidden=false;compose.hidden=false;toggle.setAttribute('aria-expanded','true');note.focus();
+ };
+ wrap.append(toggle);actionHost.append(wrap);
+ // The textarea already contains the saved note. Do not render a second copy above it.
  panel.append(compose);box.append(panel);
  return wrap;
 }
@@ -3501,7 +3564,7 @@ function readerList(){
   entry.label,entry.note,entry.origin.title,entry.origin.repo,
   entry.origin.file,entry.context?.join(' ')
  ].some(v=>String(v||'').toLowerCase().includes(query)));
- $('reader-count').textContent=matching.length===items.length?
+ $('reader-dialog-count').textContent=matching.length===items.length?
   items.length+' saved':matching.length+' of '+items.length+' saved';
  if(!matching.length){
   pane.append(el('p','muted',query?'No saved items match this search.':'No saved interests or notes. Select a question and mark it or add a note.'));
@@ -3545,7 +3608,7 @@ function readerList(){
    remove.onclick=()=>{
     if(!confirm('Remove this saved interest/note?'))return;
     const next=new Map(readerEntries);next.delete(readerKey(entry.origin,entry.node_id));
-    try{readerWrite(next);readerList();render()}
+    try{readerWrite(next);readerList();if(kamiReading())refreshKamiReaderControls();else{render();if(kamiBook())refreshKamiReaderControls()}}
     catch(e){readerMessage('Could not remove item: '+e.message,true)}
    };
    controls.append(open,remove);row.append(copy,controls);body.append(row);
@@ -3580,7 +3643,7 @@ async function readerImport(file){
  const overlap=[...incoming.keys()].filter(k=>readerEntries.has(k)).length;
  if(!confirm('Import '+incoming.size+' saved interests/notes? '+overlap+' matching records will be replaced; unrelated saved items stay.'))return;
  const next=new Map(readerEntries);for(const [k,x] of incoming)next.set(k,x);
- readerWrite(next);render();readerList();
+ readerWrite(next);if(kamiReading())refreshKamiReaderControls();else{render();if(kamiBook())refreshKamiReaderControls()}readerList();
  readerMessage('Imported '+incoming.size+' records. '+overlap+' matching records were updated.');
 }
 
