@@ -495,7 +495,6 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .kami-book.kami-reading .detail .kami-aux .reader-actions button.on{color:#9b650b}
 .kami-book.kami-reading .detail .kami-aux .note-preview{margin-top:3px}
 .kami-book.kami-reading .detail .kami-aux .reader-note-box:has(.note-compose:not([hidden])){flex-basis:100%}
-.kami-book.kami-reading .detail .kami-reference[open]>summary::before{transform:rotate(90deg)}
 .kami-book.kami-reading .detail .kami-reference-body{padding:1px 0 8px;min-width:0;overflow-wrap:anywhere}
 .kami-book.kami-reading .detail .kami-reference-body .case-section{border:0;margin:8px 0;padding:0}
 .kami-book.kami-reading .detail .kami-reference-body .case-section h3,.kami-book.kami-reading .detail .kami-reference-body h4{color:#666;font-size:12px;margin:4px 0}
@@ -2532,7 +2531,7 @@ function appendKamiOutline(box,n,trail,article){
   const branch=el('details','kami-branch');branch.dataset.nodeId=node.id;
   const label=title(node).replace(/^Relevant technical route:\s*/,'');
   const summary=el('summary',''),heading=el('span','kami-branch-heading',label);summary.append(heading);
-  if(article)article.mark(summary,node.id);
+  if(article)article.mark(heading,node.id);
   branch.append(summary);
   const body=el('div','kami-branch-body');branch.append(body);
   let loaded=false;
