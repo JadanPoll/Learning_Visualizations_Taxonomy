@@ -2547,6 +2547,15 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
  const reading=kamiReading();
  const referenceBody=reading?el('div','kami-reference-body'):box;
  const references=reading?referenceBody:box;
+ // Once the reader requests references, show the actual locators immediately.
+ function appendReferenceFold(fold,body){
+  if(!reading){fold.append(body);box.append(fold);return}
+  const section=el('section','case-section');
+  const label=fold.firstElementChild?.textContent;
+  if(label)section.append(el('h3','',label));
+  section.append(body);references.append(section);
+ }
+
  if(!inline)trail=[n.id];
  if(reading&&!inline){
   const bar=el('div','kami-backbar'),back=el('button','','‹ Back to book'),map=el('button','','Technical map ↗');
@@ -2901,7 +2910,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
     const entry=makeManufacturingSource(bookMap,book.source_id,bookMap.get(book.source_id)?.title||book.source_id,loc,'TOC-level route · '+sec.use_when);
     body.append(entry);
    }
-   fold.append(body);references.append(fold);
+   appendReferenceFold(fold,body);
   }
  }
  if(n.source_sections?.length){
@@ -2915,7 +2924,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
    entry.append(el('p','case-source-status',(section.pages||'')+' · '+(section.page_scheme||'Page scheme not specified')));
    body.append(entry);
   }
-  fold.append(body);references.append(fold);
+  appendReferenceFold(fold,body);
  }
  if((n.id==='MFG-ROOT'||(state.tree.landscape_lens&&n.id===state.tree.root))&&state.tree.book_factorization){
   const factorization=state.tree.book_factorization,lens=state.tree.landscape_lens;
@@ -2987,7 +2996,10 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
   body.append(el('small','case-evidence-status',comparison.certificate_status||comparison.status||''));
   fold.append(body);box.append(fold);
  }
- fieldSection('What remains uncertain',n.unresolved_questions);
+ const boilerplateUncertainty='The linked chapter is a retrieval lead; substantive validation or implementation is not yet documented.';
+ const uncertainty=reading&&Array.isArray(n.unresolved_questions)?n.unresolved_questions.filter(q=>q!==boilerplateUncertainty):n.unresolved_questions;
+ if(reading&&Array.isArray(n.unresolved_questions)&&n.unresolved_questions.includes(boilerplateUncertainty))references.append(el('p','kami-record-status',boilerplateUncertainty));
+ fieldSection('What remains uncertain',uncertainty);
  if(!comparison||comparison.cheapest_discriminating_probe!==n.minimum_reconstruction_probe)fieldSection('Try reproducing it',n.minimum_reconstruction_probe);
  fieldSection('Limits',n.resource_or_outcome_limitations);
  const notes=(state.tree.evidence_notes||[]).filter(e=>e.node_id===n.id);
@@ -3019,7 +3031,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
    body.append(group);
   }
   body.append(el('p','case-source-status','Reading assignments are not completed investigations.'));
-  fold.append(body);references.append(fold);
+  appendReferenceFold(fold,body);
  }
  const relatedProjects=(state.tree.projects||[]).filter(p=>(p.case_ids||[]).includes(n.id));
  if(relatedProjects.length){
@@ -3067,7 +3079,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
    for(const ref of route.cross_book_references||[])entryRow(routeBody,ref,sources);
    routeFold.append(routeBody);body.append(routeFold);
   }
-  fold.append(body);references.append(fold);
+  appendReferenceFold(fold,body);
  }
  const linkedCases=(n.fieldwork_case_ids||[]).filter(id=>!reading||!state.index.has(id));
  if(linkedCases.length&&state.curiosityData?.fieldwork_nodes?.length){
@@ -3079,7 +3091,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
    b.onclick=()=>openResearchTarget(id);
    body.append(b);
   }
-  fold.append(body);references.append(fold);
+  appendReferenceFold(fold,body);
  }
 
  if(state.activeView?.projection?.shape==='curiosities'&&state.curiosityData?.landscape_views?.length){
@@ -3096,7 +3108,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
     };
     body.append(btn);
    }
-   fold.append(body);references.append(fold);
+   appendReferenceFold(fold,body);
   }
  }
 
