@@ -1132,7 +1132,7 @@ function mappedView(data,view,r){const spec=view.projection||{},shape=spec.shape
 }
 function globMatch(pattern,path){const parts=pattern.split(/(\*\*|\*)/),re='^'+parts.map(x=>x==='**'?'.*':x==='*'?'[^/]*':x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('')+'$';return new RegExp(re).test(path)}
 async function discover(r){const data=await fetchJson(api(r,'git/trees/'+encodeURIComponent(r.branch)+'?recursive=1'));if(data.truncated)throw Error('Repository listing truncated; open a specific JSON file instead');return (data.tree||[]).filter(x=>x.type==='blob').map(x=>x.path)}
-function viewList(manifest,paths){if(manifest.mapping_version!=='0.1'||!Array.isArray(manifest.views))throw Error('Unsupported mapping manifest');const views=[];for(const template of manifest.views){if(template.file){views.push(template);continue}if(template.glob){for(const file of paths.filter(p=>globMatch(template.glob,p)&&!(template.exclude||[]).some(ex=>globMatch(ex,p)))){const name=simpleLabel(file.endsWith('/domain.json')?file.split('/').slice(-2,-1)[0]:file);views.push({...template,id:template.id+':'+file,title:template.title+' · '+name,file})}}}return views.map(v=>({...v,aliases:Object.entries(manifest.record_aliases||{}).filter(([from,to])=>to===v.file).map(([from])=>from)}))}
+function viewList(manifest,paths){if(manifest.mapping_version!=='0.1'||!Array.isArray(manifest.views))throw Error('Unsupported mapping manifest');const views=[];for(const template of manifest.views){if(template.file){views.push(template);continue}if(template.glob){for(const file of paths.filter(p=>globMatch(template.glob,p)&&!(template.exclude||[]).some(ex=>globMatch(ex,p)))){const name=simpleLabel(file.endsWith('/domain.json')?file.split('/').slice(-2,-1)[0]:file);views.push({...template,id:template.id+':'+(manifest.legacy_files?.[file]||file),title:template.title+' · '+name,file})}}}return views.map(v=>({...v,reader_file:manifest.legacy_files?.[v.file]||v.file,aliases:Object.entries(manifest.record_aliases||{}).filter(([from,to])=>to===v.file).map(([from])=>from)}))}
 
 /* The entry layer is purposely ordinary language. A selected entry generates a
    temporary technical hierarchy from canonical studies and sourced bridges. */
@@ -1735,7 +1735,7 @@ function openResearchSelection(selection){
   state.glossarySelected=null
  }
   openTree(projection.tree,projection.tree.routes?.length?projection.tree:null,projection.title,{type:'github',repo:r.owner+'/'+r.repo,
-   branch:r.branch,file:view.file,view_id:projection.originViewId,title:projection.title});
+   branch:r.branch,file:view.reader_file||view.file,view_id:projection.originViewId,title:projection.title});
   state.url=repoUrl(r,view.file);
   updateLensSelector();showCuriosityIndex(!selection);
   // Read an authored answer immediately, with the technical routes still on the map.
@@ -1772,7 +1772,7 @@ function renderCatalog(){
  const domain=views.filter(v=>v.file?.startsWith('Domains/')&&v.file.endsWith('/domain.json'));
  const top=domain.filter(v=>v.file.split('/').length===3);
  const sub=domain.filter(v=>v.file.split('/').length>3);
- const projects=views.filter(v=>v.file?.startsWith('Project_Ideas/Landscapes/'));
+ const projects=views.filter(v=>v.projection?.root?.kind==='project');
  const other=views.filter(v=>!domain.includes(v)&&!projects.includes(v));
  const featured=(state.catalogHome.featured||[]).map(item=>{
   const v=views.find(v=>(item.view_id&&v.id===item.view_id)||(item.file&&v.file===item.file));
@@ -1929,7 +1929,7 @@ async function loadMapped(r,view){
  }
  closeCatalog();
  openTree(tree,guide,projected?.title||view.title,{type:'github',repo:r.owner+'/'+r.repo,
-  branch:r.branch,file:view.file,view_id:projected?.originViewId||view.id,title:projected?.title||view.title});
+  branch:r.branch,file:view.reader_file||view.file,view_id:projected?.originViewId||view.id,title:projected?.title||view.title});
  state.activeView=view;state.url=repoUrl(r,view.file);state.repo=r;state.recordMap=false;
  if(caseSurvey(view)&&!selection)state.glossaryMode='cases';else if(state.glossaryMode==='cases'&&!caseSurvey(view))state.glossaryMode='questions';
  updateLensSelector();
@@ -1993,7 +1993,7 @@ async function loadSource(raw){
   state.activeView=null;showCuriosityIndex(false);updateLensSelector();setStatus('Loaded remote JSON');return;
  }
  const manifest=await tryManifest(r);
- if(r.path&&r.path.endsWith('.json')&&!r.path.endsWith('rsm-view.json')){
+ if(!manifest&&r.path&&r.path.endsWith('.json')&&!r.path.endsWith('rsm-view.json')){
   if(!r.branch)throw Error('Unable to infer branch; provide an explicit GitHub /blob/main/ URL or direct JSON URL');
   setChoices([],false);await loadPath(r,r.path);return;
  }
@@ -2013,7 +2013,9 @@ async function loadSource(raw){
     views=viewList({...manifest,views:manifest.views.filter(v=>v.file)},null);
    }
   }else views=viewList(manifest,null);
-  const filtered=r.path?views.filter(v=>v.file.startsWith(r.path.replace(/\/$/,'')+'/')):views;
+  const direct=r.path?.endsWith('.json')&&!r.path.endsWith('rsm-view.json')?views.find(v=>v.file===r.path||v.aliases?.includes(r.path)||v.reader_file===r.path):null;
+  if(!direct&&r.path?.endsWith('.json')&&!r.path.endsWith('rsm-view.json')){setChoices([],false);await loadPath(r,manifest.record_aliases?.[r.path]||r.path);return}
+  const filtered=r.path&&!direct?views.filter(v=>v.file.startsWith(r.path.replace(/\/$/,'')+'/')):views;
   state.repo=r;state.views=filtered.length?filtered:views;state.activeView=null;
   state.catalogHome=manifest.home||null;
   if(!state.views.length)throw Error('Mapping manifest has no files to display');
@@ -2023,7 +2025,7 @@ async function loadSource(raw){
    'human-ai-questions':'human-ai-curiosities','human-ai-investigation':'human-ai-curiosities',
    'human-ai-fieldwork':'human-ai-curiosities'};
   const alias=wanted?.startsWith('manufacturing-')?'manufacturing-curiosities':aliases[wanted];
-  const selected=state.views.find(v=>v.id===wanted)||state.views.find(v=>v.id===alias)||state.views[0];
+  const selected=direct||state.views.find(v=>v.id===wanted)||state.views.find(v=>v.id===alias)||state.views[0];
   if(state.catalogHome&&!wanted&&!r.path){openCatalog();return}
   $('choices').value=selected.id;await loadMapped(r,selected);return;
  }
