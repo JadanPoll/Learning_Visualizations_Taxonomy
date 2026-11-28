@@ -484,7 +484,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .kami-book.kami-reading .detail .kami-original{display:flex;flex-wrap:wrap;gap:6px 14px;margin:18px 0 0;padding:2px 0;font-size:11px;line-height:1.4}
 .kami-book.kami-reading .detail .kami-original a{color:#777;text-decoration:none;display:inline-flex;align-items:center;min-height:32px}
 .kami-book.kami-reading .detail .kami-original a:hover,.kami-book.kami-reading .detail .kami-original a:focus-visible{text-decoration:underline}
-.kami-book.kami-reading .detail .note-preview[hidden]{display:none!important}
+.reader-note-box .note-preview[hidden]{display:none!important}
 @media(max-width:600px){.kami-book.kami-reading .detail .kami-branch-body{margin-left:4px;padding-left:10px}.kami-book.kami-reading .detail .kami-branch>summary{font-size:15px}}
 @media(max-width:600px){.kami-book #curiosity-index{padding:0 16px 32px}.kami-book .top{padding:10px 16px}.kami-book .top-actions button{font-size:12px}.kami-book.kami-reading .atlas-inspector-rail>.journey-content:not([hidden]){padding:14px 17px 50px!important}}
 </style></head>
@@ -2646,7 +2646,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
   const browse=el('button','case-related-link','Browse other curiosities');
   browse.type='button';browse.onclick=()=>kamiBook()?openResearchSelection(null):showCuriosityIndex(true);if(!kamiBook())box.append(browse);
  }
- if(n.kind==='technical_branch'){
+ if(n.kind==='technical_branch'&&!reading){
   box.append(el('p','case-source-status','Conditional mechanism · investigate whether this explanation fits the observed failure or desired behavior.'));
  }
  if(n.status&&/^(?:candidate|provisional|active_question|pending_investigation|not investigated)/.test(n.status))
@@ -3228,6 +3228,7 @@ function refreshKamiReaderControls(id){
   if(panel.dataset.readerNodeId!==id)continue;
   const preview=panel.querySelector('.note-preview');
   if(preview){preview.textContent=note;preview.hidden=!note}
+  const draft=panel.querySelector('textarea');if(draft&&panel.hidden)draft.value=note;
  }
 }
 function renderReaderDetail(box,n){
