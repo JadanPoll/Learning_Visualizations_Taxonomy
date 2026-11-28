@@ -476,7 +476,6 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .kami-book.kami-reading .detail .details-fold>summary:focus-visible,.kami-book.kami-reading .detail .kami-branch>summary:focus-visible{outline:2px solid #87bce8;outline-offset:2px}
 .kami-book.kami-reading .detail .details-fold>.fold-body{padding:2px 0 10px var(--reading-indent)}
 .kami-book.kami-reading .detail .kami-outline{margin:18px 0 10px}
-.kami-book.kami-reading .detail .kami-outline-title{font-size:.8em;font-weight:500;color:#72777d;margin:0 0 3px;border:0;padding:0;letter-spacing:0}
 .kami-book.kami-reading .detail .kami-branch{border:0;margin:3px 0 8px}
 .kami-book.kami-reading .detail .kami-branch>summary{font-size:1.125em;font-weight:500}
 .kami-book.kami-reading .detail>.kami-outline>.kami-branch>summary{border-bottom:1px solid #eaecf0}
@@ -496,11 +495,6 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .kami-book.kami-reading .detail .kami-aux .reader-actions button.on{color:#9b650b}
 .kami-book.kami-reading .detail .kami-aux .note-preview{margin-top:3px}
 .kami-book.kami-reading .detail .kami-aux .reader-note-box:has(.note-compose:not([hidden])){flex-basis:100%}
-.kami-book.kami-reading .detail .kami-reference{min-width:0;max-width:100%;flex:1 1 145px}
-.kami-book.kami-reading .detail .kami-reference[open]{flex-basis:100%}
-.kami-book.kami-reading .detail .kami-reference>summary{list-style:none;display:flex;align-items:center;gap:6px;min-height:42px;color:#707070;font-size:12px;font-weight:500;cursor:pointer}
-.kami-book.kami-reading .detail .kami-reference>summary::-webkit-details-marker{display:none}
-.kami-book.kami-reading .detail .kami-reference>summary::before{content:'›';font-size:17px;line-height:1}
 .kami-book.kami-reading .detail .kami-reference[open]>summary::before{transform:rotate(90deg)}
 .kami-book.kami-reading .detail .kami-reference-body{padding:1px 0 8px;min-width:0;overflow-wrap:anywhere}
 .kami-book.kami-reading .detail .kami-reference-body .case-section{border:0;margin:8px 0;padding:0}
@@ -519,6 +513,33 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .kami-book.kami-reading .detail .kami-original{display:flex;flex-wrap:wrap;gap:6px 14px;margin:18px 0 0;padding:2px 0;font-size:11px;line-height:1.4}
 .kami-book.kami-reading .detail .kami-original a{color:#777;text-decoration:none;display:inline-flex;align-items:center;min-height:32px}
 .kami-book.kami-reading .detail .kami-original a:hover,.kami-book.kami-reading .detail .kami-original a:focus-visible{text-decoration:underline}
+.kami-book.kami-reading .detail .kami-branch-heading{min-width:0}
+.kami-book.kami-reading .detail .kami-citations{font-size:12px;font-weight:400;line-height:1.2;display:inline-flex;flex-wrap:wrap;gap:4px;vertical-align:super;align-self:baseline;margin-left:5px;white-space:normal;letter-spacing:0}
+.kami-book.kami-reading .detail .kami-citations a{color:#3366a0;text-decoration:none;padding:3px 2px}
+.kami-book.kami-reading .detail .kami-citations a:hover,.kami-book.kami-reading .detail .kami-citations a:focus-visible{text-decoration:underline}
+.kami-book.kami-reading .detail .kami-endmatter:empty{display:none}
+.kami-book.kami-reading .detail .kami-endmatter{margin:30px 0 12px;line-height:1.5}
+.kami-book.kami-reading .detail .kami-endmatter h2.kami-end-title{font-size:21px;font-weight:500;letter-spacing:0;margin:25px 0 12px;padding-bottom:6px;border-bottom:1px solid #dedede}
+.kami-book.kami-reading .detail .kami-book-reference{margin:16px 0 20px;scroll-margin-top:16px}
+.kami-book.kami-reading .detail .kami-book-reference-title{font-size:16px;font-weight:600;color:inherit;line-height:1.45;border:0;margin:0 0 4px;padding:0}
+.kami-book.kami-reading .detail .kami-endmatter .kami-end-caption{font-size:13px;color:#64676b;margin:4px 0 7px;line-height:1.5}
+.kami-book.kami-reading .detail .kami-source-links{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;margin:4px 0 10px}
+.kami-book.kami-reading .detail .kami-reference-context{margin:10px 0 12px 14px;scroll-margin-top:16px}
+.kami-book.kami-reading .detail .kami-reference-context:focus,.kami-book.kami-reading .detail .kami-glossary:focus{outline:1px solid #c8d8eb;outline-offset:5px}
+.kami-book.kami-reading .detail .kami-reference-context-heading{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px;font-size:14px}
+.kami-book.kami-reading .detail .kami-reference-context-heading strong{font-weight:550}
+.kami-book.kami-reading .detail .kami-reference-back{font-size:12px;font-weight:400;margin-left:8px;color:#3366a0;text-decoration:none}
+.kami-book.kami-reading .detail .kami-reference-back[hidden]{display:none}
+.kami-book.kami-reading .detail .kami-reference-passage{font-size:13px;line-height:1.5;color:#454545;margin:3px 0 5px}
+.kami-book.kami-reading .detail .kami-glossary{scroll-margin-top:16px}
+.kami-book.kami-reading .detail .kami-glossary-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:6px 18px;margin:10px 0 15px}
+.kami-book.kami-reading .detail .kami-glossary-item{min-width:0}
+.kami-book.kami-reading .detail .kami-glossary-item dt{display:flex;align-items:baseline;gap:6px;font-size:14px;font-weight:550}
+.kami-book.kami-reading .detail .kami-glossary-item dd{font-size:13px;margin:2px 0 8px;color:#454545}
+.kami-book.kami-reading .detail .kami-glossary-browse{border:0;background:none;color:#3366a0;font-size:12px;min-height:30px;padding:2px 5px}
+.kami-book.kami-reading .detail .kami-endnote-group{margin:12px 0}
+.kami-book.kami-reading .detail .kami-endnote-group>h3{font-size:14px;font-weight:550;color:inherit;border:0;padding:0;margin:0 0 4px}
+@media(max-width:600px){.kami-book.kami-reading .detail .kami-reference-context{margin-left:6px}}
 .reader-note-box .note-preview[hidden]{display:none!important}
 @media(max-width:600px){.kami-book.kami-reading .detail{--reading-indent:8px}}
 @media(max-width:600px){.kami-book #curiosity-index{padding:0 16px 32px}.kami-book .top{padding:10px 16px}.kami-book .top-actions button{font-size:12px}.kami-book.kami-reading .atlas-inspector-rail>.journey-content:not([hidden]){padding:14px 17px 50px!important}}
@@ -2503,15 +2524,16 @@ function kamiOutlineEntries(n,trail){
  }
  return [...entries.values()];
 }
-function appendKamiOutline(box,n,trail){
+function appendKamiOutline(box,n,trail,article){
  const entries=kamiOutlineEntries(n,trail);
  if(!entries.length)return;
- const outline=el('section','kami-outline');outline.append(el('h3','kami-outline-title',trail.length===1?'Explore further':''));
- if(trail.length>1)outline.firstElementChild.remove();
+ const outline=el('section','kami-outline');
  for(const {node,reasons} of entries){
   const branch=el('details','kami-branch');branch.dataset.nodeId=node.id;
   const label=title(node).replace(/^Relevant technical route:\s*/,'');
-  branch.append(el('summary','',label));
+  const summary=el('summary',''),heading=el('span','kami-branch-heading',label);summary.append(heading);
+  if(article)article.mark(summary,node.id);
+  branch.append(summary);
   const body=el('div','kami-branch-body');branch.append(body);
   let loaded=false;
   branch.addEventListener('toggle',()=>{
@@ -2519,30 +2541,171 @@ function appendKamiOutline(box,n,trail){
    loaded=true;
    for(const reason of reasons)body.append(el('p','kami-route-question',reason));
    // Expand the same canonical record without changing selection, URL or sibling disclosures.
-   renderDetail(body,node,[...trail,node.id]);
+   renderDetail(body,node,[...trail,node.id],article);
   });
   outline.append(branch);
  }
  box.append(outline);
 }
-function appendKamiBookSources(box,n){
- if(n.kind!=='curiosity_entry')return;
- const refs=new Map();
- for(const id of state.children.get(n.id)||[])for(const loc of state.index.get(id)?.curiosity_refs||[]){
-  const key=JSON.stringify([loc.source_id,loc.ref,loc.why,loc.level]);if(!refs.has(key))refs.set(key,loc);
+// Article endmatter is derived from the current projection; never persist citation numbers.
+function kamiArticleNodes(root){
+ const seen=new Set(),nodes=[];
+ function visit(n,trail){
+  if(!n||seen.has(n.id))return;
+  seen.add(n.id);nodes.push({node:n,trail});
+  for(const {node} of kamiOutlineEntries(n,trail))visit(node,[...trail,node.id]);
  }
- if(!refs.size)return;
- const section=el('section','case-section');section.append(el('h3','','Books and source passages'));
- const body=el('div',''),byId=new Map((state.tree.sources||[]).map(s=>[s.id,s]));
- for(const loc of refs.values()){
-  const source=byId.get(loc.source_id);
-  body.append(makeManufacturingSource(byId,loc.source_id,source?.title||loc.source_id,
-   [loc.ref?'Section/chapter '+loc.ref:null,loc.why].filter(Boolean).join(' · '),
-   loc.level==='inspected'?'Selected passage examined':'Candidate reading; not established evidence'));
- }
- section.append(body);box.append(section);
+ visit(root,[root.id]);return nodes;
 }
-function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
+function kamiSourceRegistry(root){
+ const nodes=kamiArticleNodes(root);
+ const sources=new Map([...(state.tree.sources||[]),...(state.guide?.related_sources||[])].map(s=>[s.id||s.source_id,s]));
+ if(state.guide?.book)sources.set(state.guide.book.source_id,state.guide.book);
+ const books=new Map(),byNode=new Map(),terms=new Map();
+ const textValue=v=>Array.isArray(v)?v.join('; '):typeof v==='string'||typeof v==='number'?String(v):'';
+ function add(node,ref,kind){
+  if(!ref)return;
+  const id=ref.source_id||'OSTEP',source=sources.get(id);
+  if(!books.has(id))books.set(id,{id,source,number:books.size+1,contexts:new Map()});
+  const book=books.get(id);
+  if(!byNode.has(node.id))byNode.set(node.id,new Set());
+  byNode.get(node.id).add(id);
+  if(!book.contexts.has(node.id))book.contexts.set(node.id,{node,passages:new Map()});
+  const context=book.contexts.get(node.id);
+  const section=ref.section||ref.title||(ref.chapter!=null?'Chapter '+ref.chapter:ref.ref!=null?'Section/chapter '+ref.ref:'');
+  const first=ref.pages?.start??ref.start,last=ref.pages?.end??ref.end;
+  const pageKind=ref.pages?.kind||ref.page_scheme||ref.page_numbering||'printed';
+  const pages=textValue(ref.pages)||(first!=null?pageKind+' '+first+(last!=null&&last!==first?'–'+last:''):ref.printed_page_start!=null?'Printed p. '+ref.printed_page_start:'');
+  const offsets=ref.offsets&&Number.isInteger(ref.offsets.start)&&Number.isInteger(ref.offsets.end)?'Source offsets ['+ref.offsets.start+', '+ref.offsets.end+') · '+(ref.offsets.unit||'UTF-16'):'';
+  const locLevel=ref.level||ref.locator_level;
+  const status=locLevel==='inspected'?'Selected source passage examined':locLevel==='toc_only'?'Chapter candidate; section not yet examined':kind==='assignment'?'Reading assignment; not a completed investigation':kind==='source'?'':kind==='certificate'?'Investigation reference':'Candidate reading';
+  const why=ref.why===title(node)+' — '+node.why||ref.why===title(node).replace(/^Relevant technical route:\s*/,'')+' — '+node.why?'':ref.why;
+  const detail=[section,pages,offsets,offsets&&source?.sha256?'SHA-256: '+source.sha256:'',textValue(why),textValue(ref.role),textValue(ref.use_when),textValue(ref.purpose),textValue(ref.verification),textValue(ref.locator_status),textValue(ref.page_scheme),status].filter(Boolean);
+  // Exact repeated locators are deduplicated. Differing scope or evidence is retained.
+  const line=[...new Set(detail)].join(' · ');
+  if(line)context.passages.set(line,line);
+ }
+ for(const {node} of nodes){
+  const direct=[...(node.curiosity_refs||[]),...(node.source_sections||[]),...(node.candidate_references||[]),...(node.certificate?.references||[])];
+  for(const ref of node.curiosity_refs||[])add(node,ref,'candidate');
+  for(const ref of node.source_sections||[])add(node,ref,'candidate');
+  for(const ref of node.candidate_references||[])add(node,ref,'candidate');
+  for(const ref of node.certificate?.references||[])add(node,ref,'certificate');
+  for(const id of node.source_ids||[])if(!direct.some(ref=>(ref.source_id||'OSTEP')===id))add(node,{source_id:id},'source');
+  if(node.id!==state.tree.root)for(const book of state.tree.book_landscaplets||[])for(const sec of book.sections||[]){
+   if(!(sec.entry_node_ids||[]).includes(node.id))continue;
+   add(node,{source_id:book.source_id,ref:sec.ref,title:sec.title,printed_page_start:sec.printed_page_start,use_when:sec.use_when,level:'toc_only',locator_status:sec.locator_status},'candidate');
+  }
+  for(const route of state.tree.reading_route||[]){
+   const source=sources.get(route.source_id);
+   if(!(source?.linked_nodes||[]).includes(node.id))continue;
+   for(const range of route.ranges||[])add(node,{...range,source_id:route.source_id,page_numbering:route.page_numbering,purpose:route.purpose},'assignment');
+   if(!route.ranges?.length)add(node,{source_id:route.source_id,purpose:route.purpose},'assignment');
+  }
+  if(state.guide){
+   const routes=[...(state.guide.routes||[]).filter(r=>(r.question_node_ids||[]).includes(node.id)),...(state.guide.cross_source_routes||[]).filter(r=>(r.node_ids||[]).includes(node.id))];
+   for(const route of routes)for(const ref of [...(route.references||[]),...(route.cross_book_references||[])])add(node,{...ref,source_id:ref.source_id||'OSTEP'},'candidate');
+  }
+  const chapterScope=descriptiveSearchEnabled()?(state.curiosityData?.landscape_views||[]).find(l=>l.root_id===node.id):null;
+  const ids=chapterScope?[...(chapterScope.term_ids||[]),...(state.glossary?.terms||[]).filter(t=>t.category===chapterScope.title).map(t=>t.id)]:(node.term_ids||[]);
+  for(const id of ids){
+   const term=state.termById.get(id);if(!term)continue;
+   if(!terms.has(id))terms.set(id,term);
+  }
+ }
+ return {nodes,books,byNode,terms};
+}
+function makeKamiArticle(root){
+ const registry=kamiSourceRegistry(root);
+ const {books,byNode,terms}=registry;
+ const end=el('section','kami-endmatter'),bibliography=el('section','kami-bibliography'),glossary=el('section','kami-glossary'),metadata=el('section','kami-endnotes');
+ const destinations=new Map(),notes=new Set(),lastMarker=new Map();
+ let serial=0;
+ function jump(target){
+  if(!target)return;
+  target.focus({preventScroll:true});target.scrollIntoView({block:'start',behavior:'auto'});
+ }
+ function localLink(label,target,aria){
+  const a=el('a','kami-local-link',label);a.href='#'+target.id;
+  if(aria)a.setAttribute('aria-label',aria);
+  a.onclick=e=>{e.preventDefault();e.stopPropagation();jump(target)};
+  return a;
+ }
+ if(books.size){
+  bibliography.append(el('h2','kami-end-title','References'));
+  const intro=el('p','kami-end-caption','Books and source passages linked to this investigation. Numbers indicate reading routes, not necessarily verified support for every claim.');
+  bibliography.append(intro);
+  for(const book of books.values()){
+   const section=el('section','kami-book-reference');section.id='kami-ref-'+book.number;section.tabIndex=-1;
+   const heading=el('h3','kami-book-reference-title','['+book.number+'] '+(book.source?.title||book.id));section.append(heading);
+   const authors=Array.isArray(book.source?.authors)?book.source.authors.join(', '):book.source?.authors||book.source?.author;
+   const edition=[authors,book.source?.edition].filter(Boolean).join(' · ');
+   if(edition)section.append(el('p','kami-end-caption',edition));
+   const links=el('div','kami-source-links'),kami=kamiFileUrl(book.source);
+   if(kami)links.append(link(kami,'Open in Kami'));
+   if(book.source?.url)links.append(link(book.source.url,kami?'Original source':'Open source'));
+   if(links.childElementCount)section.append(links);
+   if(book.source?.status)section.append(el('p','kami-end-caption',book.source.status));
+   if(book.source?.role||book.source?.scope)section.append(el('p','kami-end-caption',book.source.role||book.source.scope));
+   for(const {node,passages} of book.contexts.values()){
+    const context=el('div','kami-reference-context');context.id='kami-ref-context-'+(++serial);context.tabIndex=-1;
+    const key=book.id+'\u0000'+node.id;destinations.set(key,context);
+    const header=el('div','kami-reference-context-heading');
+    header.append(el('strong','',title(node).replace(/^Relevant technical route:\s*/,'')));
+    const back=el('a','kami-reference-back','↑ Back');back.href='#';back.hidden=true;
+    back.onclick=e=>{e.preventDefault();e.stopPropagation();jump(lastMarker.get(key))};
+    header.append(back);context.append(header);context._kamiBack=back;
+    for(const line of passages.values())context.append(el('p','kami-reference-passage',line));
+    section.append(context);
+   }
+   bibliography.append(section);
+  }
+  end.append(bibliography);
+ }
+ if(terms.size){
+  glossary.id='kami-article-glossary';glossary.tabIndex=-1;
+  const header=el('h2','kami-end-title','Glossary');glossary.append(header);
+  const back=el('a','kami-reference-back','↑ Back');back.href='#';back.hidden=true;
+  back.onclick=e=>{e.preventDefault();jump(lastMarker.get('glossary'))};header.append(back);
+  glossary._kamiBack=back;
+  const list=el('dl','kami-glossary-list');
+  for(const term of [...terms.values()].sort((a,b)=>a.label.localeCompare(b.label))){
+   const item=el('div','kami-glossary-item'),dt=el('dt','',term.label);
+   const browse=el('button','kami-glossary-browse','↗');browse.type='button';browse.title='Open domain glossary for '+term.label;browse.setAttribute('aria-label',browse.title);
+   browse.onclick=()=>{showCuriosityIndex(true);openGlossaryTerm(term.id)};
+   dt.append(browse);item.append(dt);
+   if(term.definition)item.append(el('dd','',term.definition));
+   list.append(item);
+  }
+  glossary.append(list);end.append(glossary);
+ }
+ function mark(host,nodeId,includeGlossary=false){
+  const ids=byNode.get(nodeId);
+  if(!ids?.size&&!(includeGlossary&&terms.size))return;
+  const marker=el('sup','kami-citations');marker.id='kami-citation-'+(++serial);
+  for(const id of ids||[]){
+   const book=books.get(id),key=id+'\u0000'+nodeId,target=destinations.get(key);
+   if(!target)continue;
+   const a=localLink('['+book.number+']',target,'Reference '+book.number+': '+(book.source?.title||id));
+   a.onclick=e=>{e.preventDefault();e.stopPropagation();lastMarker.set(key,a);target._kamiBack.hidden=false;target._kamiBack.href='#'+marker.id;jump(target)};
+   marker.append(a);
+  }
+  if(includeGlossary&&terms.size){
+   const a=localLink('Glossary',glossary,'Glossary for this investigation');
+   a.onclick=e=>{e.preventDefault();e.stopPropagation();lastMarker.set('glossary',a);glossary._kamiBack.hidden=false;glossary._kamiBack.href='#'+marker.id;jump(glossary)};
+   marker.append(a);
+  }
+  host.append(marker);
+ }
+ function addNotes(node,body){
+  if(!body.childElementCount||notes.has(node.id))return;
+  notes.add(node.id);
+  if(!metadata.childElementCount){metadata.append(el('h2','kami-end-title','Research notes'));end.append(metadata)}
+  const group=el('section','kami-endnote-group');group.append(el('h3','',title(node).replace(/^Relevant technical route:\s*/,'')),body);metadata.append(group);
+ }
+ return {end,mark,addNotes,registry};
+}
+function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
  const inline=!!inlineBox,box=inline?inlineBox:$('detail');
  if(!inline){
   clear(box);box.hidden=!state.detailOpen;
@@ -2552,6 +2715,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
  const n=inline?inlineNode:state.index.get(state.selected);
  if(!n)return;
  const reading=kamiReading();
+ if(reading&&!inline)article=makeKamiArticle(n);
  const referenceBody=reading?el('div','kami-reference-body'):box;
  const references=reading?referenceBody:box;
  // Once the reader requests references, show the actual locators immediately.
@@ -2580,7 +2744,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
  }
  const marker=el('span','chip',(n.kind||'Question').replace(/_/g,' '));box.append(marker);
  if(n.question_type)box.append(el('span','chip question-type-tag',questionTypeLabel(n.question_type)));
- box.append(el('h2','',title(n)));
+ const heading=el('h2','',title(n));if(article)article.mark(heading,n.id,true);box.append(heading);
  const toolbar=renderReaderDetail(box,n);
  const isChildDeck=n.kind==='subdomain'&&!!localJsonReference(n.url,state.repo);
  if(isChildDeck){
@@ -2672,7 +2836,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
  if(n.actor)box.append(el('div','case-byline',n.actor+(n.evidence_status?' · '+n.evidence_status:'')));
  const chapterScope=descriptiveSearchEnabled()?(state.curiosityData?.landscape_views||[]).find(l=>l.root_id===n.id):null;
  const vocabularyIds=chapterScope?[...new Set([...(chapterScope.term_ids||[]),...(state.glossary?.terms||[]).filter(t=>t.category===chapterScope.title).map(t=>t.id)])]:(n.term_ids||[]);
- if(vocabularyIds.length&&state.termById.size){
+ if(!reading&&vocabularyIds.length&&state.termById.size){
   const section=el('div','glossary-detail-terms');
   section.append(el('span','muted',chapterScope?'Chapter vocabulary · '+vocabularyIds.length:'Concepts'));
   for(const termId of descriptiveSearchEnabled()?vocabularyIds:vocabularyIds.slice(0,12)){
@@ -2883,7 +3047,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
    }
    if(buttons.childElementCount){sec.append(buttons);box.append(sec)}
   }
-  if(n.source_ids?.length&&!n.curiosity_refs?.length){
+  if(!reading&&n.source_ids?.length&&!n.curiosity_refs?.length){
    const sec=el('section','case-section');sec.append(el('h3','','Sources to investigate'));
    const byId=new Map((state.tree.sources||[]).map(x=>[x.id,x]));
    for(const id of n.source_ids){
@@ -2894,7 +3058,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
    }
    references.append(sec);
   }
-  if(n.curiosity_refs?.length){
+  if(!reading&&n.curiosity_refs?.length){
    const sec=el('section','case-section'),byId=new Map((state.tree.sources||[]).map(x=>[x.id,x]));
    sec.append(el('h3','','Source passages and candidate reading'));
    for(const loc of n.curiosity_refs){
@@ -2904,7 +3068,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
    references.append(sec);
   }
  }
- if(state.tree.book_landscaplets?.length&&n.id!==state.tree.root){
+ if(!reading&&state.tree.book_landscaplets?.length&&n.id!==state.tree.root){
   const routes=(state.tree.book_landscaplets||[]).flatMap(book=>(book.sections||[])
     .filter(sec=>(sec.entry_node_ids||[]).includes(n.id))
     .map(sec=>({book,sec})));
@@ -2920,7 +3084,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
    appendReferenceFold(fold,body);
   }
  }
- if(n.source_sections?.length){
+ if(!reading&&n.source_sections?.length){
   const fold=el('details','details-fold');fold.append(el('summary','','Source locations · '+n.source_sections.length));
   const body=el('div','fold-body');
   const refs=new Map((state.tree.sources||[]).map(src=>[src.id,src]));
@@ -3013,7 +3177,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
  for(const e of notes){fieldSection('Evidence',e.observation);fieldSection('Interpretation',e.interpretation)}
  const refsById=new Map([...(state.tree.sources||[]),...(state.guide?.related_sources||[])].map(x=>[x.id,x]));
  const extraSources=(n.source_ids||[]).filter(id=>!(n.source_sections||[]).some(s=>s.source_id===id));
- if(extraSources.length&&n.kind!=='technical_branch'){
+ if(!reading&&extraSources.length&&n.kind!=='technical_branch'){
   const section=el('div','case-section');section.append(el('h3','','Sources'));
   for(const id of extraSources){
    const src=refsById.get(id),row=el('div','case-source');
@@ -3026,7 +3190,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
  }
  const assigned=(state.tree.reading_route||[]).filter(route=>
   (state.tree.sources||[]).some(src=>src.id===route.source_id&&(src.linked_nodes||[]).includes(n.id)));
- if(assigned.length){
+ if(!reading&&assigned.length){
   const fold=el('details','details-fold');fold.append(el('summary','','Suggested source sections'));
   const body=el('div','fold-body');
   for(const route of assigned){
@@ -3073,7 +3237,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
   routes=(state.guide.routes||[]).filter(r=>(r.question_node_ids||[]).includes(n.id));
   for(const r of state.guide.cross_source_routes||[])if((r.node_ids||[]).includes(n.id))routes.push(r);
  }
- if(sections.length||routes.length){
+ if(!reading&&(sections.length||routes.length)){
   const fold=el('details','details-fold');fold.append(el('summary','',routes.length?'Reading routes · '+routes.length+' connected':'Books & sources'));
   const body=el('div','fold-body');
   for(const section of sections){body.append(el('h4','',section.label));for(const ref of section.refs)entryRow(body,ref,sources)}
@@ -3134,12 +3298,10 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
  }
  if(reading){
   if(unestablished)box.append(el('p','kami-record-status','Proposed investigation — not an established finding.'));
-  appendKamiOutline(box,n,trail);
-  appendKamiBookSources(referenceBody,n);
+  appendKamiOutline(box,n,trail,article);
+  if(article)article.addNotes(n,referenceBody);
+  if(!inline&&article)box.append(article.end);
   const aux=el('div','kami-aux');
-  if(referenceBody.childElementCount){
-   const refs=el('details','kami-reference');refs.append(el('summary','','Concepts & sources'),referenceBody);aux.append(refs);
-  }
   if(inline)renderReaderDetail(aux,n);
   const links=new Map();
   if(n.url)links.set(n.url,'Original resource');
