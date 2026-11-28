@@ -1132,7 +1132,7 @@ function mappedView(data,view,r){const spec=view.projection||{},shape=spec.shape
 }
 function globMatch(pattern,path){const parts=pattern.split(/(\*\*|\*)/),re='^'+parts.map(x=>x==='**'?'.*':x==='*'?'[^/]*':x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('')+'$';return new RegExp(re).test(path)}
 async function discover(r){const data=await fetchJson(api(r,'git/trees/'+encodeURIComponent(r.branch)+'?recursive=1'));if(data.truncated)throw Error('Repository listing truncated; open a specific JSON file instead');return (data.tree||[]).filter(x=>x.type==='blob').map(x=>x.path)}
-function viewList(manifest,paths){if(manifest.mapping_version!=='0.1'||!Array.isArray(manifest.views))throw Error('Unsupported mapping manifest');const views=[];for(const template of manifest.views){if(template.file){views.push(template);continue}if(template.glob){for(const file of paths.filter(p=>globMatch(template.glob,p)&&!(template.exclude||[]).some(ex=>globMatch(ex,p)))){const name=simpleLabel(file.endsWith('/domain.json')?file.split('/').slice(-2,-1)[0]:file);views.push({...template,id:template.id+':'+(manifest.legacy_files?.[file]||file),title:template.title+' · '+name,file})}}}return views.map(v=>({...v,reader_file:manifest.legacy_files?.[v.file]||v.file,aliases:Object.entries(manifest.record_aliases||{}).filter(([from,to])=>to===v.file).map(([from])=>from)}))}
+function viewList(manifest,paths){if(manifest.mapping_version!=='0.1'||!Array.isArray(manifest.views))throw Error('Unsupported mapping manifest');const views=[];for(const template of manifest.views){if(template.file){views.push(template);continue}if(template.glob){for(const file of paths.filter(p=>globMatch(template.glob,p)&&!(template.exclude||[]).some(ex=>globMatch(ex,p)))){const name=simpleLabel(/(?:\/domain|\/axioms)\.json$/.test(file)?file.split('/').slice(-2,-1)[0]:file);views.push({...template,id:template.id+':'+(manifest.legacy_files?.[file]||file),title:template.title+' · '+name,file})}}}return views.map(v=>({...v,reader_file:manifest.legacy_files?.[v.file]||v.file,aliases:Object.entries(manifest.record_aliases||{}).filter(([from,to])=>to===v.file).map(([from])=>from)}))}
 
 /* The entry layer is purposely ordinary language. A selected entry generates a
    temporary technical hierarchy from canonical studies and sourced bridges. */
@@ -1773,7 +1773,8 @@ function renderCatalog(){
  const top=domain.filter(v=>v.file.split('/').length===3);
  const sub=domain.filter(v=>v.file.split('/').length>3);
  const projects=views.filter(v=>v.projection?.root?.kind==='project');
- const other=views.filter(v=>!domain.includes(v)&&!projects.includes(v));
+ const tacits=views.filter(v=>v.projection?.root?.kind==='tacit_book');
+ const other=views.filter(v=>!domain.includes(v)&&!projects.includes(v)&&!tacits.includes(v));
  const featured=(state.catalogHome.featured||[]).map(item=>{
   const v=views.find(v=>(item.view_id&&v.id===item.view_id)||(item.file&&v.file===item.file));
   return v?{...v,home_label:item.label||v.short_title||v.title,home_description:item.description||''}:null;
@@ -1788,7 +1789,7 @@ function renderCatalog(){
   const grid=el('div','curiosity-card-grid');
   for(const v of selected){
    const card=el('button','curiosity-card curiosity-set-card');card.type='button';
-   card.append(el('strong','',v.home_label||v.short_title||v.title.replace(/^Domain · /,'').replace(/^Project landscape · /,'')));
+   card.append(el('strong','',v.home_label||v.short_title||v.title.replace(/^Domain · /,'').replace(/^Project landscape · /,'').replace(/^Applied survey · /,'').replace(/^Tacit problem set · /,'')));
    if(v.home_description)card.append(el('span','',v.home_description));
    card.onclick=async()=>{
     try{await loadMapped(state.repo,v);$('choices').value=v.id;window.scrollTo(0,0)}
@@ -1806,10 +1807,11 @@ function renderCatalog(){
  const nested=new Set(other.filter(v=>v.atlas_file).map(v=>v.id));
  group('Other collections',remaining(other).filter(v=>query||(!nested.has(v.id)&&!v.shared_reader_id)),{collapsed:!query});
  group('Specialized surveys',sub,{collapsed:!query});
+ group('Tacit problem sets',tacits,{collapsed:!query});
  group('Applied surveys',projects,{collapsed:!query});
  $('catalog-count').textContent=query?
   views.filter(matches).length+' matching collections':
-  top.length+' major domains · '+sub.length+' specialized domains · '+projects.length+' project landscapes · '+other.length+' other views';
+  top.length+' subject surveys · '+sub.length+' specialized surveys · '+tacits.length+' tacit problem sets · '+projects.length+' applied surveys';
  if(!results.children.length)results.append(el('p','curiosity-empty','No matching collections.'));
 }
 function openCatalog(){
@@ -2419,7 +2421,7 @@ function resourceHeading(k){return k.replace(/_/g,' ').replace(/([a-z])([A-Z])/g
 function renderReferencedData(host,data,r,openLocal,fieldName='',sourcePath=''){
  if(data==null)return;
  if(typeof data==='string'){
-  const address=safeHref(data),repoPath=!address&&/^(?:Resources|Domains|Glossaries|Collections|Project_Ideas|Practical_Knowledge|Axioms)\/[\w./-]+\.json$/.test(data)&&!data.includes('..')?data:null;
+  const address=safeHref(data),repoPath=!address&&/^(?:Resources|Domains|Glossaries|Collections|Project_Ideas|Projects|Practical_Knowledge|Axioms|Thoughts)\/[\w./-]+\.json$/.test(data)&&!data.includes('..')?data:null;
   const domainChild=fieldName==='children'&&sourcePath.endsWith('/domain.json')&&/^[A-Za-z0-9_-]+$/.test(data)?
    sourcePath.slice(0,sourcePath.lastIndexOf('/')+1)+data+'/domain.json':null;
   const internal=repoPath||localJsonReference(address,r)||domainChild;
@@ -2479,7 +2481,7 @@ function mappedChildEntries(data,sourcePath,r){
    if(!path&&typeof item==='string'){
     if(rule.path==='children'&&/^[A-Za-z0-9_-]+$/.test(item))
      path=sourcePath.slice(0,sourcePath.lastIndexOf('/')+1)+item+'/domain.json';
-    else if(/^(?:Resources|Domains|Glossaries|Collections|Project_Ideas|Practical_Knowledge|Axioms)\/[\w./-]+\.json$/.test(item)&&!item.includes('..'))path=item;
+    else if(/^(?:Resources|Domains|Glossaries|Collections|Project_Ideas|Projects|Practical_Knowledge|Axioms|Thoughts)\/[\w./-]+\.json$/.test(item)&&!item.includes('..'))path=item;
    }
    const label=typeof item==='string'?simpleLabel(item):
     field(item,rule.label_field)||item?.name||item?.title||item?.question||item?.label||rule.label||rule.path;
@@ -2663,8 +2665,8 @@ function appendKamiOutline(box,n,trail,article){
  if(!entries.length)return;
  const outline=el('section','kami-outline');
  const record=hasRecordReader(),isRoot=record&&n.id===state.tree.root;
- const groupNames={research_question:'Questions',subdomain:'Domains',research_view:'Investigative books',project_alternative:'Project possibilities',capability:'Constituent capabilities',project_archetype:'Projects',project_idea:'Projects',glossary:'Glossary',operator_basis:'Axioms',reference:'Resources',publication:'Publications',core_reference:'Resources',community:'Communities',researcher:'People',domain_concept:'Concepts'};
- const rank=['Questions','Domains','Investigative books','Project possibilities','Projects','Glossary','Axioms','Constituent capabilities','Resources','Publications','People','Communities','Concepts','Related material'];
+ const groupNames={research_question:'Questions',subdomain:'Domains',research_view:'Investigative books',project_alternative:'Project possibilities',capability:n.kind==='tacit_book'?'Tacit problems':'Constituent capabilities',skill_probe:'Exercises',project_archetype:'Projects',project_idea:'Projects',glossary:'Glossary',operator_basis:'Axioms',reference:'Resources',publication:'Publications',core_reference:'Resources',community:'Communities',researcher:'People',domain_concept:'Concepts'};
+ const rank=['Questions','Domains','Investigative books','Project possibilities','Projects','Glossary','Axioms','Tacit problems','Exercises','Constituent capabilities','Resources','Publications','People','Communities','Concepts','Related material'];
  let group=null,lastGroup=null;
  if(isRoot)entries.sort((a,b)=>rank.indexOf(groupNames[a.node.kind]||'Related material')-rank.indexOf(groupNames[b.node.kind]||'Related material'));
  for(const {node,reasons} of entries){
@@ -3155,7 +3157,8 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[],article=null){
    const sec=el('div','case-section');
    sec.append(el('h3','','Canonical workflow'));
    sec.append(el('p','','Case ID: '+n.case_id));
-   sec.append(link('https://github.com/JadanPoll/FKEN_Ecosystem/blob/main/Collections/Cool_Uses_Of_AI/1/cases.json','Open Tier 1 source records'));
+   const tier=state.views?.find(v=>v.id==='cool-ai-tier-1');
+   if(tier&&state.repo)sec.append(link(repoUrl(state.repo,tier.file.replace(/investigation\.json$/,'cases.json')),'Open Tier 1 source records'));
    box.append(sec);
   }
  }
