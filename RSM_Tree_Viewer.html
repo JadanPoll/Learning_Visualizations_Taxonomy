@@ -3534,7 +3534,8 @@ function renderReaderDetail(box,n,actionHost=box){
   note.value=readerFor(n.id)?.note||'';panel.hidden=false;compose.hidden=false;toggle.setAttribute('aria-expanded','true');note.focus();
  };
  wrap.append(toggle);actionHost.append(wrap);
- // The textarea already contains the saved note. Do not render a second copy above it.
+ // Kami's textarea already contains the saved note. Keep the shared viewer's legacy preview elsewhere.
+ if(!compact){const preview=el('div','note-preview',prior?.note||'');preview.hidden=!prior?.note;panel.append(preview)}
  panel.append(compose);box.append(panel);
  return wrap;
 }
