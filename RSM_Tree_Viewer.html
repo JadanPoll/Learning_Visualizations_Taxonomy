@@ -476,6 +476,34 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .kami-book.kami-reading .detail .kami-branch-body .case-section{margin-top:10px;padding-top:4px;border:0}
 .kami-book.kami-reading .detail .kami-branch-body .case-section h3{font-size:13px;color:#555;margin:0 0 5px;font-weight:600}
 .kami-book.kami-reading .detail .kami-branch-body p{margin:5px 0 10px}
+.kami-book.kami-reading .detail .kami-branch-body .kami-route-question{color:#626262;font-size:14px;line-height:1.5;margin:2px 0 7px}
+.kami-book.kami-reading .detail .kami-branch-body .case-factor{padding:6px 0;border:0}
+.kami-book.kami-reading .detail .kami-branch-body .case-factor strong{font-size:15px;color:#333}
+.kami-book.kami-reading .detail .kami-branch-body .case-factor p{margin:3px 0 8px}
+.kami-book.kami-reading .detail .kami-branch-body .kami-mechanism{margin:5px 0 10px}
+.kami-book.kami-reading .detail .kami-record-status{font-size:12px;line-height:1.45;color:#737373;margin:7px 0}
+.kami-book.kami-reading .detail .kami-aux{display:flex;align-items:flex-start;flex-wrap:wrap;column-gap:10px;row-gap:0;margin:4px 0 8px}
+.kami-book.kami-reading .detail .kami-aux .reader-actions{margin:0;gap:0;align-items:center}
+.kami-book.kami-reading .detail .kami-aux .reader-actions button{border:0;background:transparent;color:#777}
+.kami-book.kami-reading .detail .kami-aux .reader-actions button.on{color:#9b650b}
+.kami-book.kami-reading .detail .kami-aux .note-preview{margin-top:3px}
+.kami-book.kami-reading .detail .kami-aux .reader-note-box:has(.note-compose:not([hidden])){flex-basis:100%}
+.kami-book.kami-reading .detail .kami-reference{min-width:0;max-width:100%;flex:1 1 145px}
+.kami-book.kami-reading .detail .kami-reference>summary{list-style:none;display:flex;align-items:center;gap:6px;min-height:42px;color:#707070;font-size:12px;font-weight:500;cursor:pointer}
+.kami-book.kami-reading .detail .kami-reference>summary::-webkit-details-marker{display:none}
+.kami-book.kami-reading .detail .kami-reference>summary::before{content:'›';font-size:17px;line-height:1}
+.kami-book.kami-reading .detail .kami-reference[open]>summary::before{transform:rotate(90deg)}
+.kami-book.kami-reading .detail .kami-reference-body{padding:1px 0 8px;min-width:0;overflow-wrap:anywhere}
+.kami-book.kami-reading .detail .kami-reference-body .case-section{border:0;margin:8px 0;padding:0}
+.kami-book.kami-reading .detail .kami-reference-body .case-section h3,.kami-book.kami-reading .detail .kami-reference-body h4{color:#666;font-size:12px;margin:4px 0}
+.kami-book.kami-reading .detail .kami-reference-body .glossary-detail-terms{margin:0 0 6px}
+.kami-book.kami-reading .detail .kami-reference-body .case-source-status{font-size:12px!important}
+.kami-book.kami-reading .detail .kami-reference-body .case-source,.kami-book.kami-reading .detail .kami-reference-body .case-route-resource{font-size:13px}
+.kami-book.kami-reading .detail .kami-reference-body .case-source p,.kami-book.kami-reading .detail .kami-reference-body .case-route-resource p{font-size:12px;line-height:1.45}
+.kami-book.kami-reading .detail .kami-reference-body .details-fold>summary{font-size:12px;min-height:38px}
+.kami-book.kami-reading .detail .kami-branch-body .kami-outline{margin:4px 0}
+.kami-book.kami-reading .detail .kami-branch-body .kami-branch-body{margin-bottom:7px}
+.kami-book.kami-reading .detail .kami-aux .kami-original{margin:0;align-items:center;min-height:42px}
 .kami-book.kami-reading .detail .kami-branch-body .reader-actions{margin:4px 0 0;gap:2px}
 .kami-book.kami-reading .detail .kami-branch-body .reader-actions button{border:0;background:transparent;color:#777}
 .kami-book.kami-reading .detail .kami-branch-body .reader-actions button.on{color:#9b650b}
@@ -2482,7 +2510,7 @@ function appendKamiOutline(box,n,trail){
   branch.addEventListener('toggle',()=>{
    if(!branch.open||loaded)return;
    loaded=true;
-   for(const reason of reasons)body.append(el('p','case-source-status',reason));
+   for(const reason of reasons)body.append(el('p','kami-route-question',reason));
    // Expand the same canonical record without changing selection, URL or sibling disclosures.
    renderDetail(body,node,[...trail,node.id]);
   });
@@ -2497,15 +2525,15 @@ function appendKamiBookSources(box,n){
   const key=JSON.stringify([loc.source_id,loc.ref,loc.why,loc.level]);if(!refs.has(key))refs.set(key,loc);
  }
  if(!refs.size)return;
- const fold=el('details','details-fold');fold.append(el('summary','','Books and source passages'));
- const body=el('div','fold-body'),byId=new Map((state.tree.sources||[]).map(s=>[s.id,s]));
+ const section=el('section','case-section');section.append(el('h3','','Books and source passages'));
+ const body=el('div',''),byId=new Map((state.tree.sources||[]).map(s=>[s.id,s]));
  for(const loc of refs.values()){
   const source=byId.get(loc.source_id);
   body.append(makeManufacturingSource(byId,loc.source_id,source?.title||loc.source_id,
    [loc.ref?'Section/chapter '+loc.ref:null,loc.why].filter(Boolean).join(' · '),
    loc.level==='inspected'?'Selected passage examined':'Candidate reading; not established evidence'));
  }
- fold.append(body);box.append(fold);
+ section.append(body);box.append(section);
 }
 function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
  const inline=!!inlineBox,box=inline?inlineBox:$('detail');
@@ -2517,6 +2545,8 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
  const n=inline?inlineNode:state.index.get(state.selected);
  if(!n)return;
  const reading=kamiReading();
+ const referenceBody=reading?el('div','kami-reference-body'):box;
+ const references=reading?referenceBody:box;
  if(!inline)trail=[n.id];
  if(reading&&!inline){
   const bar=el('div','kami-backbar'),back=el('button','','‹ Back to book'),map=el('button','','Technical map ↗');
@@ -2605,7 +2635,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
  }
  if(n.url&&state.repo)appendResourcePreview(box,n,childThumb);
 
- if((n.why_ask||n.why||n.description)&&!(kamiBook()&&n.answer?.length&&n.kind==='curiosity_entry'))box.append(el('p','',n.why_ask||n.why||n.description));
+ if((n.why_ask||n.why||n.description)&&!(kamiBook()&&n.answer?.length&&n.kind==='curiosity_entry'))box.append(el('p',reading&&n.kind==='technical_branch'?'kami-route-question':'',n.why_ask||n.why||n.description));
  // Reader-facing explanation is distinct from source certificates and technical routes.
  function readingBlocks(host,blocks){
   for(const block of blocks||[]){
@@ -2636,10 +2666,10 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
    chip.onclick=()=>{showCuriosityIndex(true);openGlossaryTerm(termId)};
    section.append(chip);
   }
-  if(section.childElementCount>1)box.append(section);
+  if(section.childElementCount>1)references.append(section);
  }
  if(n.kind==='curiosity_entry'){
-  if(kamiBook()&&!n.answer?.length&&!n.worked_solution?.length)box.append(el('p','case-source-status','Direct explanation not yet written. Explore the existing technical routes below.'));
+  if(reading&&!n.answer?.length&&!n.worked_solution?.length)references.append(el('p','kami-record-status','Direct explanation not yet written; the outline contains existing research routes.'));
   else if(!n.answer?.length&&!n.worked_solution?.length)box.append(el('p','case-source-status',n.task_scope==='capability_family'?
    'Reusable capability family · instantiate with suitable inputs and demonstrate the stated criterion. Source pointers are not evidence of mastery.':
    'Exploratory question · the mapped nodes below are technical explanations and conditional routes, not an automatic diagnosis.'));
@@ -2649,8 +2679,8 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
  if(n.kind==='technical_branch'&&!reading){
   box.append(el('p','case-source-status','Conditional mechanism · investigate whether this explanation fits the observed failure or desired behavior.'));
  }
- if(n.status&&/^(?:candidate|provisional|active_question|pending_investigation|not investigated)/.test(n.status))
-  box.append(el('p','case-source-status','Question or proposed investigation · no established finding yet'));
+ const unestablished=n.status&&/^(?:candidate|provisional|active_question|pending_investigation|not investigated)/.test(n.status);
+ if(unestablished&&!reading)box.append(el('p','case-source-status','Question or proposed investigation · no established finding yet'));
  function fieldSection(label,value){
   if(value==null||value===''||(Array.isArray(value)&&!value.length))return;
   const section=el('div','case-section');section.append(el('h3','',label));
@@ -2792,7 +2822,10 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
  }
  if(n.observed&&n.observed!==n.why_ask&&n.observed!==n.description)fieldSection('What happened',n.observed);
  if(n.failure_to_intervention)fieldSection('Failure and intervention',n.failure_to_intervention);
- if(n.mechanism_explanation)fieldSection(n.kind==='technical_branch'?'Mechanism and conditions to investigate':'How it worked',n.mechanism_explanation);
+ if(n.mechanism_explanation){
+  if(reading&&typeof n.mechanism_explanation==='string')box.append(el('p','kami-mechanism',n.mechanism_explanation));
+  else fieldSection(n.kind==='technical_branch'?'Mechanism and conditions to investigate':'How it worked',n.mechanism_explanation);
+ }
  else fieldSection('Mechanisms to investigate',n.mechanisms_to_investigate);
  if(n.observed_trace?.length){
   const fold=el('details','details-fold case-trace');
@@ -2812,7 +2845,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
  if(n.evidence_run_ids?.length){fieldSection('Limits of evidence',n.qualification);appendResearchRuns(box,n);}
  fieldSection('Distinctions',n.distinctions);
  if(n.technical_distinctions?.length){
-  const section=el('div','case-section');section.append(el('h3','','Mechanisms and discriminating observations'));
+  const section=el('div','case-section');if(!reading)section.append(el('h3','','Mechanisms and discriminating observations'));
   for(const item of n.technical_distinctions){
    const block=el('div','case-factor');
    block.append(el('strong','',item.contrast||'Mechanism'));
@@ -2843,16 +2876,16 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
     item.append(el('p','case-source-status','Candidate reference; not an established conclusion'));
     sec.append(item);
    }
-   box.append(sec);
+   references.append(sec);
   }
   if(n.curiosity_refs?.length){
    const sec=el('section','case-section'),byId=new Map((state.tree.sources||[]).map(x=>[x.id,x]));
    sec.append(el('h3','','Source passages and candidate reading'));
    for(const loc of n.curiosity_refs){
     sec.append(makeManufacturingSource(byId,loc.source_id,byId.get(loc.source_id)?.title||loc.source_id,
-     loc.why,loc.level==='inspected'?'Selected source passage examined':loc.level==='toc_only'?'Chapter candidate; section not yet examined':'Source lead, not an established conclusion'));
+     [loc.ref?'Section/chapter '+loc.ref:null,loc.why===title(n)+' — '+n.why||loc.why===title(n).replace(/^Relevant technical route:\s*/,'')+' — '+n.why?null:loc.why].filter(Boolean).join(' · '),loc.level==='inspected'?'Selected source passage examined':loc.level==='toc_only'?'Chapter candidate; section not yet examined':'Source lead, not an established conclusion'));
    }
-   box.append(sec);
+   references.append(sec);
   }
  }
  if(state.tree.book_landscaplets?.length&&n.id!==state.tree.root){
@@ -2868,7 +2901,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
     const entry=makeManufacturingSource(bookMap,book.source_id,bookMap.get(book.source_id)?.title||book.source_id,loc,'TOC-level route · '+sec.use_when);
     body.append(entry);
    }
-   fold.append(body);box.append(fold);
+   fold.append(body);references.append(fold);
   }
  }
  if(n.source_sections?.length){
@@ -2882,7 +2915,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
    entry.append(el('p','case-source-status',(section.pages||'')+' · '+(section.page_scheme||'Page scheme not specified')));
    body.append(entry);
   }
-  fold.append(body);box.append(fold);
+  fold.append(body);references.append(fold);
  }
  if((n.id==='MFG-ROOT'||(state.tree.landscape_lens&&n.id===state.tree.root))&&state.tree.book_factorization){
   const factorization=state.tree.book_factorization,lens=state.tree.landscape_lens;
@@ -2970,7 +3003,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
     if(src?.role)row.append(el('p','muted',src.role));
    section.append(row);
   }
-  box.append(section);
+  references.append(section);
  }
  const assigned=(state.tree.reading_route||[]).filter(route=>
   (state.tree.sources||[]).some(src=>src.id===route.source_id&&(src.linked_nodes||[]).includes(n.id)));
@@ -2986,7 +3019,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
    body.append(group);
   }
   body.append(el('p','case-source-status','Reading assignments are not completed investigations.'));
-  fold.append(body);box.append(fold);
+  fold.append(body);references.append(fold);
  }
  const relatedProjects=(state.tree.projects||[]).filter(p=>(p.case_ids||[]).includes(n.id));
  if(relatedProjects.length){
@@ -3034,7 +3067,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
    for(const ref of route.cross_book_references||[])entryRow(routeBody,ref,sources);
    routeFold.append(routeBody);body.append(routeFold);
   }
-  fold.append(body);box.append(fold);
+  fold.append(body);references.append(fold);
  }
  const linkedCases=(n.fieldwork_case_ids||[]).filter(id=>!reading||!state.index.has(id));
  if(linkedCases.length&&state.curiosityData?.fieldwork_nodes?.length){
@@ -3046,7 +3079,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
    b.onclick=()=>openResearchTarget(id);
    body.append(b);
   }
-  fold.append(body);box.append(fold);
+  fold.append(body);references.append(fold);
  }
 
  if(state.activeView?.projection?.shape==='curiosities'&&state.curiosityData?.landscape_views?.length){
@@ -3063,7 +3096,7 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
     };
     body.append(btn);
    }
-   fold.append(body);box.append(fold);
+   fold.append(body);references.append(fold);
   }
  }
 
@@ -3081,9 +3114,14 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
   fold.append(body);box.append(fold);
  }
  if(reading){
+  if(unestablished)box.append(el('p','kami-record-status','Proposed investigation — not an established finding.'));
   appendKamiOutline(box,n,trail);
-  appendKamiBookSources(box,n);
-  if(inline)renderReaderDetail(box,n);
+  appendKamiBookSources(referenceBody,n);
+  const aux=el('div','kami-aux');
+  if(referenceBody.childElementCount){
+   const refs=el('details','kami-reference');refs.append(el('summary','','Concepts & sources'),referenceBody);aux.append(refs);
+  }
+  if(inline)renderReaderDetail(aux,n);
   const links=new Map();
   if(n.url)links.set(n.url,'Original resource');
   if(n.source_location?.url)links.set(n.source_location.url,'Original record');
@@ -3091,8 +3129,9 @@ function renderDetail(inlineBox=null,inlineNode=null,trail=[]){
   if(links.size){
    const footer=el('footer','kami-original');
    for(const [url,label] of links)footer.append(link(url,label+' ↗'));
-   box.append(footer);
+   aux.append(footer);
   }
+  if(aux.childElementCount)box.append(aux);
  }else if(n.url||n.source_location?.url||state.url){
   const fold=el('details','details-fold');fold.append(el('summary','','Original material'));
   const body=el('div','fold-body');
